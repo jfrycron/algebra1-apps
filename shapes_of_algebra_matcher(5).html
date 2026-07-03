@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Shapes of Algebra Matcher</title>
+<style>
+  :root{
+    --bg:#0f172a;--card:#111827;--card2:#1f2937;--ink:#f8fafc;--muted:#cbd5e1;--accent:#38bdf8;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;
+    --line:#334155;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#0f172a,#111827 45%,#0b1120);color:var(--ink);}
+  .wrap{max-width:1180px;margin:0 auto;padding:8px 10px 12px;}
+  header{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:6px}
+  h1{font-size:clamp(1.25rem,3vw,1.9rem);margin:0;letter-spacing:.2px}
+  .subtitle{color:var(--muted);margin:2px 0 0;font-size:.84rem}
+  .pill{background:rgba(56,189,248,.13);border:1px solid rgba(56,189,248,.35);color:#e0f2fe;border-radius:999px;padding:6px 10px;font-weight:700;font-size:.82rem}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 8px;align-items:center}
+  button{border:0;border-radius:12px;padding:8px 10px;font-weight:800;font-size:.9rem;cursor:pointer;background:var(--accent);color:#082f49;box-shadow:0 6px 18px rgba(0,0,0,.22)}
+  button.secondary{background:#334155;color:#f8fafc;border:1px solid #475569}
+  button.good{background:var(--good);color:#052e16}
+  button.warn{background:var(--warn);color:#451a03}
+  .scorebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:8px}
+  .score{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:13px;padding:6px;text-align:center}
+  .score b{display:block;font-size:1.02rem}
+  .score span{color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em}
+
+  .frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1;font-weight:800;margin:0 .08rem}
+  .frac .num{border-bottom:2px solid currentColor;padding:0 .22rem .08rem}
+  .frac .den{padding:.08rem .22rem 0;white-space:nowrap}
+  .eq-line{vertical-align:middle}
+  .answer-eq{display:inline-flex;align-items:center;gap:.05rem}
+  .instructions{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);border-radius:14px;padding:7px 10px;margin-bottom:8px;color:#e2e8f0;line-height:1.25;font-size:.86rem}
+  .board{display:grid;gap:8px;align-items:start}
+  .col-title{font-size:.95rem;margin:0 0 5px;color:#e0f2fe}
+  .graphs,.equations{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+  .graph-card,.eq-card{background:rgba(255,255,255,.065);border:2px solid rgba(255,255,255,.11);border-radius:14px;padding:5px;transition:.15s;position:relative;overflow:hidden;aspect-ratio:1/1}
+  .graph-card{cursor:default;display:flex;flex-direction:column;gap:4px}
+  .graph-card.drag-over{border-color:var(--accent);box-shadow:0 0 0 4px rgba(56,189,248,.14)}
+  .graph-card.correct,.eq-card.correct{border-color:var(--good);background:rgba(34,197,94,.12)}
+  .graph-card.incorrect{animation:shake .24s;border-color:var(--bad);background:rgba(239,68,68,.12)}
+  .graph-card.locked{border-color:var(--good);background:rgba(34,197,94,.14)}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  .graph-label{position:absolute;top:6px;left:8px;font-weight:900;color:#bfdbfe;background:rgba(15,23,42,.72);border-radius:999px;padding:2px 7px;font-size:.72rem}
+  .eq-card{display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(.72rem,1.4vw,.96rem);line-height:1.12;font-weight:850;color:#f8fafc;cursor:grab;user-select:none}
+  .eq-card:active,.placed-eq:active{cursor:grabbing}
+  .eq-card.placed{opacity:.32;filter:saturate(.5)}
+  .svg-wrap{flex:1;min-height:0}
+  .drop-slot{min-height:38px;border:1.5px dashed rgba(203,213,225,.45);border-radius:10px;display:flex;align-items:center;justify-content:center;text-align:center;color:#94a3b8;font-size:.68rem;font-weight:800;padding:4px;line-height:1.05}
+  .placed-eq{width:100%;min-height:36px;border-radius:9px;background:rgba(56,189,248,.16);border:1px solid rgba(56,189,248,.38);color:#f8fafc;font-weight:900;font-size:.68rem;line-height:1.05;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px;cursor:grab}
+  .locked .placed-eq{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.55);cursor:default}
+  .equations.drop-bank{outline:2px dashed rgba(56,189,248,.25);outline-offset:3px;border-radius:14px}
+  .submit-note{font-size:.78rem;color:#cbd5e1;margin-left:auto}
+  .eq-card small{display:block;color:var(--muted);font-weight:700;margin-top:3px;font-size:.68rem}
+  svg{width:100%;height:100%;display:block;background:#f8fafc;border-radius:10px}
+  .feedback{background:rgba(15,23,42,.72);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:7px 10px;margin:6px auto 8px;max-width:1180px;backdrop-filter:blur(10px)}
+  .feedback-inner{margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  .message{font-weight:800;color:#e2e8f0;font-size:.9rem}
+  .match-list{margin-top:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:10px;display:none}
+  .match-list.show{display:block}
+  .match-list h3{margin:0 0 8px;color:#e0f2fe}
+  .match-list div{padding:6px 0;border-top:1px solid rgba(255,255,255,.08);color:#e2e8f0}
+  .family{font-weight:900;color:#bae6fd}
+  .modal{position:fixed;inset:0;background:rgba(2,6,23,.78);display:none;align-items:center;justify-content:center;padding:18px;z-index:20}
+  .modal.show{display:flex}
+  .modal-card{background:#0f172a;border:1px solid rgba(255,255,255,.18);border-radius:22px;box-shadow:0 30px 80px rgba(0,0,0,.45);padding:14px;max-width:820px;width:min(92vw,820px)}
+  .modal-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
+  .modal-title{font-weight:900;color:#e0f2fe}
+  .modal svg{height:min(56vh,420px);border-radius:16px}
+
+  @media(min-width:761px) and (max-height:760px){
+    .wrap{padding-top:6px}
+    header{margin-bottom:4px}
+    .subtitle{display:none}
+    .pill{font-size:.75rem;padding:5px 8px}
+    .toolbar{margin:4px 0 6px}
+    .instructions{display:none}
+    .feedback{margin:4px auto 6px;padding:6px 9px}
+    .scorebar{margin-bottom:6px}
+    .graph-card,.eq-card{padding:4px}
+    .eq-card{font-size:.78rem}
+  }
+  @media(max-width:760px){
+    .graphs,.equations{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .scorebar{grid-template-columns:repeat(2,1fr)}
+    .eq-card{font-size:.95rem}
+    .wrap{padding-bottom:18px}
+  }
+  @media(min-width:761px){
+    .board{grid-template-rows:auto auto}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Shapes of Algebra Matcher</h1>
+      <p class="subtitle">Drag equations onto graphs. Submit when ready. Infinite practice.</p>
+    </div>
+    <div class="pill">Linear • Quadratic • Exponential • Rational • Absolute Value</div>
+  </header>
+
+  <div class="toolbar">
+    <button onclick="newRound()">New Round</button>
+    <button class="secondary" onclick="toggleAnswers()">Show / Hide Answers</button>
+    <button class="warn" onclick="resetStats()">Reset Stats</button>
+  </div>
+
+  <div class="scorebar">
+    <div class="score"><b id="roundCorrect">0/5</b><span>This round</span></div>
+    <div class="score"><b id="attempts">0</b><span>Attempts</span></div>
+  </div>
+
+  <div class="instructions">
+    <strong>How to play:</strong> drag each equation card onto the graph you think it matches. When all five are placed, press Submit. Correct pairs lock in so you can focus on the others.
+  </div>
+
+  <div class="feedback">
+    <div class="feedback-inner">
+      <div id="message" class="message">Choose a graph to begin.</div>
+      <button class="good" onclick="submitMatches()">Submit Matches</button>
+    </div>
+  </div>
+
+  <div class="board">
+    <section>
+      <h2 class="col-title">Graphs</h2>
+      <div id="graphs" class="graphs"></div>
+    </section>
+    <section>
+      <h2 class="col-title">Equations</h2>
+      <div id="equations" class="equations"></div>
+    </section>
+  </div>
+  <div id="answers" class="match-list"></div>
+</div>
+<div id="graphModal" class="modal" onclick="closeGraphModal(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-top"><div id="modalTitle" class="modal-title">Graph preview</div><button class="secondary" onclick="closeGraphModal()">Close</button></div>
+    <div id="modalGraph"></div>
+  </div>
+</div>
+
+<script>
+const families = ["linear","quadratic","exponential","rational","absolute value"];
+let round = [], graphOrder=[], eqOrder=[], assignments = {}, locked = new Set(), lastWrong = new Set(), draggedEqId = null;
+let stats = JSON.parse(localStorage.getItem('shapeMatcherStats')||'{"attempts":0,"correct":0}');
+
+function rnd(arr){return arr[Math.floor(Math.random()*arr.length)]}
+function shuffle(a){return [...a].sort(()=>Math.random()-0.5)}
+function fmt(n){ if(Math.abs(n)===1) return n===1?'':'-'; return String(n); }
+function sign(n){ return n>=0 ? `+ ${n}` : `− ${Math.abs(n)}`; }
+function save(){localStorage.setItem('shapeMatcherStats',JSON.stringify(stats));updateStats();}
+function resetStats(){ if(confirm('Reset practice stats?')){stats={attempts:0,correct:0};save();setMsg('Stats reset.');}}
+function updateStats(){
+  document.getElementById('attempts').textContent=stats.attempts;
+  document.getElementById('roundCorrect').textContent=locked.size+'/5';
+}
+function setMsg(t){document.getElementById('message').textContent=t;}
+
+function makeProblem(family){
+  let eq, fn, hint;
+  if(family==='linear'){
+    const m=rnd([-3,-2,-1,1,2,3]), b=rnd([-4,-2,0,2,4]);
+    fn=x=>m*x+b; eq=`y = ${fmt(m)}x ${sign(b)}`.replace('x + 0','x').replace('x − 0','x'); hint='Straight line pattern';
+  } else if(family==='quadratic'){
+    const a=rnd([-1,1,2,-2]), h=rnd([-3,-1,0,1,3]), k=rnd([-4,-2,1,3]);
+    fn=x=>a*(x-h)*(x-h)+k; eq=`y = ${fmt(a)}(x ${sign(-h)})² ${sign(k)}`; hint='Parabolic pattern';
+  } else if(family==='exponential'){
+    const a=rnd([1,2,3]), base=rnd([2,3,0.5]); const k=rnd([-3,-1,0,2]);
+    fn=x=>a*Math.pow(base,x)+k; eq=`y = ${a===1?'':a}(${base})ˣ ${sign(k)}`.replace(' + 0',''); hint='Multiplicative growth/decay pattern';
+  } else if(family==='rational'){
+    const a=rnd([-6,-4,4,6]), h=rnd([-3,-1,1,3]), k=rnd([-3,-1,1,3]);
+    fn=x=> a/(x-h)+k; eq=`y = ${a}/(x ${sign(-h)}) ${sign(k)}`; hint='Two-branch rational pattern';
+  } else {
+    const a=rnd([-2,-1,1,2]), h=rnd([-3,-1,0,2,3]), k=rnd([-4,-1,1,3]);
+    fn=x=>a*Math.abs(x-h)+k; eq=`y = ${fmt(a)}|x ${sign(-h)}| ${sign(k)}`; hint='V-shaped pattern';
+  }
+  return {id:crypto.randomUUID(),family,eq,fn,hint};
+}
+
+function newRound(){
+  round = families.map(makeProblem);
+  graphOrder=shuffle(round.map(p=>p.id));
+  eqOrder=shuffle(round.map(p=>p.id));
+  assignments = {}; locked = new Set(); lastWrong = new Set(); draggedEqId=null;
+  render(); updateStats(); setMsg('Drag each equation onto a graph. Press Submit when your pairs are ready.');
+  document.getElementById('answers').classList.remove('show');
+}
+
+function byId(id){return round.find(p=>p.id===id)}
+function getAssignedGraph(eqId){return Object.keys(assignments).find(gid=>assignments[gid]===eqId)}
+
+function equationHTML(p){
+  if(p.family==='rational'){
+    const m = p.eq.match(/^y = ([\-\d]+)\/\(([^)]+)\) (.+)$/);
+    if(m){
+      return `<span class="eq-line">y = </span><span class="frac"><span class="num">${m[1]}</span><span class="den">${m[2]}</span></span><span class="eq-line"> ${m[3]}</span>`;
+    }
+  }
+  return p.eq;
+}
+
+function render(){
+  document.getElementById('graphs').innerHTML=graphOrder.map((id,i)=>graphCard(byId(id),i)).join('');
+  document.getElementById('equations').innerHTML=eqOrder.map(id=>eqCard(byId(id))).join('');
+  wireDragDrop();
+  renderAnswers();
+  updateStats();
+}
+function graphCard(p,i){
+  const assignedId=assignments[p.id];
+  const assigned=assignedId?byId(assignedId):null;
+  const isLocked=locked.has(p.id);
+  const wrong=lastWrong.has(p.id) && !isLocked;
+  return `<div class="graph-card ${isLocked?'correct locked':''} ${wrong?'incorrect':''}" data-graph-id="${p.id}" ondragover="allowDrop(event)" ondrop="dropOnGraph(event,'${p.id}')">
+    <div class="graph-label">Graph ${i+1}</div>
+    <div class="svg-wrap" onclick="openGraphModal('${p.id}')">${drawSVG(p.fn,p.family,false)}</div>
+    <div class="drop-slot">${assigned?placedEq(assigned,isLocked):'Drop equation here'}</div>
+  </div>`
+}
+function placedEq(p,isLocked){
+  return `<div class="placed-eq" data-eq-id="${p.id}" ${isLocked?'':'draggable="true" ondragstart="dragEq(event,\''+p.id+'\')"'}>${equationHTML(p)}</div>`
+}
+function eqCard(p){
+  const assignedGraph=getAssignedGraph(p.id);
+  const unavailable=assignedGraph || locked.has(p.id);
+  if(unavailable) return `<div class="eq-card placed" data-eq-id="${p.id}"><div>${equationHTML(p)}<small>Placed</small></div></div>`;
+  return `<div class="eq-card" draggable="true" data-eq-id="${p.id}" ondragstart="dragEq(event,'${p.id}')"><div>${equationHTML(p)}<small>Drag onto a graph</small></div></div>`
+}
+
+function wireDragDrop(){
+  const bank=document.getElementById('equations');
+  bank.ondragover=e=>{e.preventDefault(); bank.classList.add('drop-bank')};
+  bank.ondragleave=()=>bank.classList.remove('drop-bank');
+  bank.ondrop=e=>{e.preventDefault(); bank.classList.remove('drop-bank'); if(draggedEqId) unassignEq(draggedEqId);};
+}
+function allowDrop(e){e.preventDefault(); const card=e.currentTarget; if(card && !locked.has(card.dataset.graphId)) card.classList.add('drag-over');}
+function dragEq(e,eqId){draggedEqId=eqId; e.dataTransfer.setData('text/plain',eqId); e.dataTransfer.effectAllowed='move';}
+function dropOnGraph(e,graphId){
+  e.preventDefault();
+  document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+  if(locked.has(graphId)) return;
+  const eqId=e.dataTransfer.getData('text/plain') || draggedEqId;
+  if(!eqId || locked.has(eqId)) return;
+  unassignEq(eqId,false);
+  assignments[graphId]=eqId;
+  lastWrong.delete(graphId);
+  render();
+  const placed=Object.keys(assignments).length;
+  setMsg(placed<5?`${placed} of 5 equations placed. Keep dragging, then press Submit.`:'All five are placed. Press Submit Matches to check.');
+}
+function unassignEq(eqId,doRender=true){
+  for(const gid of Object.keys(assignments)){
+    if(assignments[gid]===eqId && !locked.has(gid)){
+      delete assignments[gid]; lastWrong.delete(gid);
+    }
+  }
+  if(doRender){render(); setMsg('Equation moved back. Drag it onto another graph.');}
+}
+
+function submitMatches(){
+  const placed=Object.keys(assignments).length;
+  if(placed<5){setMsg(`You have ${placed} of 5 pairs placed. Place all five before submitting.`);return;}
+  stats.attempts++;
+  let correctThisSubmit=0, newlyLocked=0;
+  lastWrong=new Set();
+  for(const gid of graphOrder){
+    if(assignments[gid]===gid){
+      correctThisSubmit++;
+      if(!locked.has(gid)){locked.add(gid); newlyLocked++;}
+    } else if(!locked.has(gid)){
+      lastWrong.add(gid);
+    }
+  }
+  stats.correct += newlyLocked;
+  save();
+  render();
+  if(correctThisSubmit===5){
+    setMsg('Perfect — all 5 pairs are correct. Start a new round for more practice.');
+  } else {
+    setMsg(`You got ${correctThisSubmit} of 5 pairs correct. Green pairs are locked. Keep working on the others.`);
+  }
+}
+function checkRoundDone(){submitMatches();}
+function toggleAnswers(){document.getElementById('answers').classList.toggle('show');}
+function renderAnswers(){
+  const html='<h3>Answer key for this round</h3>'+round.map(p=>`<div><span class="family">${cap(p.family)}</span>: <span class="answer-eq">${equationHTML(p)}</span> — ${p.hint}</div>`).join('');
+  document.getElementById('answers').innerHTML=html;
+}
+function cap(s){return s.replace(/\b\w/g,c=>c.toUpperCase())}
+
+function drawSVG(fn,family,large=false){
+  const W=large?720:260, H=large?430:220;
+  const xmin=-6,xmax=6,ymin=-6,ymax=6;
+  const sx=x=> (x-xmin)/(xmax-xmin)*W;
+  const sy=y=> H-(y-ymin)/(ymax-ymin)*H;
+  let axes=`<line x1="0" y1="${sy(0)}" x2="${W}" y2="${sy(0)}" stroke="#cbd5e1" stroke-width="${large?3:2}"/>`+
+           `<line x1="${sx(0)}" y1="0" x2="${sx(0)}" y2="${H}" stroke="#cbd5e1" stroke-width="${large?3:2}"/>`;
+  let paths=[];
+  const steps=large?520:260;
+  if(family==='rational'){
+    let seg=[];
+    let lastY=null;
+    for(let i=0;i<=steps;i++){
+      const x=xmin+(xmax-xmin)*i/steps, y=fn(x);
+      const jump=lastY!==null && Math.abs(y-lastY)>8;
+      if(!isFinite(y)||Math.abs(y)>60||jump){ if(seg.length>1) paths.push(segToPath(seg,sx,sy)); seg=[]; lastY=null; continue; }
+      if(y>=ymin-2&&y<=ymax+2) seg.push([x,y]); else { if(seg.length>1) paths.push(segToPath(seg,sx,sy)); seg=[]; }
+      lastY=y;
+    }
+    if(seg.length>1) paths.push(segToPath(seg,sx,sy));
+  } else {
+    let pts=[];
+    for(let i=0;i<=steps;i++){
+      const x=xmin+(xmax-xmin)*i/steps, y=fn(x);
+      if(isFinite(y)&&y>=ymin-2.5&&y<=ymax+2.5) pts.push([x,y]);
+    }
+    paths=[segToPath(pts,sx,sy)];
+  }
+  const stroke = large ? 7 : 5.2;
+  return `<svg viewBox="0 0 ${W} ${H}" aria-label="${family} graph">${axes}${paths.map(d=>`<path d="${d}" fill="none" stroke="#075985" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</svg>`;
+}
+function openGraphModal(id){
+  const p=round.find(x=>x.id===id); if(!p) return;
+  document.getElementById('modalTitle').textContent=`${cap(p.family)} shape preview`;
+  document.getElementById('modalGraph').innerHTML=drawSVG(p.fn,p.family,true);
+  document.getElementById('graphModal').classList.add('show');
+}
+function closeGraphModal(){document.getElementById('graphModal').classList.remove('show');}
+function segToPath(pts,sx,sy){ if(!pts.length)return''; return pts.map((p,i)=>`${i?'L':'M'} ${sx(p[0]).toFixed(1)} ${sy(p[1]).toFixed(1)}`).join(' '); }
+
+newRound();
+</script>
+</body>
+</html>
