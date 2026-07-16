@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Shapes of Algebra Matcher</title>
+<title>Equation ↔ Graph Matcher</title>
 <style>
   :root{
     --bg:#f5f7fb;--card:#ffffff;--card2:#f8fafc;--ink:#162033;--muted:#667085;--accent:#2563eb;--good:#16a34a;--bad:#5b1020;--warn:#d97706;
@@ -102,21 +102,14 @@
 <div class="wrap">
   <header>
     <div>
-      <h1>Shapes of Algebra Matcher</h1>
+      <h1><strong>Equation</strong> ↔ <strong>Graph</strong> Matcher</h1>
       <p class="subtitle">Drag equations onto graphs. Submit when ready. Infinite practice.</p>
     </div>
     <div class="pill">Linear • Quadratic • Exponential • Rational • Absolute Value</div>
   </header>
 
   <div class="toolbar">
-    <button onclick="newRound()">New Round</button>
-    <button class="secondary" onclick="toggleAnswers()">Show / Hide Answers</button>
-    <button class="warn" onclick="resetStats()">Reset Stats</button>
-  </div>
-
-  <div class="scorebar">
-    <div class="score"><b id="roundCorrect">0/5</b><span>This round</span></div>
-    <div class="score"><b id="attempts">0</b><span>Attempts</span></div>
+    <button class="secondary" onclick="newRound()">New Round</button>
   </div>
 
   <div class="instructions">
@@ -161,8 +154,10 @@ function sign(n){ return n>=0 ? `+ ${n}` : `− ${Math.abs(n)}`; }
 function save(){localStorage.setItem('shapeMatcherStats',JSON.stringify(stats));updateStats();}
 function resetStats(){ if(confirm('Reset practice stats?')){stats={attempts:0,correct:0};save();setMsg('Stats reset.');}}
 function updateStats(){
-  document.getElementById('attempts').textContent=stats.attempts;
-  document.getElementById('roundCorrect').textContent=locked.size+'/5';
+  const attemptsEl=document.getElementById('attempts');
+  const roundEl=document.getElementById('roundCorrect');
+  if(attemptsEl) attemptsEl.textContent=stats.attempts;
+  if(roundEl) roundEl.textContent=locked.size+'/5';
 }
 function setMsg(t){document.getElementById('message').textContent=t;}
 
