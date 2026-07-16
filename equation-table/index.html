@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Equation ↔ Table Matcher</title>
+<style>
+:root{
+  --bg:#f5f7fb; --card:#ffffff; --ink:#162033; --muted:#667085; --line:#d7dce7;
+  --blue:#2563eb; --green:#16a34a; --red:#7f1d1d; --gold:#d97706; --burgundy:#5b1020;
+  --shadow:0 8px 24px rgba(16,24,40,.10);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.app{max-width:1180px;margin:0 auto;padding:16px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+h1{font-size:clamp(22px,3vw,36px);margin:0;font-weight:900;letter-spacing:-.03em}
+.sub{color:var(--muted);font-size:14px;margin-top:3px}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bottomControls{display:flex;justify-content:center;align-items:center;gap:10px;margin:18px 0 4px}
+.bottomControls .submit{font-size:1.05rem;min-width:190px;padding:14px 28px}
+button{border:0;border-radius:12px;padding:11px 14px;font-weight:800;cursor:pointer;background:#111827;color:white;box-shadow:var(--shadow)}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.secondary{background:#e5e7eb;color:#111827;box-shadow:none}
+button.submit{background:var(--blue)}
+.board{display:grid;grid-template-columns:1fr;gap:12px}
+.rowTitle{font-weight:900;color:#344054;margin:8px 0 4px;font-size:14px;text-transform:uppercase;letter-spacing:.08em}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:16px;box-shadow:var(--shadow);min-height:230px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;touch-action:none;user-select:none}
+.eqCard{font-size:clamp(16px,1.8vw,24px);font-weight:850;text-align:center;padding:12px;line-height:1.25;cursor:grab}
+.eqCard.dragging{opacity:.55;transform:scale(.98)}
+.eqCard.used{opacity:.38;transform:scale(.95);background:#e5e7eb;color:#94a3b8;border-color:#cbd5e1;box-shadow:none;filter:grayscale(.9);cursor:not-allowed;}
+.eqCard.used::after{content:'✓';position:absolute;top:8px;right:8px;background:#475569;color:white;border-radius:999px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:1000;}
+.eqCard.hiddenUsed{visibility:hidden;}
+sup{font-size:.72em;line-height:0;vertical-align:super;font-weight:800;color:inherit;margin-left:1px;}
+.expBase{white-space:nowrap;}
+.tableCard{padding:8px;align-items:stretch;justify-content:stretch;flex-direction:column;gap:4px}
+.slot{position:absolute;inset:6px;border:2px dashed transparent;border-radius:12px;pointer-events:none;transition:.15s}
+.tableCard.hover .slot{border-color:var(--blue);background:rgba(37,99,235,.05)}
+.tableCard.matched{border-color:#94a3b8;background:#f8fafc}
+.tableCard.correct{border:4px solid var(--green);background:#dcfce7;box-shadow:0 0 0 4px rgba(22,163,74,.22), var(--shadow)}
+.tableCard.correct::after{content:'✓';position:absolute;top:8px;right:8px;background:#15803d;color:white;border-radius:999px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:1000;z-index:5}
+.tableCard.correct.locked{cursor:not-allowed;}
+.tableCard.incorrect{border:4px dashed var(--burgundy);background:repeating-linear-gradient(45deg,#f8fafc 0,#f8fafc 8px,#e5e7eb 8px,#e5e7eb 16px);box-shadow:0 0 0 4px rgba(91,16,32,.20), var(--shadow)}
+.tableCard.incorrect::after{content:'✕';position:absolute;top:8px;right:8px;background:#5b1020;color:white;border-radius:999px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:1000;z-index:5}
+.tableCard.incorrect.shake{animation:shake .26s linear 1}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-3px)}}
+.tableCard.incorrect .dropEquation{background:#5b1020}
+.tableCard.correct .dropEquation{background:#14532d}
+.tableWrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;gap:8px;z-index:1}
+table{border-collapse:collapse;font-size:clamp(12px,1.45vw,16px);background:white;border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px #e5e7eb}
+th,td{border:1px solid #e5e7eb;padding:3px 8px;text-align:center;min-width:34px}
+th{background:#eef2f7;font-weight:900}.pattern{font-size:11px;color:#475467;text-align:center;font-weight:800;z-index:1}
+.dropEquation{position:absolute;left:8px;right:8px;bottom:8px;background:#111827;color:white;border-radius:10px;padding:7px 8px;font-weight:900;text-align:center;font-size:13px;z-index:2;box-shadow:0 6px 18px rgba(0,0,0,.18);cursor:grab}
+.tableCard.locked .dropEquation{cursor:not-allowed}
+.dropEquation.dragging{opacity:.55;transform:scale(.98)}
+.dropEquation .frac{color:white}.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1}.frac .bar{height:2px;background:currentColor;width:100%;margin:2px 0}.feedback{margin-top:12px;padding:14px;border-radius:16px;background:white;border:2px solid var(--line);box-shadow:var(--shadow);font-weight:750}.feedback.good{border-color:var(--green);background:#ecfdf3}.feedback.bad{border-color:var(--gold);background:#fffbeb}.small{font-size:13px;color:var(--muted);font-weight:650}.familyTag{position:absolute;top:6px;left:8px;font-size:11px;font-weight:900;color:#667085;z-index:3;background:rgba(255,255,255,.8);border-radius:999px;padding:3px 7px}.hideFamilies .familyTag{display:none}
+@media (max-width:850px){.grid{grid-template-columns:repeat(5,minmax(118px,1fr));overflow-x:auto;padding-bottom:4px}.card{min-height:220px}.app{padding:10px}header{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div><h1>Equation ↔ Table Matcher</h1><div class="sub">Drag each equation onto the table it matches. Then submit.</div></div>
+  <div class="controls"><button class="secondary" onclick="newRound()">New Round</button></div>
+</header>
+<div class="board" id="board">
+  <div class="rowTitle">Equations</div><div class="grid" id="equations"></div>
+  <div class="rowTitle">Tables</div><div class="grid" id="tables"></div>
+</div>
+<div class="bottomControls"><button id="submitBtn" class="submit" onclick="primaryAction()">Submit</button></div>
+<div id="feedback" class="feedback small">Match each equation to its table, then submit.</div>
+</div>
+<script>
+const families = {
+  linear:{name:'Linear', patterns:['Constant change','Constant first difference'], make(){
+    const mode=choice(['parent','slope','shift']);
+    let m=1,b=0;
+    if(mode==='slope') m=choice([-2,-1,2]);
+    if(mode==='shift') b=choice([-2,-1,1,2]);
+    const xs=[-4,-3,-2,-1,0,1,2,3,4];
+    return {family:'linear', eq:`y = ${fmtM(m)}x ${fmtB(b)}`, htmlEq:`y = ${fmtM(m)}x ${fmtB(b)}`, rows:xs.map(x=>[x,m*x+b]), pattern:'constant change'};
+  }},
+  quadratic:{name:'Quadratic', patterns:['Symmetry','Constant second difference'], make(){
+    const mode=choice(['parent','reflect','vertical','horizontal','stretch']);
+    let a=1,h=0,k=0;
+    if(mode==='reflect') a=-1;
+    if(mode==='vertical') k=choice([-2,-1,1,2]);
+    if(mode==='horizontal') h=choice([-1,1]);
+    if(mode==='stretch') a=2;
+    const xs=[h-4,h-3,h-2,h-1,h,h+1,h+2,h+3,h+4];
+    return {family:'quadratic', eq:`y = ${a===1?'':a===-1?'-':a}(x ${h===0?'':h>0?'- '+h:'+ '+(-h)})² ${fmtB(k)}`, htmlEq:`y = ${a===1?'':a===-1?'−':a}(x ${h===0?'':h>0?'− '+h:'+ '+(-h)})² ${fmtB(k)}`, rows:xs.map(x=>[x,a*(x-h)*(x-h)+k]), pattern:'symmetry around the vertex'};
+  }},
+  absolute:{name:'Absolute Value', patterns:['Symmetry','V-table'], make(){
+    const mode=choice(['parent','reflect','vertical','horizontal','stretch']);
+    let a=1,h=0,k=0;
+    if(mode==='reflect') a=-1;
+    if(mode==='vertical') k=choice([-2,-1,1,2]);
+    if(mode==='horizontal') h=choice([-1,1]);
+    if(mode==='stretch') a=2;
+    const xs=[h-4,h-3,h-2,h-1,h,h+1,h+2,h+3,h+4];
+    return {family:'absolute', eq:`y = ${a===1?'':a===-1?'-':a}|x ${h===0?'':h>0?'- '+h:'+ '+(-h)}| ${fmtB(k)}`, htmlEq:`y = ${a===1?'':a===-1?'−':a}|x ${h===0?'':h>0?'− '+h:'+ '+(-h)}| ${fmtB(k)}`, rows:xs.map(x=>[x,a*Math.abs(x-h)+k]), pattern:'symmetry with a sharp turn'};
+  }},
+  exponential:{name:'Exponential', patterns:['Constant ratio'], make(){
+    const mode=choice(['parent','stretch','decay','horizontal']);
+    let a=1,base=2,h=0;
+    if(mode==='stretch') a=2;
+    if(mode==='decay') base=0.5;
+    if(mode==='horizontal') h=choice([-1,1]);
+    const xs=[0,1,2,3,4,5,6,7,8];
+    const baseText=base===0.5?'½':'2';
+    const exponentText=h===0?'x':h>0?`x − ${h}`:`x + ${-h}`;
+    return {family:'exponential', eq:`y = ${a===1?'':a}(${baseText})^(${exponentText})`, htmlEq:`y = ${a===1?'':a}<span class="expBase">(${baseText})<sup>${exponentText}</sup></span>`, rows:xs.map(x=>[x,round(a*Math.pow(base,x-h))]), pattern:'constant ratio'};
+  }},
+  rational:{name:'Rational', patterns:['Error/undefined value'], make(){
+    const h=choice([-1,1]);
+    const xs=[h-4,h-3,h-2,h-1,h,h+1,h+2,h+3,h+4];
+    return {family:'rational', eq:`y = 1/(x ${h>0?'- 1':'+ 1'})`, htmlEq:`y = ${frac(1,`x ${h>0?'− 1':'+ 1'}`)}`, rows:xs.map(x=>[x, x===h?'ERROR':round(1/(x-h))]), pattern:'error / undefined value'};
+  }}
+};
+let current=[], placements={}, locked=new Set();
+function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+function choice(arr){return arr[Math.floor(Math.random()*arr.length)]}
+function shuffle(a){return a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1])}
+function fmtB(b){return b===0?'':(b>0?'+ '+b:'− '+Math.abs(b))}
+function fmtM(m){return m===1?'':m===-1?'−':m}
+function round(n){return Math.round(n*100)/100}
+function frac(top,bottom){return `<span class="frac"><span>${top}</span><span class="bar"></span><span>${bottom}</span></span>`}
+function tableHTML(rows){let s='<table><thead><tr><th>x</th><th>y</th></tr></thead><tbody>'; rows.forEach(r=>{s+=`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`}); return s+'</tbody></table>'}
+function newRound(){placements={}; locked=new Set(); document.getElementById('submitBtn').textContent='Submit'; document.getElementById('submitBtn').disabled=false; current=Object.entries(families).map(([key,f])=>({...f.make(), id:key+'_'+Math.random().toString(36).slice(2)})); render(); document.getElementById('feedback').className='feedback small'; document.getElementById('feedback').textContent='Match each equation to its table, then submit.';}
+function render(){const eqBox=document.getElementById('equations'), tbBox=document.getElementById('tables'); eqBox.innerHTML=''; tbBox.innerHTML=''; shuffle(current).forEach(item=>{let d=document.createElement('div'); d.className='card eqCard'; d.draggable=true; d.dataset.id=item.id; d.innerHTML=item.htmlEq; d.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',item.id); d.classList.add('dragging')}); d.addEventListener('dragend',()=>d.classList.remove('dragging')); eqBox.appendChild(d);}); shuffle(current).forEach(item=>{let c=document.createElement('div'); c.className='card tableCard'; c.dataset.id=item.id; c.innerHTML=`<div class="familyTag">${item.pattern}</div><div class="slot"></div><div class="tableWrap">${tableHTML(item.rows)}</div>`; c.addEventListener('dragover',e=>{if(locked.has(c.dataset.id)) return; e.preventDefault(); c.classList.add('hover')}); c.addEventListener('dragleave',()=>c.classList.remove('hover')); c.addEventListener('drop',e=>{if(locked.has(c.dataset.id)) return; e.preventDefault(); c.classList.remove('hover'); const eqId=e.dataTransfer.getData('text/plain'); place(eqId,item.id);}); tbBox.appendChild(c);});}
+function place(eqId, tableId){ // remove equation from any previous unlocked table
+ if(locked.has(tableId)) return;
+ Object.keys(placements).forEach(k=>{if(!locked.has(k) && placements[k]===eqId) delete placements[k]}); placements[tableId]=eqId; updateDrops();}
+function updateDrops(){
+ document.querySelectorAll('.tableCard').forEach(card=>{
+   card.classList.remove('matched','correct','incorrect','shake','locked');
+   const old=card.querySelector('.dropEquation'); if(old) old.remove();
+   const tableId=card.dataset.id;
+   const eqId=placements[tableId];
+   if(eqId){
+     card.classList.add('matched');
+     if(locked.has(tableId)) card.classList.add('correct','locked');
+     const item=current.find(x=>x.id===eqId);
+     const div=document.createElement('div');
+     div.className='dropEquation';
+     div.innerHTML=item.htmlEq;
+     div.dataset.id=eqId;
+     div.draggable=!locked.has(tableId);
+     if(!locked.has(tableId)){
+       div.title='Drag this equation to fix your match';
+       div.addEventListener('dragstart',e=>{
+         e.stopPropagation();
+         e.dataTransfer.setData('text/plain',eqId);
+         e.dataTransfer.setData('from-table',tableId);
+         div.classList.add('dragging');
+       });
+       div.addEventListener('dragend',()=>div.classList.remove('dragging'));
+     }
+     card.appendChild(div);
+   }
+ });
+ const usedIds=new Set(Object.values(placements));
+ document.querySelectorAll('.eqCard').forEach(eq=>{
+   const isUsed=usedIds.has(eq.dataset.id);
+   eq.classList.toggle('used', isUsed);
+   eq.classList.toggle('hiddenUsed', isUsed);
+   eq.draggable=!isUsed;
+ });
+}function primaryAction(){
+  if(locked.size===5){newRound(); return;}
+  checkAnswers();
+}
+
+function checkAnswers(){
+ let total=current.length, correct=0;
+ document.querySelectorAll('.tableCard').forEach(card=>{
+   const tableId=card.dataset.id, eqId=placements[tableId];
+   card.classList.remove('correct','incorrect','shake','locked');
+   if(eqId && eqId===tableId){
+     correct++; locked.add(tableId); card.classList.add('correct','locked');
+   } else {
+     if(!locked.has(tableId)) { card.classList.add('incorrect','shake'); setTimeout(()=>card.classList.remove('shake'),300); }
+   }
+ });
+ updateDrops();
+ // restore visual incorrect classes after updateDrops removes them
+ document.querySelectorAll('.tableCard').forEach(card=>{
+   const tableId=card.dataset.id, eqId=placements[tableId];
+   if(!locked.has(tableId) && eqId) card.classList.add('incorrect');
+ });
+ const fb=document.getElementById('feedback');
+ const btn=document.getElementById('submitBtn');
+ if(correct===total){
+   btn.textContent='All Correct'; btn.disabled=true;
+   fb.className='feedback good';
+   fb.innerHTML=`🎉 Perfect — all ${total} pairs are correct.`;
+   document.getElementById('submitBtn').textContent='Next Round';
+   document.getElementById('submitBtn').disabled=false;
+ } else {
+   btn.textContent='Check Again'; btn.disabled=false;
+   fb.className='feedback bad';
+   const right=current.filter(x=>locked.has(x.id)).map(x=>families[x.family].name).join(', ')||'none yet';
+   fb.innerHTML=`You got <b>${correct} out of ${total}</b> correct. <b>✓ Solid green cards are locked.</b> <b>✕ Dashed burgundy striped cards need to be fixed.</b><br><span class="small">Correct so far: ${right}</span>`;
+ }
+}newRound();
+</script>
+</body>
+</html>
