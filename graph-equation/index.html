@@ -10,11 +10,12 @@
     --line:#334155;
   }
   *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);}
-  .wrap{max-width:1180px;margin:0 auto;padding:8px 10px 12px;}
-  header{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:6px}
-  h1{font-size:clamp(1.25rem,3vw,1.9rem);margin:0;letter-spacing:.2px}
-  .subtitle{color:var(--muted);margin:2px 0 0;font-size:.84rem}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#f4f6fa;color:var(--ink);}
+  .wrap{max-width:1180px;margin:0 auto;padding:14px 12px 18px;}
+  header{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
+  h1{font-size:clamp(22px,3vw,36px);margin:0;font-weight:900;letter-spacing:-.03em}
+  .subtitle{color:var(--muted);margin:3px 0 0;font-size:14px}
+  .kicker{color:#475467;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
   .pill{background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:999px;padding:6px 10px;font-weight:700;font-size:.82rem}
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 8px;align-items:center}
   button{border:0;border-radius:12px;padding:8px 10px;font-weight:800;font-size:.9rem;cursor:pointer;background:var(--accent);color:white;box-shadow:0 8px 24px rgba(16,24,40,.10)}
@@ -60,7 +61,7 @@
   .bottom-actions button{min-width:210px;padding:13px 26px;font-size:1.02rem}
   .eq-card small{display:block;color:var(--muted);font-weight:700;margin-top:3px;font-size:.68rem}
   svg{width:100%;height:100%;display:block;background:#f8fafc;border-radius:10px}
-  .feedback{background:white;border:2px solid #d7dce7;border-radius:14px;padding:7px 10px;margin:6px auto 8px;max-width:1180px;backdrop-filter:blur(10px)}
+  .feedback{background:white;border:2px solid #d7dce7;border-radius:16px;padding:14px;margin:12px auto 0;max-width:1180px;box-shadow:0 8px 24px rgba(16,24,40,.08)}
   .feedback-inner{margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
   .message{font-weight:800;color:#344054;font-size:.9rem}
   .match-list{margin-top:8px;background:white;border:1px solid #d7dce7;border-radius:14px;padding:10px;display:none}
@@ -102,25 +103,12 @@
 <div class="wrap">
   <header>
     <div>
-      <h1><strong>Equation</strong> ↔ <strong>Graph</strong> Matcher</h1>
-      <p class="subtitle">Drag equations onto graphs. Submit when ready. Infinite practice.</p>
+      <h1>Equation ↔ Graph Matcher</h1>
+      <div class="subtitle">Drag each equation onto the graph it matches. Then submit.</div>
+      <div class="kicker">Shapes of Algebra</div>
     </div>
-    <div class="pill">Linear • Quadratic • Exponential • Rational • Absolute Value</div>
+    <div class="controls"><button class="secondary" onclick="newRound()">New Round</button></div>
   </header>
-
-  <div class="toolbar">
-    <button class="secondary" onclick="newRound()">New Round</button>
-  </div>
-
-  <div class="instructions">
-    <strong>How to play:</strong> drag each equation card onto the graph you think it matches. When all five are placed, press Submit. Correct pairs lock in so you can focus on the others.
-  </div>
-
-  <div class="feedback">
-    <div class="feedback-inner">
-      <div id="message" class="message">Drag each equation onto a graph.</div>
-    </div>
-  </div>
 
   <div class="board">
     <section>
@@ -133,6 +121,7 @@
     </section>
   </div>
   <div class="bottom-actions"><button id="submitBtn" class="good" onclick="primaryAction()">Submit</button></div>
+  <div class="feedback"><div class="feedback-inner"><div id="message" class="message">Match each equation to its graph, then submit.</div></div></div>
   <div id="answers" class="match-list"></div>
 </div>
 <div id="graphModal" class="modal" onclick="closeGraphModal(event)">
@@ -248,7 +237,7 @@ function newRound(){
   eqOrder=shuffle(round.map(p=>p.id));
   assignments = {}; locked = new Set(); lastWrong = new Set(); draggedEqId=null;
   const btn=document.getElementById('submitBtn'); if(btn){btn.textContent='Submit';btn.disabled=false;}
-  render(); updateStats(); setMsg('Drag each equation onto a graph. Press Submit when your pairs are ready.');
+  render(); updateStats(); setMsg('Match each equation to its graph, then submit.');
   document.getElementById('answers').classList.remove('show');
 }
 
