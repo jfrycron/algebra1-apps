@@ -10,7 +10,7 @@
     --line:#334155;
   }
   *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#f4f6fa;color:var(--ink);}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);}
   .wrap{max-width:1180px;margin:0 auto;padding:14px 12px 18px;}
   header{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
   h1{font-size:clamp(22px,3vw,36px);margin:0;font-weight:900;letter-spacing:-.03em}
@@ -46,13 +46,12 @@
   .graph-card.incorrect::after{content:'✕';position:absolute;top:7px;right:7px;width:32px;height:32px;border-radius:999px;background:#5b1020;color:white;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:1000;z-index:6}
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
   .graph-label{position:absolute;top:6px;left:8px;font-weight:900;color:#475467;background:rgba(255,255,255,.88);border-radius:999px;padding:2px 7px;font-size:.72rem}
-  .eq-card{display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(.72rem,1.4vw,.96rem);line-height:1.12;font-weight:850;color:#162033;cursor:grab;user-select:none}
+  .eq-card{display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(1.15rem,2.1vw,1.5rem);line-height:1.2;font-weight:850;color:#162033;cursor:grab;user-select:none;padding:10px}
   .eq-card:active,.placed-eq:active{cursor:grabbing}
-  .eq-card.placed{opacity:.34;filter:grayscale(.9);transform:scale(.96);background:#334155;color:#94a3b8;cursor:not-allowed}
-  .eq-card.placed::after{content:'✓';position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:999px;background:#64748b;color:white;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:1000}
+  .eq-card.placed{visibility:hidden;pointer-events:none}
   .svg-wrap{flex:1;min-height:0}
-  .drop-slot{min-height:38px;border:1.5px dashed rgba(203,213,225,.45);border-radius:10px;display:flex;align-items:center;justify-content:center;text-align:center;color:#94a3b8;font-size:.68rem;font-weight:800;padding:4px;line-height:1.05}
-  .placed-eq{width:100%;min-height:36px;border-radius:9px;background:#111827;border:1px solid #111827;color:white;font-weight:900;font-size:.68rem;line-height:1.05;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px;cursor:grab}
+  .drop-slot{min-height:38px;border:0;border-radius:10px;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px;line-height:1.05}
+  .placed-eq{width:100%;min-height:44px;border-radius:9px;background:#111827;border:1px solid #111827;color:white;font-weight:900;font-size:clamp(1rem,1.65vw,1.25rem);line-height:1.15;display:flex;align-items:center;justify-content:center;text-align:center;padding:7px;cursor:grab}
   .locked .placed-eq{background:#14532d;border-color:#86efac;cursor:default}
   .incorrect .placed-eq{background:#5b1020;border-color:#fecdd3}
   .equations.drop-bank{outline:2px dashed rgba(56,189,248,.25);outline-offset:3px;border-radius:14px}
@@ -86,12 +85,12 @@
     .feedback{margin:4px auto 6px;padding:6px 9px}
     .scorebar{margin-bottom:6px}
     .graph-card,.eq-card{padding:4px}
-    .eq-card{font-size:.78rem}
+    .eq-card{font-size:1.08rem}
   }
   @media(max-width:760px){
     .graphs,.equations{grid-template-columns:repeat(2,minmax(0,1fr))}
     .scorebar{grid-template-columns:repeat(2,1fr)}
-    .eq-card{font-size:.95rem}
+    .eq-card{font-size:1.2rem}
     .wrap{padding-bottom:18px}
   }
   @media(min-width:761px){
@@ -105,7 +104,6 @@
     <div>
       <h1>Equation ↔ Graph Matcher</h1>
       <div class="subtitle">Drag each equation onto the graph it matches. Then submit.</div>
-      <div class="kicker">Shapes of Algebra</div>
     </div>
     <div class="controls"><button class="secondary" onclick="newRound()">New Round</button></div>
   </header>
@@ -121,7 +119,7 @@
     </section>
   </div>
   <div class="bottom-actions"><button id="submitBtn" class="good" onclick="primaryAction()">Submit</button></div>
-  <div class="feedback"><div class="feedback-inner"><div id="message" class="message">Match each equation to its graph, then submit.</div></div></div>
+  <div id="feedbackBox" class="feedback" style="display:none"><div class="feedback-inner"><div id="message" class="message"></div></div></div>
   <div id="answers" class="match-list"></div>
 </div>
 <div id="graphModal" class="modal" onclick="closeGraphModal(event)">
@@ -237,7 +235,8 @@ function newRound(){
   eqOrder=shuffle(round.map(p=>p.id));
   assignments = {}; locked = new Set(); lastWrong = new Set(); draggedEqId=null;
   const btn=document.getElementById('submitBtn'); if(btn){btn.textContent='Submit';btn.disabled=false;}
-  render(); updateStats(); setMsg('Match each equation to its graph, then submit.');
+  render(); updateStats(); setMsg('');
+  const fb=document.getElementById('feedbackBox'); if(fb) fb.style.display='none';
   document.getElementById('answers').classList.remove('show');
 }
 
@@ -270,7 +269,7 @@ function graphCard(p,i){
   return `<div class="graph-card ${isLocked?'correct locked':''} ${wrong?'incorrect':''}" data-graph-id="${p.id}" ondragover="allowDrop(event)" ondrop="dropOnGraph(event,'${p.id}')">
     <div class="graph-label">Graph ${i+1}</div>
     <div class="svg-wrap" onclick="openGraphModal('${p.id}')">${drawSVG(p.fn,p.family,false)}</div>
-    <div class="drop-slot">${assigned?placedEq(assigned,isLocked):'Drop equation here'}</div>
+    <div class="drop-slot">${assigned?placedEq(assigned,isLocked):''}</div>
   </div>`
 }
 function placedEq(p,isLocked){
@@ -279,8 +278,8 @@ function placedEq(p,isLocked){
 function eqCard(p){
   const assignedGraph=getAssignedGraph(p.id);
   const unavailable=assignedGraph || locked.has(p.id);
-  if(unavailable) return `<div class="eq-card placed" data-eq-id="${p.id}"><div>${equationHTML(p)}<small>Placed</small></div></div>`;
-  return `<div class="eq-card" draggable="true" data-eq-id="${p.id}" ondragstart="dragEq(event,'${p.id}')"><div>${equationHTML(p)}<small>Drag onto a graph</small></div></div>`
+  if(unavailable) return `<div class="eq-card placed" data-eq-id="${p.id}"></div>`;
+  return `<div class="eq-card" draggable="true" data-eq-id="${p.id}" ondragstart="dragEq(event,'${p.id}')"><div>${equationHTML(p)}</div></div>`
 }
 
 function wireDragDrop(){
@@ -301,8 +300,7 @@ function dropOnGraph(e,graphId){
   assignments[graphId]=eqId;
   lastWrong.delete(graphId);
   render();
-  const placed=Object.keys(assignments).length;
-  setMsg(placed<5?`${placed} of 5 equations placed. Keep dragging, then press Submit.`:'All five are placed. Press Submit to check.');
+  setMsg(''); const fb=document.getElementById('feedbackBox'); if(fb) fb.style.display='none';
 }
 function unassignEq(eqId,doRender=true){
   for(const gid of Object.keys(assignments)){
@@ -310,7 +308,7 @@ function unassignEq(eqId,doRender=true){
       delete assignments[gid]; lastWrong.delete(gid);
     }
   }
-  if(doRender){render(); setMsg('Equation moved back. Drag it onto another graph.');}
+  if(doRender){render(); setMsg(''); const fb=document.getElementById('feedbackBox'); if(fb) fb.style.display='none';}
 }
 
 function primaryAction(){
@@ -320,7 +318,7 @@ function primaryAction(){
 
 function submitMatches(){
   const placed=Object.keys(assignments).length;
-  if(placed<5){setMsg(`You have ${placed} of 5 pairs placed. Place all five before submitting.`);return;}
+  if(placed<5){const fb=document.getElementById('feedbackBox'); if(fb) fb.style.display='block'; setMsg(`You have ${placed} of 5 pairs placed. Place all five before submitting.`);return;}
   stats.attempts++;
   let correctThisSubmit=0, newlyLocked=0;
   lastWrong=new Set();
@@ -336,6 +334,7 @@ function submitMatches(){
   save();
   render();
   const btn=document.getElementById('submitBtn');
+  const fb=document.getElementById('feedbackBox'); if(fb) fb.style.display='block';
   if(correctThisSubmit===5){
     setMsg('Perfect — all 5 pairs are correct.');
     if(btn){btn.textContent='Next Round';btn.disabled=false;}
