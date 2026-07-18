@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Order Up</title>
+  <style>
+    :root{
+      --ink:#1f2937;
+      --muted:#667085;
+      --line:#d7dee8;
+      --panel:#f8fafc;
+      --accent:#2f5f9f;
+      --accent-dark:#173f78;
+      --good:#237a3b;
+      --bad:#a52a2a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      color:var(--ink);
+      background:#eef2f7;
+    }
+    .app{
+      width:min(1000px,94vw);
+      margin:32px auto;
+    }
+    .card{
+      background:#fff;
+      border:1px solid #dce3ec;
+      border-radius:20px;
+      box-shadow:0 14px 38px rgba(30,50,80,.10);
+      padding:28px;
+    }
+    h1{
+      text-align:center;
+      margin:0;
+      font-size:clamp(2rem,5vw,3.2rem);
+      letter-spacing:-.03em;
+      color:var(--accent-dark);
+    }
+    .directions{
+      text-align:center;
+      color:var(--muted);
+      margin:10px auto 26px;
+      font-size:1.05rem;
+      line-height:1.5;
+      max-width:720px;
+    }
+    .section-label{
+      font-weight:800;
+      color:#445167;
+      margin-bottom:10px;
+      text-align:center;
+    }
+    .order-strip{
+      min-height:116px;
+      border:2px dashed #cbd5e1;
+      border-radius:16px;
+      background:#fbfcfe;
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:18px;
+      margin-bottom:24px;
+    }
+    .food-item{
+      width:66px;
+      height:66px;
+      border-radius:14px;
+      border:1px solid #dbe2ea;
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:2.3rem;
+      cursor:grab;
+      user-select:none;
+      box-shadow:0 4px 10px rgba(30,50,80,.07);
+      transition:transform .15s ease,opacity .15s ease;
+    }
+    .food-item:hover{transform:translateY(-2px)}
+    .food-item.dragging{opacity:.45}
+    .food-item.sorted{
+      width:54px;
+      height:54px;
+      font-size:1.9rem;
+      box-shadow:none;
+    }
+    .trays{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:16px;
+      margin-bottom:22px;
+    }
+    .tray{
+      min-height:220px;
+      border:2px solid var(--line);
+      border-radius:17px;
+      background:var(--panel);
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      transition:border-color .18s ease,background .18s ease;
+    }
+    .tray.dragover{
+      border-color:#7ca7d9;
+      background:#eef5ff;
+    }
+    .tray-title{
+      font-size:1.13rem;
+      font-weight:850;
+      text-align:center;
+      margin-bottom:10px;
+    }
+    .tray-items{
+      flex:1;
+      display:flex;
+      flex-wrap:wrap;
+      align-content:flex-start;
+      justify-content:center;
+      gap:8px;
+      min-height:92px;
+      padding:8px 0 14px;
+    }
+    .count-row{
+      border-top:1px solid #d8e0e9;
+      padding-top:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      font-weight:800;
+    }
+    .count-input{
+      width:72px;
+      height:48px;
+      border:2px solid #bcc8d6;
+      border-radius:10px;
+      font-size:1.45rem;
+      text-align:center;
+      font-weight:800;
+      color:var(--accent-dark);
+      background:#fff;
+    }
+    .count-input:focus{
+      outline:none;
+      border-color:#6e9bd0;
+      box-shadow:0 0 0 3px rgba(86,139,197,.15);
+    }
+    .receipt{
+      border:2px solid #cdd7e3;
+      border-radius:17px;
+      background:#fff;
+      padding:20px;
+      text-align:center;
+      transition:background .25s ease,border-color .25s ease,transform .25s ease,box-shadow .25s ease;
+    }
+    .receipt-label{
+      color:#5c687a;
+      font-size:.96rem;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      margin-bottom:8px;
+    }
+    .receipt-success,.receipt-error{
+      display:none;
+      align-items:center;
+      justify-content:center;
+      gap:.5rem;
+      font-size:1.2rem;
+      font-weight:900;
+      margin-bottom:10px;
+    }
+    .receipt-success{color:var(--good)}
+    .receipt-error{color:var(--bad)}
+    .round-icon{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:1.6em;
+      height:1.6em;
+      border-radius:50%;
+      color:#fff;
+      font-size:.8em;
+    }
+    .receipt-success .round-icon{background:var(--good)}
+    .receipt-error .round-icon{background:#b63a3a}
+    .receipt-output{
+      font-size:clamp(1.75rem,4.8vw,2.8rem);
+      font-weight:900;
+      color:var(--accent-dark);
+      line-height:1.35;
+      min-height:1.5em;
+    }
+    .card.correct .receipt{
+      background:#eefaf1;
+      border-color:#82cf98;
+      transform:scale(1.025);
+      box-shadow:0 10px 28px rgba(22,121,74,.12);
+    }
+    .card.correct .receipt-label{display:none}
+    .card.correct .receipt-success{display:flex}
+    .card.correct .receipt-output{font-size:clamp(2.1rem,5.5vw,3.35rem)}
+    .card.incorrect .receipt{
+      background:#fff1f1;
+      border-color:#e0a1a1;
+      box-shadow:0 10px 28px rgba(170,45,45,.10);
+    }
+    .card.incorrect .receipt-label{display:none}
+    .card.incorrect .receipt-error{display:flex}
+    .card.incorrect .receipt-output{color:#7f1d1d}
+    .actions{
+      display:flex;
+      justify-content:center;
+      gap:12px;
+      margin-top:20px;
+      flex-wrap:wrap;
+    }
+    button{
+      border:none;
+      border-radius:11px;
+      padding:13px 22px;
+      font-size:1rem;
+      font-weight:850;
+      cursor:pointer;
+    }
+    .primary{
+      background:var(--accent);
+      color:#fff;
+      box-shadow:0 5px 12px rgba(47,95,159,.23);
+    }
+    .secondary{
+      background:#edf2f7;
+      color:#354052;
+    }
+    .next{display:none}
+    .card.correct .check{display:none}
+    .card.correct .next{display:inline-block}
+    .card.correct .order-strip,
+    .card.correct .trays{
+      opacity:.35;
+      transition:opacity .25s ease;
+    }
+    @media (max-width:760px){
+      .card{padding:20px}
+      .trays{grid-template-columns:1fr}
+      .tray{min-height:180px}
+      .food-item{width:58px;height:58px;font-size:2rem}
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="card" id="card">
+      <h1>Order Up</h1>
+      <p class="directions">Sort each item into its matching tray, count each category, then simplify the order.</p>
+
+      <div class="section-label">Customer Order</div>
+      <div class="order-strip" id="orderStrip" aria-label="Customer order"></div>
+
+      <div class="trays">
+        <div class="tray" data-type="burger">
+          <div class="tray-title">🍔 Hamburgers</div>
+          <div class="tray-items" id="burgerTray"></div>
+          <div class="count-row"><input class="count-input" id="burgerCount" inputmode="numeric" aria-label="Hamburger count"> hamburgers</div>
+        </div>
+
+        <div class="tray" data-type="fries">
+          <div class="tray-title">🍟 French Fries</div>
+          <div class="tray-items" id="friesTray"></div>
+          <div class="count-row"><input class="count-input" id="friesCount" inputmode="numeric" aria-label="French fries count"> fries</div>
+        </div>
+
+        <div class="tray" data-type="nuggets">
+          <div class="tray-title">🐔 Chicken Nuggets</div>
+          <div class="tray-items" id="nuggetsTray"></div>
+          <div class="count-row"><input class="count-input" id="nuggetsCount" inputmode="numeric" aria-label="Chicken nugget count"> nuggets</div>
+        </div>
+
+        <div class="tray" data-type="coke">
+          <div class="tray-title">🥤 Coke</div>
+          <div class="tray-items" id="cokeTray"></div>
+          <div class="count-row"><input class="count-input" id="cokeCount" inputmode="numeric" aria-label="Coke count"> Cokes</div>
+        </div>
+      </div>
+
+      <div class="receipt" aria-live="polite">
+        <div class="receipt-label">Simplified Order</div>
+        <div class="receipt-success"><span class="round-icon">✓</span> Correct!</div>
+        <div class="receipt-error"><span class="round-icon">✕</span> Try Again</div>
+        <div class="receipt-output" id="receiptOutput">—</div>
+      </div>
+
+      <div class="actions">
+        <button class="secondary" id="resetBtn">Reset Order</button>
+        <button class="primary check" id="checkBtn">Check Order</button>
+        <button class="primary next" id="nextBtn">Next Order →</button>
+      </div>
+    </section>
+  </main>
+
+<script>
+  const foods={
+    burger:{icon:'🍔',label:'hamburgers'},
+    fries:{icon:'🍟',label:'fries'},
+    nuggets:{icon:'🐔',label:'nuggets'},
+    coke:{icon:'🥤',label:'cokes'}
+  };
+
+  const card=document.getElementById('card');
+  const orderStrip=document.getElementById('orderStrip');
+  const inputs={
+    burger:document.getElementById('burgerCount'),
+    fries:document.getElementById('friesCount'),
+    nuggets:document.getElementById('nuggetsCount'),
+    coke:document.getElementById('cokeCount')
+  };
+  const trays={
+    burger:document.getElementById('burgerTray'),
+    fries:document.getElementById('friesTray'),
+    nuggets:document.getElementById('nuggetsTray'),
+    coke:document.getElementById('cokeTray')
+  };
+  const receiptOutput=document.getElementById('receiptOutput');
+  let items=[];
+  let activeId=null;
+
+  function shuffle(a){
+    for(let i=a.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  }
+
+  function newOrder(){
+    card.classList.remove('correct','incorrect');
+    Object.values(inputs).forEach(i=>i.value='');
+    Object.values(trays).forEach(t=>t.innerHTML='');
+    orderStrip.innerHTML='';
+
+    const counts={
+      burger:Math.floor(Math.random()*4)+2,
+      fries:Math.floor(Math.random()*4)+2,
+      nuggets:Math.floor(Math.random()*5)+2,
+      coke:Math.floor(Math.random()*4)+2
+    };
+
+    items=[];
+    let id=0;
+    Object.entries(counts).forEach(([type,count])=>{
+      for(let i=0;i<count;i++) items.push({id:`food-${id++}`,type,location:'bank'});
+    });
+    shuffle(items);
+    render();
+    updateReceipt();
+  }
+
+  function makeItem(item){
+    const el=document.createElement('div');
+    el.className='food-item'+(item.location==='bank'?'':' sorted');
+    el.textContent=foods[item.type].icon;
+    el.draggable=true;
+    el.dataset.id=item.id;
+    el.title=foods[item.type].label;
+    el.addEventListener('dragstart',()=>{
+      activeId=item.id;
+      el.classList.add('dragging');
+    });
+    el.addEventListener('dragend',()=>{
+      activeId=null;
+      el.classList.remove('dragging');
+      document.querySelectorAll('.tray').forEach(t=>t.classList.remove('dragover'));
+    });
+    return el;
+  }
+
+  function render(){
+    orderStrip.innerHTML='';
+    Object.values(trays).forEach(t=>t.innerHTML='');
+    items.forEach(item=>{
+      const el=makeItem(item);
+      if(item.location==='bank') orderStrip.appendChild(el);
+      else trays[item.location].appendChild(el);
+    });
+  }
+
+  document.querySelectorAll('.tray').forEach(tray=>{
+    tray.addEventListener('dragover',e=>{
+      e.preventDefault();
+      tray.classList.add('dragover');
+    });
+    tray.addEventListener('dragleave',()=>tray.classList.remove('dragover'));
+    tray.addEventListener('drop',e=>{
+      e.preventDefault();
+      tray.classList.remove('dragover');
+      const item=items.find(x=>x.id===activeId);
+      if(item){
+        item.location=tray.dataset.type;
+        card.classList.remove('incorrect');
+        render();
+      }
+    });
+  });
+
+  orderStrip.addEventListener('dragover',e=>e.preventDefault());
+  orderStrip.addEventListener('drop',e=>{
+    e.preventDefault();
+    const item=items.find(x=>x.id===activeId);
+    if(item){
+      item.location='bank';
+      card.classList.remove('incorrect');
+      render();
+    }
+  });
+
+  function plural(n,word){
+    if(n===1){
+      if(word==='hamburgers') return 'hamburger';
+      if(word==='fries') return 'order of fries';
+      if(word==='nuggets') return 'order of chicken nuggets';
+      if(word==='cokes') return 'Coke';
+    }
+    if(word==='fries') return 'orders of fries';
+    if(word==='nuggets') return 'orders of chicken nuggets';
+    if(word==='cokes') return 'Cokes';
+    return word;
+  }
+
+  function updateReceipt(){
+    card.classList.remove('incorrect');
+    const parts=[];
+    for(const type of ['burger','fries','nuggets','coke']){
+      const raw=inputs[type].value.trim();
+      if(raw!==''){
+        const n=Number(raw);
+        if(Number.isFinite(n)) parts.push(`${n} ${plural(n,foods[type].label)}`);
+      }
+    }
+    if(parts.length){
+      let spoken='';
+      if(parts.length===1){
+        spoken=parts[0];
+      }else{
+        spoken=parts.slice(0,-1).join(', ') + ', and ' + parts[parts.length-1];
+      }
+      receiptOutput.textContent=`"I'd like ${spoken}."`;
+    }else{
+      receiptOutput.textContent='—';
+    }
+  }
+
+  Object.values(inputs).forEach(input=>{
+    input.addEventListener('input',()=>{
+      card.classList.remove('correct','incorrect');
+      updateReceipt();
+    });
+  });
+
+  function checkOrder(){
+    const trueCounts={burger:0,fries:0,nuggets:0,coke:0};
+    items.forEach(i=>trueCounts[i.type]++);
+
+    const sortedCorrect=items.every(i=>i.location==='bank'||i.location===i.type);
+    const valuesCorrect=Object.keys(inputs).every(type=>Number(inputs[type].value)===trueCounts[type]);
+    const complete=Object.values(inputs).every(i=>i.value.trim()!=='');
+
+    if(sortedCorrect && valuesCorrect && complete){
+      card.classList.remove('incorrect');
+      card.classList.add('correct');
+    }else{
+      card.classList.remove('correct');
+      card.classList.add('incorrect');
+    }
+  }
+
+  document.getElementById('checkBtn').addEventListener('click',checkOrder);
+  document.getElementById('nextBtn').addEventListener('click',newOrder);
+  document.getElementById('resetBtn').addEventListener('click',newOrder);
+
+  newOrder();
+</script>
+</body>
+</html>
