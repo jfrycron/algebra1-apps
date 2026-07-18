@@ -1,1 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Combining Like Terms</title>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --panel:#ffffff;
+      --ink:#20242c;
+      --muted:#6b7380;
+      --line:#d9dee8;
+      --accent:#3757d5;
+      --accent-dark:#2945b2;
+      --good:#16794a;
+      --good-bg:#eaf7f0;
+      --bad:#a23a35;
+      --bad-bg:#fff0ef;
+      --shadow:0 14px 42px rgba(36,46,74,.10);
+    }
 
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      min-height:100vh;
+      background:
+        radial-gradient(circle at top left, rgba(55,87,213,.08), transparent 34%),
+        var(--bg);
+      color:var(--ink);
+      font-family:Calibri,"Segoe UI",Arial,sans-serif;
+      display:flex;
+      justify-content:center;
+      padding:24px 16px 44px;
+    }
+
+    .app{width:min(1100px,100%)}
+
+    header{text-align:center;margin-bottom:22px}
+
+    h1{
+      margin:0;
+      font-size:clamp(2rem,5vw,3.35rem);
+      letter-spacing:-.035em;
+      font-weight:800;
+    }
+
+    .directions{
+      margin:10px auto 0;
+      max-width:760px;
+      color:var(--muted);
+      font-size:1.08rem;
+      line-height:1.45;
+    }
+
+    .card{
+      background:var(--panel);
+      border:1px solid rgba(217,222,232,.95);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      padding:clamp(20px,4vw,38px);
+    }
+
+    .prompt{
+      text-align:center;
+      font-size:clamp(1.15rem,3vw,1.5rem);
+      font-weight:800;
+      margin-bottom:16px;
+    }
+
+    .bank{
+      min-height:80px;
+      padding:18px 10px;
+      border:0;
+      border-radius:0;
+      background:transparent;
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:center;
+      gap:0;
+      margin-bottom:24px;
+      font-size:2rem;
+      line-height:1.8;
+    }
+
+
+    .expr-term{
+      display:inline-flex;
+      align-items:center;
+      padding:2px 6px;
+      margin:0 2px;
+      border-radius:8px;
+      cursor:grab;
+      transition:.15s ease;
+      font-size:inherit;
+      font-weight:800;
+      background:transparent;
+    }
+    .expr-term:hover{
+      background:#eef2ff;
+    }
+    .expr-term.ghost{
+      opacity:.35;
+    }
+
+
+    .bank{
+      column-gap:0;
+      row-gap:4px;
+    }
+
+    .expr-term{
+      padding:2px 4px;
+      margin:0;
+      font-size:clamp(1.8rem,4vw,2.5rem);
+    }
+
+    .expr-term .op{
+      display:inline-block;
+      min-width:1.55em;
+      text-align:center;
+      font-weight:700;
+    }
+
+    .expr-term.first .op{
+      min-width:0;
+      margin:0;
+    }
+
+    .bucket-items .expr-term{
+      font-size:clamp(1.55rem,3.5vw,2.15rem);
+      padding:8px 10px;
+      margin:2px;
+      background:#f1f3f7;
+      border-radius:12px;
+    }
+
+    .term{
+      min-width:auto;
+      padding:2px 6px;
+      border-radius:14px;
+      border:1px solid transparent;
+      background:transparent;
+      color:var(--ink);
+      font:inherit;
+      font-size:inherit;
+      font-weight:800;
+      cursor:grab;
+      user-select:none;
+      transition:.16s ease;
+      touch-action:none;
+    }
+
+    .term:hover{background:#e8ebf2;transform:translateY(-1px)}
+    .term:active{cursor:grabbing}
+    
+    .term.ghost{
+      opacity:.28;
+      background:#f5f5f5;
+      color:#888;
+      cursor:default;
+    }
+
+    .term.selected{
+      border-color:#6d80e8;
+      background:#e9edff;
+      color:#263da7;
+    }
+
+    .buckets{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:16px;
+    }
+
+    .bucket{
+      min-height:220px;
+      border:2px solid var(--line);
+      border-radius:20px;
+      background:#fbfcff;
+      padding:14px;
+      transition:.16s ease;
+    }
+
+    .bucket.dragover{
+      border-color:var(--accent);
+      background:#f1f4ff;
+      box-shadow:0 0 0 4px rgba(55,87,213,.09);
+    }
+
+    .bucket-title{
+      text-align:center;
+      font-size:1.2rem;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+
+    .bucket-subtitle{
+      text-align:center;
+      color:var(--muted);
+      font-size:.9rem;
+      margin-bottom:12px;
+    }
+
+    .bucket-items{
+      min-height:118px;
+      display:flex;
+      flex-wrap:wrap;
+      align-content:flex-start;
+      justify-content:center;
+      gap:8px;
+      padding:6px 0 12px;
+    }
+
+    .combine-area{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:8px;
+      border-top:1px solid var(--line);
+      padding-top:12px;
+    }
+
+    .combine-area label{
+      color:var(--muted);
+      font-size:.88rem;
+      font-weight:700;
+    }
+
+
+    .term-entry{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
+      min-width:120px;
+    }
+
+    .term-suffix{
+      font-size:1.8rem;
+      font-weight:800;
+      line-height:1;
+    }
+
+    .constant-entry{
+      min-width:86px;
+    }
+
+    .combine-area input{
+      width:86px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      padding:8px 10px;
+      text-align:center;
+      font:inherit;
+      font-size:1.25rem;
+      font-weight:800;
+      outline:none;
+    }
+
+
+    input[type="number"]{
+      appearance:textfield;
+      -moz-appearance:textfield;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button{
+      -webkit-appearance:none;
+      margin:0;
+    }
+
+    .combine-area input:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(55,87,213,.11);
+    }
+
+
+    .live-preview{
+      margin:24px auto 0;
+      padding:18px 20px;
+      max-width:720px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fafbfe;
+      text-align:center;
+    }
+
+    .live-preview-label{
+      color:var(--muted);
+      font-size:.95rem;
+      font-weight:700;
+      margin-bottom:6px;
+    }
+
+    .live-preview-expression{
+      min-height:52px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:clamp(2rem,5vw,3.2rem);
+      font-weight:800;
+      letter-spacing:-.02em;
+    }
+
+    .controls{
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:24px;
+    }
+
+    button{
+      border:0;
+      border-radius:12px;
+      padding:12px 20px;
+      font:inherit;
+      font-weight:800;
+      cursor:pointer;
+      transition:.15s ease;
+    }
+
+    button:active{transform:translateY(1px)}
+    .primary{background:var(--accent);color:white}
+    .primary:hover{background:var(--accent-dark)}
+    .secondary{background:#edf0f6;color:var(--ink)}
+    .secondary:hover{background:#e3e7ef}
+    .ghost{background:transparent;color:var(--accent-dark);border:1px solid var(--line)}
+
+    .feedback{
+      display:none;
+      max-width:760px;
+      margin:20px auto 0;
+      border-radius:16px;
+      padding:15px 18px;
+      line-height:1.45;
+    }
+
+    .feedback.show{display:block}
+    .feedback.good{background:var(--good-bg);color:var(--good)}
+    .feedback.bad{background:var(--bad-bg);color:var(--bad)}
+    .feedback strong{display:block;font-size:1.08rem;margin-bottom:3px}
+
+
+    .card.celebrating .buckets,
+    .card.celebrating .bank,
+    .card.celebrating .prompt{
+      opacity:.4;
+      transition:opacity .3s ease;
+    }
+
+    .card.celebrating .controls{
+      display:none;
+    }
+
+    .card.celebrating .live-preview{
+      border-color:rgba(55,87,213,.35);
+      background:#f3f6ff;
+      transform:scale(1.04);
+      transition:transform .28s ease, background .28s ease, border-color .28s ease;
+    }
+
+    .card.celebrating .live-preview-expression{
+      color:var(--accent-dark);
+      font-size:clamp(2.5rem,7vw,4.4rem);
+      transition:font-size .28s ease, color .28s ease;
+    }
+
+    .success-check{
+      width:58px;
+      height:58px;
+      margin:0 auto 10px;
+      border-radius:50%;
+      background:var(--good);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:2rem;
+      font-weight:900;
+      box-shadow:0 8px 22px rgba(22,121,74,.2);
+    }
+
+    .success-message{
+      font-size:1.1rem;
+      font-weight:800;
+      color:var(--good);
+      margin-bottom:14px;
+    }
+
+    .final{
+      display:none;
+      text-align:center;
+      margin-top:22px;
+    }
+
+    .final.show{display:block}
+
+    .comparison{
+      display:grid;
+      grid-template-columns:1fr auto 1fr;
+      gap:18px;
+      align-items:center;
+      max-width:900px;
+      margin:14px auto 18px;
+    }
+
+    .comparison-box{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#fafbfe;
+      padding:16px;
+    }
+
+    .comparison-label{
+      color:var(--muted);
+      font-size:.88rem;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      margin-bottom:8px;
+    }
+
+    .original-answer, .final-answer{
+      font-size:clamp(1.55rem,4vw,2.8rem);
+      font-weight:800;
+      line-height:1.35;
+    }
+
+    .comparison-arrow{
+      font-size:2rem;
+      font-weight:800;
+      color:var(--accent);
+    }
+
+    .statusbar{
+      margin-top:16px;
+      display:flex;
+      justify-content:space-between;
+      gap:14px;
+      color:var(--muted);
+      font-size:.92rem;
+      padding:0 4px;
+    }
+
+    @media(max-width:760px){
+      .buckets{grid-template-columns:1fr}
+      .bucket{min-height:180px}
+      .bank{min-height:160px}
+      .comparison{grid-template-columns:1fr;gap:10px}
+      .comparison-arrow{transform:rotate(90deg)}
+      .statusbar{flex-direction:column;align-items:center}
+    }
+  
+    .live-success{
+      display:none;
+      align-items:center;
+      justify-content:center;
+      gap:.45rem;
+      color:var(--good);
+      font-size:1.2rem;
+      font-weight:900;
+      margin-bottom:8px;
+    }
+
+    .live-check{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:1.55em;
+      height:1.55em;
+      border-radius:50%;
+      background:var(--good);
+      color:#fff;
+      font-size:.82em;
+      line-height:1;
+    }
+
+    .card.celebrating .live-preview{
+      border-color:#82cf98;
+      background:#eefaf1;
+      transform:scale(1.04);
+      box-shadow:0 10px 28px rgba(22,121,74,.12);
+      transition:transform .28s ease, background .28s ease, border-color .28s ease, box-shadow .28s ease;
+    }
+
+    .card.celebrating .live-preview-label{
+      display:none;
+    }
+
+    .card.celebrating .live-success{
+      display:flex;
+    }
+
+    .card.celebrating .live-preview-expression{
+      color:var(--accent-dark);
+      font-size:clamp(2.5rem,7vw,4.4rem);
+      transition:font-size .28s ease, color .28s ease;
+    }
+
+    .card.celebrating + .statusbar{
+      opacity:.45;
+    }
+
+
+    .live-error{
+      display:none;
+      align-items:center;
+      justify-content:center;
+      gap:.45rem;
+      color:#a52a2a;
+      font-size:1.2rem;
+      font-weight:900;
+      margin-bottom:8px;
+    }
+    .live-x{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:1.55em;
+      height:1.55em;
+      border-radius:50%;
+      background:#b63a3a;
+      color:#fff;
+      font-size:.82em;
+      line-height:1;
+    }
+    .card.incorrect .live-preview{
+      border-color:#e0a1a1;
+      background:#fff1f1;
+      box-shadow:0 10px 28px rgba(170,45,45,.10);
+      transition:background .22s ease,border-color .22s ease,box-shadow .22s ease;
+    }
+    .card.incorrect .live-preview-label{display:none;}
+    .card.incorrect .live-error{display:flex;}
+    .card.incorrect .live-preview-expression{color:#7f1d1d;}
+    </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>Combining Like Terms</h1>
+      <p class="directions">Sort every term into the correct bucket. Then combine the coefficients in each bucket to build the simplified expression.</p>
+    </header>
+
+    <section class="card">
+      <div id="prompt" class="prompt">Drag or tap each term into a bucket.</div>
+
+      <div id="bank" class="bank" aria-label="Term bank"></div>
+
+      <div class="buckets">
+        <section class="bucket" data-type="x2">
+          <div class="bucket-title">x² Terms</div>
+          <div class="bucket-subtitle">Same variable part: x²</div>
+          <div id="bucket-x2" class="bucket-items"></div>
+          <div class="combine-area">
+            <label for="input-x2">Combined term</label>
+            <div class="term-entry">
+              <input id="input-x2" type="number" inputmode="numeric" aria-label="Combined x squared coefficient">
+              <span class="term-suffix">x²</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="bucket" data-type="x">
+          <div class="bucket-title">x Terms</div>
+          <div class="bucket-subtitle">Same variable part: x</div>
+          <div id="bucket-x" class="bucket-items"></div>
+          <div class="combine-area">
+            <label for="input-x">Combined term</label>
+            <div class="term-entry">
+              <input id="input-x" type="number" inputmode="numeric" aria-label="Combined x coefficient">
+              <span class="term-suffix">x</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="bucket" data-type="c">
+          <div class="bucket-title">Constants</div>
+          <div class="bucket-subtitle">Numbers without variables</div>
+          <div id="bucket-c" class="bucket-items"></div>
+          <div class="combine-area">
+            <label for="input-c">Combined term</label>
+            <div class="term-entry constant-entry">
+              <input id="input-c" type="number" inputmode="numeric" aria-label="Combined constant">
+            </div>
+          </div>
+        </section>
+      </div>
+
+
+      <div class="live-preview" aria-live="polite">
+        <div class="live-preview-label">Simplified expression</div>
+        <div class="live-success"><span class="live-check">✓</span> Correct!</div>
+        <div class="live-error"><span class="live-x">✕</span> Try Again</div>
+        <div id="livePreview" class="live-preview-expression">—</div>
+      </div>
+
+      <div class="controls">
+        <button id="checkBtn" class="primary">Check Work</button>
+        <button id="resetBtn" class="secondary">Reset Problem</button>
+      </div>
+
+      <div id="feedback" class="feedback" aria-live="polite"></div>
+
+      <div id="final" class="final">
+        <button id="nextBtn" class="primary">Next Problem →</button>
+      </div>
+    </section>
+
+    <div class="statusbar">
+      <div id="status">0 completed</div>
+      <div>Sort first · Combine second</div>
+    </div>
+  </main>
+
+<script>
+(() => {
+  const TYPES=['x2','x','c'];
+  const SYMBOLS={x2:'x²',x:'x',c:''};
+
+  const bank=document.getElementById('bank');
+  const feedback=document.getElementById('feedback');
+  const final=document.getElementById('final');
+  const status=document.getElementById('status');
+  const card=document.querySelector('.card');
+  const livePreview=document.getElementById('livePreview');
+
+  const inputs={
+    x2:document.getElementById('input-x2'),
+    x:document.getElementById('input-x'),
+    c:document.getElementById('input-c')
+  };
+
+  let terms=[];
+  let originalTerms=[];
+  let selectedId=null;
+  let completed=0;
+
+  const randInt=(min,max)=>Math.floor(Math.random()*(max-min+1))+min;
+
+  function nonZero(){
+    let n=0;
+    while(n===0)n=randInt(-9,9);
+    return n;
+  }
+
+  function uid(){
+    return Math.random().toString(36).slice(2)+Date.now().toString(36);
+  }
+
+  function generate(){
+    let counts;
+    do{
+      counts={x2:randInt(0,3),x:randInt(0,3),c:randInt(0,3)};
+    }while(counts.x2+counts.x+counts.c<5);
+
+    const out=[];
+    TYPES.forEach(type=>{
+      for(let i=0;i<counts[type];i++){
+        out.push({id:uid(),type,coeff:nonZero(),location:'bank'});
+      }
+    });
+
+    for(let i=out.length-1;i>0;i--){
+      const j=randInt(0,i);
+      [out[i],out[j]]=[out[j],out[i]];
+    }
+    return out;
+  }
+
+  function termParts(term, isFirst=false){
+    const abs=Math.abs(term.coeff);
+    const variable=SYMBOLS[term.type];
+    const hideOne=variable && abs===1;
+    const body=`${hideOne?'':abs}${variable}`;
+
+    if(isFirst){
+      return {
+        sign:term.coeff<0?'−':'',
+        body
+      };
+    }
+
+    return {
+      sign:term.coeff<0?'−':'+',
+      body
+    };
+  }
+
+
+  function originalExpressionText(list){
+    if(!list.length)return '0';
+    return list.map((t,i)=>{
+      const abs=Math.abs(t.coeff);
+      const variable=SYMBOLS[t.type];
+      const hideOne=variable && abs===1;
+      const number=hideOne?'':abs;
+      const sign=i===0?(t.coeff<0?'−':''):(t.coeff<0?' − ':' + ');
+      return `${sign}${number}${variable}`;
+    }).join('');
+  }
+
+  function simplifiedText(totals){
+    const ordered=[
+      {type:'x2',coeff:totals.x2},
+      {type:'x',coeff:totals.x},
+      {type:'c',coeff:totals.c}
+    ].filter(t=>t.coeff!==0);
+
+    if(!ordered.length)return '0';
+
+    return ordered.map((t,i)=>{
+      const abs=Math.abs(t.coeff);
+      const variable=SYMBOLS[t.type];
+      const hideOne=variable && abs===1;
+      const number=hideOne?'':abs;
+      const sign=i===0?(t.coeff<0?'−':''):(t.coeff<0?' − ':' + ');
+      return `${sign}${number}${variable}`;
+    }).join('');
+  }
+
+  function createTermButton(term, isFirst=false){
+    const btn=document.createElement('button');
+    btn.className='expr-term';
+    if(isFirst)btn.classList.add('first');
+    if(term.id===selectedId)btn.classList.add('selected');
+
+    const parts=termParts(term,isFirst);
+    btn.innerHTML=`<span class="op">${parts.sign}</span><span class="term-body">${parts.body}</span>`;
+    btn.draggable=true;
+    btn.dataset.id=term.id;
+
+    btn.addEventListener('dragstart',e=>{
+      e.dataTransfer.setData('text/plain',term.id);
+    });
+
+    btn.addEventListener('click',()=>{
+      if(selectedId===term.id){
+        selectedId=null;
+      }else if(selectedId){
+        moveTerm(selectedId,term.location==='bank'?'bank':term.location);
+        selectedId=null;
+      }else{
+        selectedId=term.id;
+      }
+      render();
+    });
+
+    return btn;
+  }
+
+  function render(){
+    bank.innerHTML='';
+    TYPES.forEach(type=>document.getElementById(`bucket-${type}`).innerHTML='');
+
+    terms.forEach((term,index)=>{
+      const bankBtn=createTermButton(term,index===0);
+
+      if(term.location==='bank'){
+        bank.appendChild(bankBtn);
+      }else{
+        const ghost=bankBtn.cloneNode(true);
+        ghost.classList.add('ghost');
+        ghost.draggable=false;
+        bank.appendChild(ghost);
+
+        const bucketBtn=createTermButton(term,false);
+        bucketBtn.classList.remove('first');
+        document.getElementById(`bucket-${term.location}`).appendChild(bucketBtn);
+      }
+    });
+  }
+
+  function moveTerm(id,location){
+    const term=terms.find(t=>t.id===id);
+    if(term)term.location=location;
+    clearFeedback();
+    final.className='final';
+  }
+
+  function setupDropZone(el,location){
+    el.addEventListener('dragover',e=>{
+      e.preventDefault();
+      el.classList.add('dragover');
+    });
+    el.addEventListener('dragleave',()=>el.classList.remove('dragover'));
+    el.addEventListener('drop',e=>{
+      e.preventDefault();
+      el.classList.remove('dragover');
+      const id=e.dataTransfer.getData('text/plain');
+      moveTerm(id,location);
+      render();
+    });
+    el.addEventListener('click',e=>{
+      if(e.target.closest('.term'))return;
+      if(selectedId){
+        moveTerm(selectedId,location);
+        selectedId=null;
+        render();
+      }
+    });
+  }
+
+  function setFeedback(kind,title,text){
+    feedback.className=`feedback show ${kind}`;
+    feedback.innerHTML=`<strong>${title}</strong>${text}`;
+  }
+
+  function clearFeedback(){
+    feedback.className='feedback';
+    feedback.innerHTML='';
+  }
+
+  function totals(){
+    const out={x2:0,x:0,c:0};
+    terms.forEach(t=>out[t.type]+=t.coeff);
+    return out;
+  }
+
+
+  function updateLivePreview(){
+    const values={
+      x2:inputs.x2.value==='' ? null : Number(inputs.x2.value),
+      x:inputs.x.value==='' ? null : Number(inputs.x.value),
+      c:inputs.c.value==='' ? null : Number(inputs.c.value)
+    };
+
+    const entered=TYPES.some(type=>values[type]!==null);
+
+    if(!entered){
+      livePreview.textContent='—';
+      return;
+    }
+
+    const ordered=[
+      {type:'x2',coeff:values.x2},
+      {type:'x',coeff:values.x},
+      {type:'c',coeff:values.c}
+    ].filter(t=>t.coeff!==null && t.coeff!==0);
+
+    if(!ordered.length){
+      livePreview.textContent='0';
+      return;
+    }
+
+    livePreview.textContent=ordered.map((t,i)=>{
+      const abs=Math.abs(t.coeff);
+      const variable=SYMBOLS[t.type];
+      const hideOne=variable && abs===1;
+      const number=hideOne?'':abs;
+      const sign=i===0?(t.coeff<0?'−':''):(t.coeff<0?' − ':' + ');
+      return `${sign}${number}${variable}`;
+    }).join('');
+  }
+
+  function showInlineError(){
+    card.classList.remove('celebrating');
+    card.classList.add('incorrect');
+    final.className='final';
+    clearFeedback();
+  }
+
+  function checkWork(){
+const answers={};
+    for(const type of TYPES){
+      if(inputs[type].value===''){
+        showInlineError();
+        return;
+      }
+      answers[type]=Number(inputs[type].value);
+    }
+
+    const correct=totals();
+    const wrong=TYPES.filter(type=>answers[type]!==correct[type]);
+
+    if(wrong.length){
+      showInlineError();
+      return;
+    }
+
+    completed++;
+    status.textContent=`${completed} completed`;
+    clearFeedback();
+    card.classList.remove('incorrect');
+    final.className='final show';
+    card.classList.add('celebrating');
+  }
+
+  function resetProblem(){
+    terms=originalTerms.map(t=>({...t,location:'bank'}));
+    selectedId=null;
+    Object.values(inputs).forEach(input=>input.value='');
+    updateLivePreview();
+    clearFeedback();
+    final.className='final';
+    card.classList.remove('celebrating');
+    card.classList.remove('incorrect');
+    render();
+  }
+
+  function newProblem(){
+    terms=generate();
+    originalTerms=terms.map(t=>({...t}));
+    selectedId=null;
+    Object.values(inputs).forEach(input=>input.value='');
+    updateLivePreview();
+    clearFeedback();
+    final.className='final';
+    card.classList.remove('celebrating');
+    card.classList.remove('incorrect');
+    render();
+  }
+
+  setupDropZone(bank,'bank');
+  document.querySelectorAll('.bucket').forEach(bucket=>{
+    setupDropZone(bucket,bucket.dataset.type);
+  });
+
+  Object.values(inputs).forEach(input=>input.addEventListener('input',updateLivePreview));
+  document.getElementById('checkBtn').addEventListener('click',checkWork);
+  document.getElementById('resetBtn').addEventListener('click',resetProblem);
+  document.getElementById('nextBtn').addEventListener('click',newProblem);
+
+  newProblem();
+  updateLivePreview();
+})();
+</script>
+</body>
+</html>
