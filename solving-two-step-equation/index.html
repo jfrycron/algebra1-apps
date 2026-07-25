@@ -1,1 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Solving Equations — Drag Prototype</title>
+<style>
+:root{
+  --bg:#EEF3F8; --paper:#FFFFFF; --ink:#24211e; --muted:#66717d;
+  --accent:#b95525; --good:#286654; --bad:#842f2f; --line:#dfd4c7;
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:#EEF3F8;font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
+.app{max-width:980px;margin:auto;padding:20px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(30px,5vw,48px);letter-spacing:-1px}.subtitle{margin:6px 0 0;color:var(--muted)}
+button{border:0;border-radius:12px;padding:12px 16px;font-size:15px;font-weight:800;cursor:pointer}.primary{background:var(--accent);color:white}.secondary{background:#eee5db;color:#3f3128;border:1px solid #d8c8b9}
+.board{position:relative;margin-top:22px;background:var(--paper);border:2px solid #D8E0E8;border-radius:10px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,.08);transition:background 1.2s ease,border-color 1.2s ease,box-shadow 1.2s ease}.board.completed{background:#CFEFD8;border-color:#8CC9A0;box-shadow:0 10px 28px rgba(40,102,84,.20)}
+.instruction{text-align:center;font-weight:800;background:#fff7e9;border:1px solid #eed1a4;border-radius:14px;padding:12px;margin-bottom:24px}
+.equation-stage{min-height:250px;display:flex;align-items:center;justify-content:center;position:relative;overflow:visible}
+.equation{display:flex;align-items:center;justify-content:center;gap:.34em;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(34px,7vw,64px);font-weight:600;line-height:1.2;white-space:nowrap;padding:45px 15px}
+.side-expression{display:flex;align-items:center;justify-content:center;gap:.34em;min-height:1.35em;position:relative}
+.side-expression.compress-empty-first,.side-expression.compress-empty-second,.side-expression.compress-zero{gap:0}
+.side-expression .lane{transition:none}
+.equation.measure-no-transition .side-expression,.equation.measure-no-transition .lane{transition:none!important}
+.term.compression-placeholder{opacity:0!important}
+.equation.squeezing{animation:equationSqueeze 1.8s cubic-bezier(.22,.8,.25,1)}
+@keyframes equationSqueeze{0%{letter-spacing:0}45%{letter-spacing:.018em}100%{letter-spacing:0}}
+.lane{position:relative;height:1.35em;display:flex;align-items:center;justify-content:center;min-width:0}.term{position:relative;display:inline-flex;align-items:baseline;justify-content:center;padding:5px 3px;border-radius:8px;cursor:grab;touch-action:none;user-select:none;transition:background .35s,transform .35s,opacity .55s,box-shadow .35s}
+.term-sign{position:static;display:inline-block;min-width:.55em;text-align:center;margin-right:.12em;pointer-events:none}
+.term-core{display:inline-block}
+.term.merging-source{opacity:0!important}
+.term.merging-target{animation:targetFade 4.35s ease forwards}
+@keyframes targetFade{0%,70%{opacity:1}84%,100%{opacity:0}}
+.zero-target{font-family:"Cambria Math",Cambria,Georgia,serif;opacity:.62;cursor:grab;padding:5px 12px;border-radius:8px;transition:.35s}.zero-target.target{opacity:1;background:#e7f3ee;box-shadow:0 0 0 4px rgba(40,102,84,.18);transform:scale(1.06)}.term:hover,.term.ready{background:#eaf0f8;box-shadow:0 0 0 3px rgba(72,104,149,.12)}.term:active{cursor:grabbing}.term.source{opacity:.2}.term.target{background:#e7f3ee;box-shadow:0 0 0 4px rgba(40,102,84,.18);transform:scale(1.06)}
+.equals{display:inline-flex;align-items:center;justify-content:center;min-width:.7em;text-align:center;color:#423a34;font-weight:700;margin:0 .08em;transition:margin 1.5s ease}
+.equation.compact-final{gap:.24em}
+.equation.compact-final .side-expression{display:flex;width:auto;min-width:0;grid-template-columns:none;gap:0;transition:width 1.5s ease}
+.equation.compact-final .lane:empty{display:none}
+.equation.compact-final .lane{width:auto;height:1.35em}
+.equation.compact-final .term-sign{min-width:.48em;margin-right:.08em}
+.equation.compact-final .equals{margin:0 .06em}
+.drag-ghost{position:fixed;left:0;top:0;z-index:9999;pointer-events:none;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(34px,7vw,64px);font-weight:600;padding:5px 9px;border-radius:9px;background:transparent;box-shadow:none;opacity:.62;text-shadow:0 2px 8px rgba(255,255,255,.95);transform:translate(-50%,-50%);transition:color .28s,transform .28s,opacity .28s}
+.drag-ghost.crossed{background:transparent;color:#8b3d16;opacity:.72;transform:translate(-50%,-50%) scale(1.1)}
+.cross-note{position:fixed;z-index:9998;pointer-events:none;transform:translate(-50%,-115%);font-weight:800;font-size:14px;background:#2f2925;color:#fff;padding:7px 10px;border-radius:9px;white-space:nowrap;opacity:0;transition:opacity .12s}.cross-note.show{opacity:1}
+.merge-preview{position:absolute;left:0;top:0;pointer-events:none;z-index:20;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(34px,7vw,64px);font-weight:600;line-height:1.2;white-space:nowrap}
+.merge-group{position:absolute;left:0;top:0;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;white-space:nowrap}
+.merge-pair{position:relative;display:flex;align-items:baseline;justify-content:center;gap:0;white-space:nowrap;will-change:transform,opacity}
+.merge-piece{position:absolute;left:0;top:0;display:inline-block;will-change:transform,opacity,color}
+.merge-piece .merge-old-sign,.merge-piece .merge-old-core{display:inline-block;will-change:opacity,filter;}.merge-piece .merge-old-sign{margin-right:.02em}
+.term-core .variable-symbol,.term-core .coeff-one{display:inline-block}
+.term-core .coeff-one{will-change:opacity,filter}
+.merge-piece.like-highlight,.merge-result.like-highlight{color:#1f75fe;text-shadow:0 0 .01px currentColor}
+.merge-underline{height:3px;width:100%;min-width:2.2em;margin-top:.08em;border-radius:999px;background:rgba(80,72,66,.20);transform:scaleX(0);transform-origin:center;opacity:0;will-change:transform,opacity,width}
+.merge-result{position:absolute;left:0;top:0;display:inline-flex;align-items:baseline;justify-content:center;padding:5px 3px;border-radius:8px;opacity:0;transform:translate(-50%,-50%);white-space:nowrap;will-change:transform,opacity,color}.merge-result .term-sign,.merge-result .term-core,.merge-result .coeff-one,.merge-result .variable-symbol{font:inherit;line-height:inherit}
+.drop-spacer{display:flex;align-items:center;justify-content:center;width:0;min-width:0;height:1.35em;overflow:visible;opacity:0;transition:width .95s cubic-bezier(.22,.8,.25,1),opacity .45s ease;flex:0 0 auto}
+.drop-spacer.show{opacity:1}
+.drop-slot{position:relative;z-index:18;display:flex;align-items:baseline;justify-content:center;height:1.18em;padding:4px 9px;border:2px dashed rgba(92,84,77,.24);border-radius:9px;background:rgba(92,84,77,.025);font-family:"Cambria Math",Cambria,Georgia,serif;font-size:inherit;font-weight:600;white-space:nowrap;pointer-events:none;opacity:0;transform:scaleX(.78);transform-origin:left center;transition:opacity .45s ease,transform .8s cubic-bezier(.22,.8,.25,1)}
+.drop-spacer.show .drop-slot{opacity:1;transform:scaleX(1)}
+.drop-slot .slot-text{opacity:.28}
+.term.like-match{background:rgba(40,102,84,.09);color:var(--good);box-shadow:0 0 0 3px rgba(40,102,84,.13)}
+.equation.insertion-open .term,.equation.insertion-open .zero-target,.equation.insertion-open .equals{transition:transform .9s cubic-bezier(.22,.8,.25,1),background .35s,color .35s,box-shadow .35s,opacity .35s}
 
+
+.division-zone{display:none;flex-direction:column;align-items:center;gap:10px;margin:-12px auto 18px;max-width:460px}.division-zone.show{display:flex}.division-prompt{font-weight:800;text-align:center}.division-entry{display:flex;align-items:center;justify-content:center;gap:10px}.division-entry.hidden{display:none}.division-choices{display:grid;grid-template-columns:repeat(2,minmax(108px,1fr));gap:12px;width:min(100%,360px)}.division-choices.two-options{grid-template-columns:minmax(108px,180px);justify-content:center}.division-choice{min-height:58px;padding:12px 18px;border:2px solid #bda78f;border-radius:14px;background:#fff;color:var(--ink);font-family:"Cambria Math",Cambria,Georgia,serif;font-size:24px;font-weight:800;box-shadow:0 3px 9px rgba(70,48,30,.09)}.division-choice:hover{border-color:#568675;transform:translateY(-1px)}.division-choice:active{transform:translateY(0)}.division-choice.wrong{border-color:#b94a48;background:#fff0ef;color:#8b2826;animation:choiceShake .28s ease}.division-choice.correct{border-color:var(--good);background:#edf8f3;color:var(--good)}.division-choice:disabled{cursor:default}.division-input{display:none}.division-submit{display:none}@keyframes choiceShake{0%,100%{transform:translateX(0)}30%{transform:translateX(-5px)}70%{transform:translateX(5px)}}.division-continue{display:none;min-width:170px;padding:14px 22px;background:var(--good);color:#fff;font-size:18px;box-shadow:0 5px 14px rgba(40,102,84,.18)}.division-continue.show{display:block}.division-continue:disabled{opacity:.55;cursor:default;box-shadow:none}.division-work{display:none}
+.inplace-division{display:flex;align-items:center;justify-content:center;gap:.24em;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(34px,7vw,64px);font-weight:600;white-space:nowrap}
+.inplace-fraction{display:inline-grid;grid-template-rows:auto 3px auto;justify-items:center;align-items:center;min-width:1.35em;opacity:0;filter:blur(5px);animation:fractionDissolve 1.25s cubic-bezier(.22,.8,.25,1) forwards}
+.inplace-fraction .num{padding:0 .12em .05em;display:inline-flex;align-items:baseline;justify-content:center}
+.inplace-fraction .bar{height:3px;background:currentColor;width:100%;opacity:1}
+.inplace-fraction .den{padding-top:.03em;opacity:1;transform:none}
+.inplace-division .equals{margin:0 .06em}
+.cancel-coeff,.cancel-x-den,.keep-x,.other-num,.other-den,.fraction-bar,.answer-value{display:inline-block;will-change:transform,opacity,filter}
+.inplace-fraction{position:relative}
+.answer-value{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);opacity:0;white-space:nowrap}
+.final-travel-layer{position:absolute;inset:0;pointer-events:none;z-index:40;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(34px,7vw,64px);font-weight:600;white-space:nowrap}.final-travel-piece{position:absolute;left:0;top:0;will-change:transform}.final-measure{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:.24em;visibility:hidden;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(34px,7vw,64px);font-weight:600;white-space:nowrap}.final-simple{display:flex;align-items:center;justify-content:center;gap:.24em;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(34px,7vw,64px);font-weight:600;white-space:nowrap}
+
+.completion-check-inline{position:absolute;left:0;top:0;color:var(--good);width:clamp(38px,6vw,56px);height:clamp(38px,6vw,56px);border:clamp(2px,.34vw,4px) solid currentColor;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:Arial,Helvetica,sans-serif;font-size:clamp(25px,4vw,38px);font-weight:900;line-height:1;opacity:0;transform-origin:center;will-change:transform,opacity}
+.completion-check-inline::before{content:'✓';transform:translateY(-.02em)}
+.completion-check-inline.show{animation:checkAppear 1.05s .2s cubic-bezier(.22,.8,.25,1) forwards}
+.final-travel-layer.celebrate{animation:finalAnswerCelebrate 1.25s cubic-bezier(.2,.9,.25,1) forwards}
+.equation.static-celebrate{animation:finalAnswerCelebrate 1.25s cubic-bezier(.2,.9,.25,1) forwards}
+@keyframes checkAppear{0%{opacity:0;transform:translateY(-50%) scale(.45) rotate(-12deg)}62%{opacity:1;transform:translateY(-50%) scale(1.15) rotate(2deg)}100%{opacity:1;transform:translateY(-50%) scale(1) rotate(0)}}
+@keyframes finalAnswerCelebrate{0%{transform:scale(1)}55%{transform:scale(1.17)}100%{transform:scale(1.12)}}
+@keyframes fractionDissolve{0%{opacity:0;filter:blur(5px)}45%{opacity:.38;filter:blur(2px)}100%{opacity:1;filter:blur(0)}}
+@keyframes denDrop{to{opacity:1;transform:translateY(0)}}
+.message[hidden]{display:none!important}.message{min-height:58px;margin-top:8px;padding:14px 16px;border:1px solid #dfd3c7;border-radius:14px;background:#f5f0e9;display:flex;align-items:center;justify-content:center;text-align:center;font-size:17px;font-weight:800}.message.good{background:#eaf4f0;border-color:#bcd6cc;color:#24594b}.message.bad{background:#faecec;border-color:#e4bebe;color:#7c2b2b}
+.actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:16px}
+button[hidden]{display:none!important}
+.session-stats{display:flex;justify-content:center;gap:22px;margin:16px auto 0;padding:9px 16px;width:max-content;max-width:100%;border:1px solid #ded2c5;border-radius:999px;background:rgba(255,255,255,.72);color:var(--muted);font-size:14px;font-weight:800}.session-stats strong{color:var(--ink);font-size:16px;margin-left:5px}.check-work-btn{opacity:0;transform:translateY(5px);transition:opacity .45s ease,transform .45s ease}.check-work-btn.reveal{opacity:1;transform:translateY(0)}
+.verification-panel{position:absolute;inset:8px 0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;opacity:0;transform:translateY(8px);transition:opacity .38s ease,transform .38s ease;pointer-events:none}.verification-panel.show{opacity:1;transform:translateY(0);pointer-events:auto}.equation-stage.verifying{display:block;min-height:250px}.equation-stage.verifying .equation{display:none}.equation-stage.verifying .verification-panel{position:relative;inset:auto;width:100%;padding:0;justify-content:flex-start}.verification-card{position:relative;box-sizing:border-box;width:min(680px,96%);margin:0 auto;background:#fff;border:1px solid #dfd4c7;border-radius:20px;padding:18px 20px;box-shadow:0 10px 25px rgba(62,42,24,.12);overflow:hidden}.verification-close{position:absolute;top:9px;right:11px;width:36px;height:36px;border:0;border-radius:50%;background:transparent;color:#6f665f;font:700 28px/1 Arial,sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .18s ease,color .18s ease,transform .12s ease}.verification-close:hover{background:#f1ebe5;color:#2f2925}.verification-close:active{transform:scale(.94)}.verification-close:focus-visible{outline:3px solid rgba(31,117,254,.28);outline-offset:2px}.verification-title{text-align:center;font-size:18px;font-weight:900;color:var(--good);margin-bottom:12px}.verification-steps{display:flex;flex-direction:column;gap:7px}.verification-row{display:grid;grid-template-columns:92px 1fr;align-items:center;gap:12px;min-height:42px;opacity:0;transform:translateY(8px);transition:opacity .42s ease,transform .42s ease,background .35s ease}.verification-row.show{opacity:1;transform:translateY(0)}.verification-label{text-align:right;color:var(--muted);font-size:13px;font-weight:800}.verification-math{font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(25px,4.5vw,38px);font-weight:600;text-align:center;white-space:nowrap}.verification-row.substitute .verification-math{color:#1f75fe}.verification-row.final{border-radius:12px;padding:5px 8px}.verification-row.final.equal{background:#eaf4f0;color:var(--good)}.verification-result{text-align:center;margin-top:9px;font-weight:900;color:var(--good);opacity:0;visibility:hidden;transition:opacity .45s ease}.verification-result.show{visibility:visible;opacity:1}.verification-controls{display:flex;justify-content:center;align-items:center;min-height:48px;margin-top:12px}.verification-continue{min-width:150px;padding:11px 22px;border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-weight:900;cursor:pointer;box-shadow:0 4px 0 rgba(83,47,24,.18);transition:transform .12s ease,opacity .2s ease}.verification-continue:hover{transform:translateY(-1px)}.verification-continue:active{transform:translateY(1px)}.verification-continue.finished{visibility:hidden!important;opacity:0!important;pointer-events:none!important;transform:none!important}
+@media(max-width:650px){.app{padding:12px}.board{padding:14px}.equation-stage{min-height:220px}.equation{gap:.3em;padding:86px 2px 48px}.side-expression{gap:.24em}.term{padding:4px 2px}.term-sign{min-width:.44em;margin-right:.06em}.division-entry{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div><h1>Solving Equations</h1><p class="subtitle">Move a term beside its like term, then watch them combine.</p></div>
+    <button class="primary" id="newBtn">New Equation</button>
+  </div>
+  <div class="session-stats" aria-label="Session progress"><span>Equations Solved <strong id="solvedCount">0</strong></span><span>Work Checked <strong id="checkedCount">0</strong></span></div>
+  <section class="board">
+    <div class="equation-stage" id="stage"><div class="equation" id="equation"></div><div class="verification-panel" id="verificationPanel" hidden aria-live="polite"></div></div>
+    <div class="division-zone" id="divisionZone"><div class="division-prompt" id="divisionPrompt">What should we divide both sides by?</div><div class="division-entry" id="divisionEntry"><div class="division-choices" id="divisionChoices" role="group" aria-label="Choose a divisor"></div><input class="division-input" id="divisionInput" inputmode="decimal" aria-label="Divisor" placeholder=""><button class="division-submit" id="divisionSubmit">Divide</button></div><button class="division-continue" id="divisionContinue" type="button">Continue →</button><div class="division-work" id="divisionWork"></div></div>
+    <div class="message" id="message" hidden></div>
+    <div class="actions"><button class="primary" id="nextBtn" hidden>Next Problem</button><button class="secondary check-work-btn" id="checkWorkBtn" hidden>Check My Work</button><button class="secondary" id="restartBtn">Restart Equation</button></div>
+  </section>
+</div>
+<div class="drag-ghost" id="ghost" hidden></div><div class="cross-note" id="crossNote">Crossed = → use the opposite</div>
+<script>
+(()=>{
+function randomInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function randomNonzero(min,max){let n=0;while(n===0)n=randomInt(min,max);return n;}
+function generateEquation(){
+  // Every displayed coefficient and constant stays between -16 and 16, excluding zero.
+  // Build from an integer solution so every generated equation solves cleanly.
+  for(let tries=0;tries<5000;tries++){
+    const solution=randomNonzero(-10,10);
+    const leftCoeff=randomNonzero(-16,16);
+    let rightCoeff=randomNonzero(-16,16);
+    if(rightCoeff===leftCoeff)continue;
+    const leftConstant=randomNonzero(-16,16);
+    const rightConstant=(leftCoeff-rightCoeff)*solution+leftConstant;
+    if(rightConstant===0 || rightConstant < -16 || rightConstant > 16)continue;
+    const eq={
+      left:[{v:leftCoeff,t:'x'},{v:leftConstant,t:'c'}],
+      right:[{v:rightCoeff,t:'x'},{v:rightConstant,t:'c'}]
+    };
+    return randomizeEquationOrder(eq);
+  }
+  // Safe fallback within the same range.
+  return randomizeEquationOrder({left:[{v:-12,t:'x'},{v:15,t:'c'}],right:[{v:4,t:'x'},{v:-1,t:'c'}]});
+}
+let original,state,drag=null,locked=false,insertion=null;
+// Original equations use conventional notation (x and −x). After the first
+// arithmetic operation, coefficients of 1 remain explicit until the final answer.
+let arithmeticStarted=false;
+let divisionSteps=[],divisionStepBusy=false,divisionAdvancePending=false,divisionChoicePending=false;
+function queueDivisionStep(action,busyMs){divisionSteps.push({action,busyMs});}
+function updateDivisionContinue(){
+  if(!divisionContinue)return;
+  const hasWork=locked&&(divisionSteps.length||divisionStepBusy);
+  divisionContinue.classList.toggle('show',hasWork);
+  divisionContinue.disabled=divisionStepBusy||!divisionSteps.length;
+}
+function advanceDivisionStep(){
+  if(!locked||!divisionSteps.length)return;
+  if(divisionStepBusy){divisionAdvancePending=true;return;}
+  const step=divisionSteps.shift();
+  divisionStepBusy=true;
+  divisionAdvancePending=false;
+  updateDivisionContinue();
+  step.action();
+  setTimeout(()=>{
+    divisionStepBusy=false;
+    if(divisionSteps.length){
+      if(divisionAdvancePending){
+        divisionAdvancePending=false;
+        advanceDivisionStep();
+      }else{
+        updateDivisionContinue();
+        setMessage('Tap Continue for the next step.','good');
+      }
+    }else{
+      updateDivisionContinue();
+    }
+  },step.busyMs);
+}
+const board=document.querySelector('.board'),eqEl=document.getElementById('equation'),stage=document.getElementById('stage'),message=document.getElementById('message'),ghost=document.getElementById('ghost'),crossNote=document.getElementById('crossNote'),divisionZone=document.getElementById('divisionZone'),divisionPrompt=document.getElementById('divisionPrompt'),divisionEntry=document.getElementById('divisionEntry'),divisionChoices=document.getElementById('divisionChoices'),divisionInput=document.getElementById('divisionInput'),divisionSubmit=document.getElementById('divisionSubmit'),divisionContinue=document.getElementById('divisionContinue'),divisionWork=document.getElementById('divisionWork');
+const nextBtn=document.getElementById('nextBtn'),checkWorkBtn=document.getElementById('checkWorkBtn'),verificationPanel=document.getElementById('verificationPanel'),solvedCountEl=document.getElementById('solvedCount'),checkedCountEl=document.getElementById('checkedCount');
+let solvedCount=0,checkedCount=0,currentSolution=null,currentSolvedRecorded=false,currentChecked=false,checkRevealTimer=null,verificationRun=0;
+const clone=x=>JSON.parse(JSON.stringify(x));
+function randomizeEquationOrder(eq){
+  const out=clone(eq);
+  if(Math.random()<.5)out.left.reverse();
+  if(Math.random()<.5)out.right.reverse();
+  return out;
+}
+function absText(t){if(t.t==='x'){if(Math.abs(t.v)===1)return'x';return Math.abs(t.v)+'x'}return String(Math.abs(t.v));}
+function signedText(t){if(t.t==='x'){if(t.v===1)return'x';if(t.v===-1)return'−x';return String(t.v).replace('-','−')+'x'}return String(t.v).replace('-','−');}
+function explicitSignedText(t){const core=absText(t);return (t.v<0?'−':'+')+core;}
+// Blue grouped expressions are formatted as a self-contained expression:
+// the first term never carries a leading plus, while coefficients of 1
+// remain explicit so students can see 1x during the combining step.
+function blueGroupedTermText(t,isFirst=false){
+  const core=t.t==='x'&&Math.abs(t.v)===1?'1x':absText(t);
+  if(isFirst)return t.v<0?'−'+core:core;
+  return (t.v<0?'−':'+')+core;
+}
+function mergeTermHTML(text){const first=text.charAt(0);if(first==='+'||first==='−')return `<span class="merge-old-sign">${first}</span><span class="merge-old-core">${text.slice(1)}</span>`;return `<span class="merge-old-core">${text}</span>`;}
+function resultTermHTML(text){const first=text.charAt(0);const hasSign=first==='+'||first==='−';const sign=hasSign?first:'';const core=hasSign?text.slice(1):text;let coreHTML=core;if(core.endsWith('x')){const coeff=core.slice(0,-1);coreHTML=(coeff?`<span class="coeff-one">${coeff}</span>`:'')+'<span class="variable-symbol">x</span>';}return `${sign?`<span class="term-sign">${sign}</span>`:''}<span class="term-core">${coreHTML}</span>`;}
+function sideText(arr){const visible=arr.map((t,i)=>({t,i})).filter(o=>o.t);if(!visible.length)return'0';return visible.map((o,k)=>{const t=o.t,core=absText(t);if(k===0)return t.v<0?'−'+core:core;return (t.v<0?' − ':' + ')+core}).join('');}
+function equationText(s){return `${sideText(s.left)} = ${sideText(s.right)}`;}
+function setMessage(text,type=''){if(!message)return;message.textContent=text;message.className='message'+(type?' '+type:'');message.hidden=true;}
+function addHistory(text){}
+function displayTerm(t,i){const core=absText(t);if(i===0)return t.v<0?'−'+core:core;return (t.v<0?'−':'+')+core;}
+function displayTermOnSide(side,index){
+  const arr=state[side];
+  const firstVisible=arr.findIndex(Boolean);
+  const t=arr[index];
+  if(!t)return '';
+  const core=absText(t);
+  if(index===firstVisible)return t.v<0?'−'+core:core;
+  return (t.v<0?'−':'+')+core;
+}
+function finalCombinedDisplay(side,index,sourceSide,sourceIndex,combined){
+  const arr=state[side].map(t=>t?{...t}:null);
+  if(sourceSide===side)arr[sourceIndex]=null;
+  arr[index]=combined.v===0?null:{...combined};
+  if(combined.v===0)return '0';
+  const firstVisible=arr.findIndex(Boolean);
+  let core=absText(combined);
+  // Once combining has reduced the equation to one variable term and one
+  // constant, keep an implied coefficient of 1 visible for instruction.
+  const otherSide=side==='left'?'right':'left';
+  const leavesSingleVariable=combined.t==='x'&&Math.abs(combined.v)===1&&
+    arr.filter(Boolean).length===1&&state[otherSide].filter(Boolean).length===1&&
+    state[otherSide].filter(Boolean)[0].t==='c';
+  if(leavesSingleVariable)core='1x';
+  if(index===firstVisible)return combined.v<0?'−'+core:core;
+  return (combined.v<0?'−':'+')+core;
+}
+function highlightedCombinedDisplay(side,index,sourceSide,sourceIndex,combined){
+  const normal=finalCombinedDisplay(side,index,sourceSide,sourceIndex,combined);
+  if(combined.v===0)return normal;
+  // Blue results use the equation's final sign rules, so an unnecessary
+  // leading plus is never shown. A coefficient of 1 is always explicit.
+  if(combined.t==='x'&&Math.abs(combined.v)===1){
+    if(normal.startsWith('−'))return '−1x';
+    if(normal.startsWith('+'))return '+1x'; // necessary between two terms
+    return '1x';
+  }
+  return normal.startsWith('+')&&index===0?normal.slice(1):normal;
+}
+function makeSide(arr,side){
+  const wrap=document.createElement('div');wrap.className='side-expression';wrap.dataset.side=side;
+  const hasAny=arr.some(Boolean);
+  const firstVisible=arr.findIndex(Boolean);
+  for(let i=0;i<2;i++){
+    const lane=document.createElement('div');lane.className='lane';lane.dataset.side=side;lane.dataset.index=i;
+    const t=arr[i];
+    if(t){
+      const term=document.createElement('span');
+      const isFirst=i===firstVisible;
+      term.className='term'+(isFirst?' first-visible':'')+(isFirst&&t.v<0?' first-negative':'');
+      const sign=isFirst?(t.v<0?'−':''):(t.v<0?'−':'+');
+      let core=absText(t);
+      const otherSide=side==='left'?'right':'left';
+      if(t.t==='x'&&Math.abs(t.v)===1&&arithmeticStarted)core='1x';
+      let coreHTML=core;
+      if(t.t==='x'){
+        if(core==='1x')coreHTML='<span class="coeff-one">1</span><span class="variable-symbol">x</span>';
+        else if(core==='x')coreHTML='<span class="variable-symbol">x</span>';
+      }
+      term.innerHTML=`${sign?`<span class="term-sign">${sign}</span>`:''}<span class="term-core">${coreHTML}</span>`;
+      term.dataset.side=side;term.dataset.index=i;term.dataset.type=t.t;term.addEventListener('pointerdown',startDrag);lane.appendChild(term);
+    }else if(!hasAny&&i===0){
+      const z=document.createElement('span');z.className='zero-target';z.textContent='0';z.dataset.side=side;z.dataset.index=i;z.dataset.type='zero';lane.appendChild(z);
+    }
+    wrap.appendChild(lane);
+  }
+  return wrap;
+}
+function render(options={}){eqEl.innerHTML='';eqEl.classList.remove('squeezing','compact-final');eqEl.appendChild(makeSide(state.left,'left'));const equals=document.createElement('span');equals.className='equals';equals.id='equals';equals.textContent='=';eqEl.appendChild(equals);eqEl.appendChild(makeSide(state.right,'right'));if(getDivisionData())eqEl.classList.add('compact-final');if(options.hideTarget){const sel=options.hideTarget.zero?`.zero-target[data-side="${options.hideTarget.side}"]`:`.term[data-side="${options.hideTarget.side}"][data-index="${options.hideTarget.index}"]`;const hidden=eqEl.querySelector(sel);if(hidden)hidden.style.opacity='0';}checkFinal();}
+function applyCompressionClasses(){
+  const sides=[['left',state.left],['right',state.right]];
+  let willMove=false;
+  for(const [name,arr] of sides){
+    const wrap=eqEl.querySelector(`.side-expression[data-side="${name}"]`);
+    if(!wrap)continue;
+    wrap.classList.remove('compress-zero','compress-empty-first','compress-empty-second');
+    if(!arr.some(Boolean)){wrap.classList.add('compress-zero');willMove=true;}
+    else if(!arr[0]&&arr[1]){wrap.classList.add('compress-empty-first');willMove=true;}
+    else if(arr[0]&&!arr[1]){wrap.classList.add('compress-empty-second');willMove=true;}
+  }
+  return willMove;
+}
+function clearCompressionClasses(){
+  eqEl.querySelectorAll('.side-expression').forEach(w=>w.classList.remove('compress-zero','compress-empty-first','compress-empty-second'));
+}
+function animateCompression(){
+  const willMove=applyCompressionClasses();
+  if(willMove)eqEl.classList.add('squeezing');
+  return willMove;
+}
+function clearInsertion(resetTransforms=true){
+  if(!insertion)return;
+  insertion.spacer?.remove();
+  insertion.slot?.remove();
+  insertion.target?.classList.remove('like-match');
+  if(resetTransforms){
+    eqEl.querySelectorAll('.term,.zero-target,.equals').forEach(el=>{el.style.transform='';});
+    eqEl.classList.remove('insertion-open');
+  }
+  insertion=null;
+}
+function showInsertion(target,movedTerm){
+  if(insertion&&insertion.target===target)return;
+  clearInsertion(true);
+
+  const fontSize=parseFloat(getComputedStyle(eqEl).fontSize);
+  const measure=document.createElement('span');
+  measure.style.cssText='position:absolute;visibility:hidden;white-space:nowrap;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:'+fontSize+'px;font-weight:600;padding:4px 9px;border:2px solid transparent;';
+  measure.textContent=explicitSignedText(movedTerm);
+  stage.appendChild(measure);
+  const measuredWidth=Math.ceil(measure.getBoundingClientRect().width);
+  measure.remove();
+
+  // Build the landing space inside the equation's live flex layout. This is
+  // recalculated from the current DOM on every drag, so the second move cannot
+  // reuse stale coordinates from the original equation.
+  const slotWidth=Math.max(measuredWidth+18,fontSize*1.08);
+  const spacerWidth=slotWidth+Math.max(14,fontSize*.18);
+  const targetLane=target.closest('.lane');
+  const sideWrap=target.closest('.side-expression');
+  if(!targetLane||!sideWrap)return;
+
+  const spacer=document.createElement('div');
+  spacer.className='drop-spacer';
+  spacer.style.width='0px';
+  const slot=document.createElement('div');
+  slot.className='drop-slot';
+  slot.style.width=slotWidth+'px';
+  slot.innerHTML=`<span class="slot-text">${explicitSignedText(movedTerm)}</span>`;
+  spacer.appendChild(slot);
+  targetLane.insertAdjacentElement('afterend',spacer);
+
+  target.classList.add('like-match');
+  eqEl.classList.add('insertion-open');
+  insertion={target,slot,spacer,movedTerm,slotWidth,openingWidth:spacerWidth};
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    spacer.style.width=spacerWidth+'px';
+    spacer.classList.add('show');
+  }));
+}
+function pointNearElement(x,y,el,pad=38){
+  const r=el.getBoundingClientRect();
+  return x>=r.left-pad&&x<=r.right+pad&&y>=r.top-pad&&y<=r.bottom+pad;
+}
+function startDrag(e){if(locked)return;e.preventDefault();const el=e.currentTarget;const side=el.dataset.side,index=Number(el.dataset.index),term=state[side][index];drag={el,side,index,type:term.t,originalV:term.v,crossed:false,target:null,pointerId:e.pointerId};el.setPointerCapture(e.pointerId);el.classList.add('source');ghost.hidden=false;ghost.textContent=displayTermOnSide(side,index);moveGhost(e.clientX,e.clientY);document.addEventListener('pointermove',moveDrag);document.addEventListener('pointerup',endDrag,{once:true});}
+function moveGhost(x,y){ghost.style.left=x+'px';ghost.style.top=y+'px';crossNote.style.left=x+'px';crossNote.style.top=(y-12)+'px';}
+function moveDrag(e){
+  if(!drag)return;
+  moveGhost(e.clientX,e.clientY);
+  const equalsRect=document.getElementById('equals').getBoundingClientRect();
+  const nowCrossed=drag.side==='left'?e.clientX>equalsRect.right:e.clientX<equalsRect.left;
+  if(nowCrossed!==drag.crossed){
+    drag.crossed=nowCrossed;
+    const val=nowCrossed?-drag.originalV:drag.originalV;
+    ghost.textContent=nowCrossed?explicitSignedText({v:val,t:drag.type}):displayTermOnSide(drag.side,drag.index);
+    ghost.classList.toggle('crossed',nowCrossed);
+    crossNote.classList.toggle('show',nowCrossed);
+    clearInsertion(true);
+  }
+  document.querySelectorAll('.term.target,.zero-target.target').forEach(x=>x.classList.remove('target'));
+  let target=null;
+  if(insertion&&pointNearElement(e.clientX,e.clientY,insertion.slot,28))target=insertion.target;
+  if(!target){
+    const candidates=[...eqEl.querySelectorAll('.term,.zero-target')].filter(el=>{
+      if(el===drag.el)return false;
+      if(!(el.dataset.type===drag.type||el.dataset.type==='zero'))return false;
+      const targetSide=el.dataset.side;
+      return (targetSide===drag.side&&!drag.crossed)||(targetSide!==drag.side&&drag.crossed);
+    });
+    target=candidates.find(el=>pointNearElement(e.clientX,e.clientY,el,46))||null;
+  }
+  drag.target=target;
+  if(target){
+    target.classList.add('target');
+    const moved={v:drag.crossed?-drag.originalV:drag.originalV,t:drag.type};
+    showInsertion(target,moved);
+  }else clearInsertion(true);
+}
+function cleanup(preserveInsertion=false){
+  document.removeEventListener('pointermove',moveDrag);
+  document.querySelectorAll('.term.target,.zero-target.target,.term.source').forEach(x=>x.classList.remove('target','source'));
+  ghost.hidden=true;ghost.classList.remove('crossed');crossNote.classList.remove('show');
+  if(!preserveInsertion)clearInsertion(true);
+  drag=null;
+}
+function endDrag(){
+  if(!drag)return;
+  const d={...drag};
+  if(!d.target){
+    cleanup();
+    setMessage(d.crossed?'Drop it into the space beside the like term on the other side.':'Drop it into the space beside a like term.','bad');
+    return;
+  }
+  const targetSide=d.target.dataset.side,targetIndex=Number(d.target.dataset.index);
+  const sameSide=targetSide===d.side;
+  if(sameSide&&d.crossed){cleanup();setMessage('Bring the term back to its original side to combine terms already on the same side.','bad');return;}
+  if(!sameSide&&!d.crossed){cleanup();setMessage('Cross the equal sign before combining with a term on the other side.','bad');return;}
+
+  const moving=state[d.side][d.index],target=state[targetSide][targetIndex]||{v:0,t:moving.t};
+  const before=equationText(state);
+  const movedTerm=sameSide?{v:moving.v,t:moving.t}:{v:-moving.v,t:moving.t};
+  const combined={v:target.v+movedTerm.v,t:target.t};
+  const sourceEl=d.el,targetEl=d.target;
+  const activeInsertion=insertion;
+  const sourceCore=sourceEl.querySelector('.term-core')||sourceEl;
+  const targetCore=targetEl.querySelector('.term-core')||targetEl;
+  const sourceRect=sourceCore.getBoundingClientRect();
+  const targetRect=targetCore.getBoundingClientRect();
+  const slotRect=activeInsertion?.slot?.getBoundingClientRect();
+  const stageRect=stage.getBoundingClientRect();
+  cleanup(true);locked=true;
+
+  // Build an overlay exactly on top of the two real terms. Nothing jumps or
+  // reappears: the visible copies begin at the same pixels as the originals.
+  const p=document.createElement('div');p.className='merge-preview';
+  p.style.left='0';p.style.top='0';p.style.width='100%';p.style.height='100%';
+  p.innerHTML=`<div class="merge-group" style="left:0;top:0;transform:none;width:100%;height:100%">
+    <div class="merge-pair" style="position:absolute;left:0;top:0;width:100%;height:1.35em">
+      <span class="merge-piece left like-highlight">${mergeTermHTML(blueGroupedTermText(target,true))}</span>
+      <span class="merge-piece right like-highlight">${mergeTermHTML(blueGroupedTermText(movedTerm,false))}</span>
+    </div>
+    <div class="merge-underline" style="position:absolute"></div>
+    <span class="merge-result like-highlight">${resultTermHTML(highlightedCombinedDisplay(targetSide,targetIndex,d.side,d.index,combined))}</span>
+  </div>`;
+  stage.appendChild(p);
+  const leftPiece=p.querySelector('.merge-piece.left');
+  const rightPiece=p.querySelector('.merge-piece.right');
+  const underline=p.querySelector('.merge-underline');
+  const resultEl=p.querySelector('.merge-result');
+
+  const centerY=(targetRect.top-stageRect.top)+(targetRect.height/2);
+  const targetCenterX=(targetRect.left-stageRect.left)+(targetRect.width/2);
+  const slotCenterX=slotRect?(slotRect.left-stageRect.left+slotRect.width/2):(targetRect.right-stageRect.left+parseFloat(getComputedStyle(eqEl).fontSize)*.75);
+  const anchorX=(targetCenterX+slotCenterX)/2;
+  // The drag itself already showed the term travelling to its match. Once the
+  // pointer is released, begin directly in the grouped position instead of
+  // replaying a second trip from the original term or mouse-down location.
+  sourceEl.style.visibility='hidden';
+  targetEl.style.visibility='hidden';
+
+  // Calculate a clean textbook-width grouped expression with a visible operator.
+  const measure=document.createElement('span');
+  measure.style.cssText='position:absolute;visibility:hidden;white-space:nowrap;font:inherit;';
+  measure.innerHTML=`<span>${blueGroupedTermText(target,true)}</span><span style="margin-left:.18em">${blueGroupedTermText(movedTerm,false)}</span>`;
+  p.appendChild(measure);
+  const children=measure.children;
+  const w1=children[0].getBoundingClientRect().width;
+  const w2=children[1].getBoundingClientRect().width;
+  const opGap=Math.max(10,parseFloat(getComputedStyle(eqEl).fontSize)*.12);
+  const groupedWidth=Math.max(w1+w2+opGap,(slotCenterX-targetCenterX)+w1/2+w2/2);
+  measure.remove();
+  const leftGroupedX=targetCenterX;
+  const rightGroupedX=slotCenterX;
+
+  // The equation already opened while the student was dragging. Keep that
+  // exact layout in place; do not replay a second opening animation.
+  const opening=[];
+  if(activeInsertion?.slot)activeInsertion.slot.remove();
+  insertion=null;
+
+  // Place the grouped terms immediately where the student dropped them. The
+  // equation around them may open with translation, but the dragged term does
+  // not perform a redundant cursor-to-target or source-to-target animation.
+  leftPiece.style.transform=`translate(${leftGroupedX}px,${centerY}px) translate(-50%,-50%)`;
+  rightPiece.style.transform=`translate(${rightGroupedX}px,${centerY}px) translate(-50%,-50%)`;
+
+  Promise.all(opening.map(a=>a.finished)).then(()=>{
+    const underlineY=centerY+parseFloat(getComputedStyle(eqEl).fontSize)*.48;
+    const underlineLeft=Math.min(leftGroupedX-w1/2,rightGroupedX-w2/2);
+    const underlineRight=Math.max(leftGroupedX+w1/2,rightGroupedX+w2/2);
+    underline.style.left=underlineLeft+'px';
+    underline.style.top=underlineY+'px';
+    underline.style.width=(underlineRight-underlineLeft)+'px';
+    underline.animate([{transform:'scaleX(0)',opacity:0},{transform:'scaleX(1)',opacity:1}],{
+      duration:1300,easing:'ease-out',fill:'forwards'
+    });
+
+    setTimeout(()=>{
+      // The underline contraction and the algebraic simplification are one
+      // synchronized action. The two original terms translate inward while
+      // fading, and the combined term emerges at the same center point.
+      const compressedGap=Math.max(3,parseFloat(getComputedStyle(eqEl).fontSize)*.035);
+      const leftCompressedX=anchorX-(w1/2+compressedGap/2);
+      const rightCompressedX=anchorX+(w2/2+compressedGap/2);
+      resultEl.style.left=anchorX+'px';
+      resultEl.style.top=centerY+'px';
+
+      const contractionDuration=3600;
+      const lc=leftPiece.animate([
+        {transform:`translate(${leftGroupedX}px,${centerY}px) translate(-50%,-50%)`,opacity:1,color:'#1f75fe'},
+        {transform:`translate(${leftCompressedX}px,${centerY}px) translate(-50%,-50%)`,opacity:1,color:'#1f75fe',offset:.28},
+        {transform:`translate(${anchorX}px,${centerY}px) translate(-50%,-50%)`,opacity:1,color:'#1f75fe'}
+      ],{duration:contractionDuration,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
+      const rc=rightPiece.animate([
+        {transform:`translate(${rightGroupedX}px,${centerY}px) translate(-50%,-50%)`,opacity:1,color:'#1f75fe'},
+        {transform:`translate(${rightCompressedX}px,${centerY}px) translate(-50%,-50%)`,opacity:1,color:'#1f75fe',offset:.28},
+        {transform:`translate(${anchorX}px,${centerY}px) translate(-50%,-50%)`,opacity:1,color:'#1f75fe'}
+      ],{duration:contractionDuration,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
+      // Fade the term cores first, but let each visible operator complete its
+      // own slower dissolve. Keeping the parent opaque prevents the sign from
+      // being cut off by an earlier parent fade.
+      [leftPiece,rightPiece].forEach(piece=>{
+        const core=piece.querySelector('.merge-old-core');
+        const sign=piece.querySelector('.merge-old-sign');
+        if(core)core.animate([
+          {opacity:1,filter:'blur(0)'},
+          {opacity:.85,filter:'blur(.5px)',offset:.30},
+          {opacity:0,filter:'blur(6px)',offset:.60},
+          {opacity:0,filter:'blur(6px)'}
+        ],{duration:contractionDuration,easing:'ease',fill:'forwards'});
+        if(sign)sign.animate([
+          {opacity:1,filter:'blur(0)'},
+          {opacity:1,filter:'blur(0)',offset:.58},
+          {opacity:.62,filter:'blur(1px)',offset:.76},
+          {opacity:0,filter:'blur(6px)'}
+        ],{duration:contractionDuration,easing:'ease',fill:'forwards'});
+      });
+      const underlineContract=underline.animate([
+        {transform:'scaleX(1)',opacity:1},
+        {transform:'scaleX(.58)',opacity:1,offset:.48},
+        {transform:'scaleX(.20)',opacity:0}
+      ],{duration:contractionDuration,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
+      const emerge=resultEl.animate([
+        {transform:'translate(-50%,-50%) scale(.94)',opacity:0,color:'#1f75fe'},
+        {transform:'translate(-50%,-50%) scale(.96)',opacity:.08,color:'#1f75fe',offset:.24},
+        {transform:'translate(-50%,-50%) scale(.99)',opacity:.58,color:'#1f75fe',offset:.68},
+        {transform:'translate(-50%,-50%) scale(1)',opacity:1,color:'#1f75fe'}
+      ],{duration:contractionDuration,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
+
+      Promise.all([lc.finished,rc.finished,underlineContract.finished,emerge.finished]).then(()=>{
+          const oldRects=new Map();
+          const oldCoreRects=new Map();
+          const oldSigns=new Map();
+          const oldCoeffOneKeys=new Set();
+          eqEl.querySelectorAll('.term,.zero-target,.equals').forEach(el=>{
+            if(el===sourceEl||el===targetEl)return;
+            const key=el.classList.contains('equals')?'equals':`${el.dataset.side}-${el.dataset.index}`;
+            oldRects.set(key,el.getBoundingClientRect());
+            if(el.classList.contains('term')){
+              const coreEl=el.querySelector('.variable-symbol')||el.querySelector('.term-core');
+              if(coreEl)oldCoreRects.set(key,coreEl.getBoundingClientRect());
+              if(el.querySelector('.coeff-one'))oldCoeffOneKeys.add(key);
+              const signEl=el.querySelector('.term-sign');
+              if(signEl)oldSigns.set(key,{text:signEl.textContent,rect:signEl.getBoundingClientRect()});
+            }
+          });
+
+          // From the first completed arithmetic operation onward, make an
+          // implied coefficient of 1 visible in every intermediate equation.
+          arithmeticStarted=true;
+          if(sameSide){
+            const arr=state[d.side];arr[d.index]=null;arr[targetIndex]=combined.v===0?null:combined;
+          }else{
+            state[d.side][d.index]=null;state[targetSide][targetIndex]=combined.v===0?null:combined;
+          }
+          addHistory(`${before}  →  ${equationText(state)}`);
+
+          // The second combine usually creates the compact one-term-per-side
+          // equation. That layout used to begin its own width transition while
+          // the blue result was travelling toward it, so the destination kept
+          // moving underneath the animation. Freeze all equation layout
+          // transitions for this redraw. The surrounding terms are already
+          // translated explicitly below, so no visual motion is lost.
+          eqEl.classList.add('measure-no-transition');
+          render({hideTarget:{side:targetSide,index:targetIndex,zero:combined.v===0}});
+          void eqEl.offsetWidth;
+
+          // When an operator becomes superfluous (most often a leading +),
+          // preserve its last exact screen position in a temporary overlay and
+          // dissolve it away. The permanent term core is anchored independently,
+          // so the operation fades rather than popping out of existence.
+          const signFades=[];
+          const signOverlays=[];
+          oldSigns.forEach((info,key)=>{
+            const current=key==='equals'?eqEl.querySelector('.equals'):eqEl.querySelector(`.term[data-side="${key.split('-')[0]}"][data-index="${key.split('-')[1]}"]`);
+            if(current?.querySelector('.term-sign'))return;
+            const overlay=document.createElement('span');
+            overlay.className='operator-dissolve-overlay';
+            overlay.textContent=info.text;
+            overlay.style.position='fixed';
+            overlay.style.left=info.rect.left+'px';
+            overlay.style.top=info.rect.top+'px';
+            overlay.style.width=info.rect.width+'px';
+            overlay.style.height=info.rect.height+'px';
+            overlay.style.display='flex';
+            overlay.style.alignItems='center';
+            overlay.style.justifyContent='center';
+            overlay.style.zIndex='10020';
+            overlay.style.pointerEvents='none';
+            overlay.style.fontFamily='"Cambria Math",Cambria,Georgia,serif';
+            overlay.style.fontSize=getComputedStyle(eqEl).fontSize;
+            overlay.style.fontWeight='600';
+            overlay.style.color=getComputedStyle(eqEl).color;
+            document.body.appendChild(overlay);
+            signOverlays.push(overlay);
+            signFades.push(overlay.animate([
+              {opacity:1,filter:'blur(0)',transform:'scale(1)'},
+              {opacity:.55,filter:'blur(1.5px)',transform:'scale(.98)',offset:.52},
+              {opacity:0,filter:'blur(6px)',transform:'scale(.88)'}
+            ],{duration:700,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'}));
+          });
+
+          const actualTerm=combined.v===0
+            ?eqEl.querySelector(`.zero-target[data-side="${targetSide}"]`)
+            :eqEl.querySelector(`.term[data-side="${targetSide}"][data-index="${targetIndex}"]`);
+          const finalRect=actualTerm?.getBoundingClientRect();
+
+          // If an implied coefficient of 1 has just become instructional text,
+          // keep the x glyph anchored at its old pixel and fade only the 1 into
+          // the empty space immediately to its left.
+          // Fade in only coefficients of 1 that were genuinely implied before
+          // this redraw. An already-visible 1 or −1 must remain continuously
+          // visible so students never see it disappear and then reappear.
+          const appearingOnes=[...eqEl.querySelectorAll('.term-core .coeff-one')].filter(one=>{
+            const term=one.closest('.term');
+            if(!term)return false;
+            const key=`${term.dataset.side}-${term.dataset.index}`;
+            return !oldCoeffOneKeys.has(key);
+          });
+          appearingOnes.forEach(one=>{one.style.opacity='0';one.style.filter='blur(3px)';});
+          const closing=[];
+          eqEl.querySelectorAll('.term,.zero-target,.equals').forEach(el=>{
+            if(el===actualTerm)return;
+            const key=el.classList.contains('equals')?'equals':`${el.dataset.side}-${el.dataset.index}`;
+            const old=oldRects.get(key);if(!old)return;
+            const now=el.getBoundingClientRect();
+            let dx=old.left-now.left,dy=old.top-now.top;
+
+            // When a leading operator has become unnecessary, align the
+            // animation by the term's visible core (for example the 2x), not
+            // by the outer box whose width just changed. The core therefore
+            // begins at precisely the same pixel where students last saw it.
+            if(el.classList.contains('term') && oldSigns.has(key) && !el.querySelector('.term-sign')){
+              const oldCore=oldCoreRects.get(key);
+              const newCore=(el.querySelector('.variable-symbol')||el.querySelector('.term-core'))?.getBoundingClientRect();
+              if(oldCore&&newCore){
+                dx=oldCore.left-newCore.left;
+                dy=oldCore.top-newCore.top;
+              }
+            }
+            closing.push(el.animate([
+              {transform:`translate(${dx}px,${dy}px)`},
+              {transform:'translate(0,0)'}
+            ],{duration:2250,easing:'cubic-bezier(.22,.8,.25,1)',fill:'both'}));
+          });
+          const oneFades=appearingOnes.map(one=>one.animate([
+            {opacity:0,filter:'blur(3px)'},
+            {opacity:0,filter:'blur(3px)',offset:.25},
+            {opacity:.45,filter:'blur(1px)',offset:.62},
+            {opacity:1,filter:'blur(0)'}
+          ],{duration:2250,easing:'ease-out',fill:'forwards'}));
+          // Align the visible algebra glyphs rather than the padded outer term
+          // boxes. Positive results have no sign span, so box-center alignment can
+          // create a tiny nudge during the blue-to-black handoff. Measuring the
+          // actual core keeps the digits and x on the same pixels throughout.
+          const actualCore=actualTerm?.querySelector('.term-core')||actualTerm;
+          const resultCore=resultEl.querySelector('.term-core')||resultEl;
+          const actualCoreRect=actualCore?.getBoundingClientRect();
+          const resultRectNow=resultEl.getBoundingClientRect();
+          const resultCoreRect=resultCore?.getBoundingClientRect();
+          const resultCoreOffsetX=(resultCoreRect&&resultRectNow)
+            ?(resultCoreRect.left+resultCoreRect.width/2)-(resultRectNow.left+resultRectNow.width/2):0;
+          const resultCoreOffsetY=(resultCoreRect&&resultRectNow)
+            ?(resultCoreRect.top+resultCoreRect.height/2)-(resultRectNow.top+resultRectNow.height/2):0;
+          const finalX=actualCoreRect
+            ?actualCoreRect.left-stageRect.left+actualCoreRect.width/2-resultCoreOffsetX
+            :(finalRect?finalRect.left-stageRect.left+finalRect.width/2:anchorX);
+          const finalY=actualCoreRect
+            ?actualCoreRect.top-stageRect.top+actualCoreRect.height/2-resultCoreOffsetY
+            :(finalRect?finalRect.top-stageRect.top+finalRect.height/2:centerY);
+          const travel=resultEl.animate([
+            {transform:'translate(-50%,-50%)',opacity:1,color:'#1f75fe'},
+            {transform:`translate(calc(-50% + ${(finalX-anchorX)*.72}px),calc(-50% + ${(finalY-centerY)*.72}px))`,opacity:1,color:'#1f75fe',offset:.72},
+            {transform:`translate(calc(-50% + ${finalX-anchorX}px),calc(-50% + ${finalY-centerY}px))`,opacity:1,color:'#1f75fe'}
+          ],{duration:1425,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
+          Promise.all([travel.finished,...closing.map(a=>a.finished),...signFades.map(a=>a.finished),...oneFades.map(a=>a.finished)]).then(()=>{
+            signOverlays.forEach(el=>el.remove());
+            // Hand the blue result to the real equation term in one paint.
+            // The actual term becomes the visible blue element first; the floating
+            // overlay is then removed immediately. From that point forward, only
+            // the actual term's color changes, so there is no redraw flash.
+            if(actualTerm){
+              const ink=getComputedStyle(actualTerm).color||'#2f2925';
+              actualTerm.getAnimations().forEach(animation=>animation.cancel());
+
+              // Measure the blue result exactly where the travel animation left it.
+              // If the compact equation layout places the permanent term a few
+              // pixels away, preserve that difference and visibly translate the
+              // same term into place instead of allowing an instantaneous nudge.
+              const visibleResultCore=resultEl.querySelector('.term-core')||resultEl;
+              const permanentCore=actualTerm.querySelector('.term-core')||actualTerm;
+              const blueRect=visibleResultCore.getBoundingClientRect();
+              const blackRect=permanentCore.getBoundingClientRect();
+              const handoffDx=(blueRect.left+blueRect.width/2)-(blackRect.left+blackRect.width/2);
+              const handoffDy=(blueRect.top+blueRect.height/2)-(blackRect.top+blackRect.height/2);
+
+              actualTerm.style.transition='none';
+              actualTerm.style.opacity='1';
+              actualTerm.style.filter='';
+              actualTerm.style.color='#1f75fe';
+              actualTerm.style.transform=`translate(${handoffDx}px,${handoffDy}px)`;
+
+              // Paint the permanent term directly underneath the floating result,
+              // then remove the floating copy. The permanent term now completes
+              // any remaining repositioning as an intentional translation.
+              void actualTerm.offsetWidth;
+              p.remove();
+
+              requestAnimationFrame(()=>{
+                const settle=actualTerm.animate([
+                  {transform:`translate(${handoffDx}px,${handoffDy}px)`,color:'#1f75fe'},
+                  {transform:'translate(0,0)',color:'#1f75fe',offset:.62},
+                  {transform:'translate(0,0)',color:ink}
+                ],{duration:850,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
+                settle.finished.then(()=>{
+                  actualTerm.style.transform='';
+                  actualTerm.style.color='';
+                  actualTerm.style.transition='';
+                  eqEl.querySelectorAll('.coeff-one').forEach(one=>{one.style.opacity='';one.style.filter='';});
+                  eqEl.classList.remove('measure-no-transition');
+                  locked=false;
+                });
+              });
+            }else{
+              p.remove();
+              eqEl.classList.remove('measure-no-transition');
+              locked=false;
+            }
+          });
+      });
+    },1500);
+  });
+}
+function isDivisionReady(){const data=getDivisionData();return !!(data&&Math.abs(data.x.v)!==1);}
+function getDivisionData(){
+  const L=state.left.filter(Boolean),R=state.right.filter(Boolean);
+  if(L.length===1&&R.length===1){
+    const l=L[0],r=R[0];
+    if(l.t==='x'&&r.t==='c')return{xs:'left',other:'right',x:l,c:r};
+    if(r.t==='x'&&l.t==='c')return{xs:'right',other:'left',x:r,c:l};
+  }
+  return null;
+}
+function updateSessionStats(){
+  solvedCountEl.textContent=String(solvedCount);
+  checkedCountEl.textContent=String(checkedCount);
+}
+function revealCompletionActions(solution){
+  currentSolution=solution;
+  if(!currentSolvedRecorded){
+    solvedCount++;
+    currentSolvedRecorded=true;
+    updateSessionStats();
+  }
+  nextBtn.hidden=false;
+  checkWorkBtn.hidden=false;
+  checkWorkBtn.classList.remove('reveal');
+  checkWorkBtn.textContent=currentChecked?'Check Again':'Check My Work';
+  clearTimeout(checkRevealTimer);
+  checkRevealTimer=setTimeout(()=>requestAnimationFrame(()=>checkWorkBtn.classList.add('reveal')),650);
+}
+function formatNumber(n){return String(n).replace('-','−');}
+function formatValueExpression(values){
+  return values.map((v,i)=>{
+    const a=Math.abs(v),core=String(a);
+    if(i===0)return v<0?'−'+core:core;
+    return v<0?' − '+core:' + '+core;
+  }).join('');
+}
+function substitutedSide(arr,solution){
+  const visible=arr.filter(Boolean);
+  return visible.map((t,i)=>{
+    let core;
+    if(t.t==='x'){
+      const mag=Math.abs(t.v);
+      core=(mag===1?'':String(mag))+'('+formatNumber(solution)+')';
+    }else core=String(Math.abs(t.v));
+    if(i===0)return t.v<0?'−'+core:core;
+    return t.v<0?' − '+core:' + '+core;
+  }).join('');
+}
+function evaluatedValues(arr,solution){return arr.filter(Boolean).map(t=>t.t==='x'?t.v*solution:t.v);}
+function makeVerificationRow(label,text,extra=''){
+  const row=document.createElement('div');row.className='verification-row '+extra;
+  row.innerHTML=`<div class="verification-label">${label}</div><div class="verification-math">${text}</div>`;
+  return row;
+}
+function runVerification(){
+  if(currentSolution===null||!board.classList.contains('completed'))return;
+  const run=++verificationRun;
+  clearTimeout(checkRevealTimer);
+  checkWorkBtn.classList.add('reveal');
+  checkWorkBtn.disabled=true;
+  nextBtn.disabled=true;
+  const leftVals=evaluatedValues(original.left,currentSolution);
+  const rightVals=evaluatedValues(original.right,currentSolution);
+  const leftTotal=leftVals.reduce((a,b)=>a+b,0);
+  const rightTotal=rightVals.reduce((a,b)=>a+b,0);
+  const rows=[
+    makeVerificationRow('Original',equationText(original)),
+    makeVerificationRow('Substitute',`${substitutedSide(original.left,currentSolution)} = ${substitutedSide(original.right,currentSolution)}`,'substitute'),
+    makeVerificationRow('Multiply',`${formatValueExpression(leftVals)} = ${formatValueExpression(rightVals)}`),
+    makeVerificationRow('Simplify',`${formatNumber(leftTotal)} = ${formatNumber(rightTotal)}`,'final')
+  ];
+  verificationPanel.innerHTML='<div class="verification-card"><button class="verification-close" type="button" aria-label="Close check my work" title="Close">×</button><div class="verification-title">Checking by substitution</div><div class="verification-steps"></div><div class="verification-result">✓ Both sides are equal.</div><div class="verification-controls"><button class="verification-continue" type="button">Continue →</button></div></div>';
+  const steps=verificationPanel.querySelector('.verification-steps');
+  // Reserve the full verified layout from the beginning. Every row occupies
+  // its final space immediately, but only the current instructional line is
+  // visible. This keeps the checker at one constant size throughout.
+  rows.forEach(row=>steps.appendChild(row));
+  const continueBtn=verificationPanel.querySelector('.verification-continue');
+  const closeBtn=verificationPanel.querySelector('.verification-close');
+  const result=verificationPanel.querySelector('.verification-result');
+  const card=verificationPanel.querySelector('.verification-card');
+  closeBtn.addEventListener('click',hideVerification);
+  let visibleIndex=0;
+  verificationPanel.hidden=false;
+  stage.classList.add('verifying');
+  // All final rows, the result, and the Continue control already occupy
+  // space, so the card opens at its maximum verified dimensions and never
+  // changes size during the sequence.
+  card.style.height='auto';
+  card.style.minHeight='';
+  eqEl.style.opacity='';
+  stage.querySelectorAll('.final-travel-layer,.completion-check-inline').forEach(el=>el.style.opacity='0');
+  requestAnimationFrame(()=>{
+    if(run!==verificationRun)return;
+    verificationPanel.classList.add('show');
+    rows[0].classList.add('show');
+  });
+  continueBtn.addEventListener('click',()=>{
+    if(run!==verificationRun)return;
+    continueBtn.disabled=true;
+    visibleIndex++;
+    if(visibleIndex<rows.length){
+      requestAnimationFrame(()=>rows[visibleIndex].classList.add('show'));
+      setTimeout(()=>{
+        if(run===verificationRun)continueBtn.disabled=false;
+      },400);
+      return;
+    }
+    rows[3].classList.add('equal');
+    result.classList.add('show');
+    continueBtn.classList.add('finished');
+    continueBtn.disabled=true;
+    // The card was already rendered at its completed dimensions. The hidden
+    // Continue button and the now-visible result simply trade visibility while
+    // preserving the exact same layout space.
+    if(!currentChecked){checkedCount++;currentChecked=true;updateSessionStats();}
+    checkWorkBtn.textContent='Check Again';
+    checkWorkBtn.disabled=false;
+    nextBtn.disabled=false;
+    setMessage('The solution makes the original equation true.','good');
+  });
+}
+function hideVerification(){
+  verificationRun++;
+  verificationPanel.classList.remove('show');
+  verificationPanel.hidden=true;
+  verificationPanel.innerHTML='';
+  stage.classList.remove('verifying');
+  eqEl.style.opacity='';
+  stage.querySelectorAll('.final-travel-layer,.completion-check-inline').forEach(el=>el.style.opacity='');
+  checkWorkBtn.disabled=false;nextBtn.disabled=false;
+}
+function celebrateWithoutDivision(data){
+  if(board.classList.contains('completed')||stage.querySelector('.completion-check-inline'))return;
+  const current=getDivisionData();
+  if(!current||current.x.v!==1)return;
+
+  const finishCelebration=()=>{
+    const stageRect=stage.getBoundingClientRect();
+    const eqRect=eqEl.getBoundingClientRect();
+    board.classList.add('completed');
+    eqEl.classList.add('static-celebrate');
+    const check=document.createElement('span');
+    check.className='completion-check-inline';
+    check.textContent='';
+    const gap=Math.max(18,parseFloat(getComputedStyle(eqEl).fontSize)*.28);
+    check.style.left=(eqRect.right-stageRect.left+gap)+'px';
+    check.style.top=(eqRect.top-stageRect.top+eqRect.height/2)+'px';
+    check.style.transform='translateY(-50%) scale(.45)';
+    stage.appendChild(check);
+    requestAnimationFrame(()=>check.classList.add('show'));
+    setMessage(`Solved! x = ${data.c.v}`,'good');
+    revealCompletionActions(data.c.v);
+  };
+
+  // At the final answer, slowly dissolve the instructional coefficient 1.
+  // Keep the x glyph at the same coordinates throughout the dissolve. Once
+  // the 1 is fully gone, gently close the small space it occupied.
+  const xTerm=eqEl.querySelector(`.term[data-side="${current.xs}"][data-type="x"]`);
+  const coeff=xTerm?.querySelector('.coeff-one');
+  const xGlyph=xTerm?.querySelector('.variable-symbol');
+  if(coeff&&xGlyph){
+    const fade=coeff.animate([
+      {opacity:1,filter:'blur(0)',transform:'scale(1)'},
+      {opacity:.72,filter:'blur(1px)',transform:'scale(.99)',offset:.38},
+      {opacity:.28,filter:'blur(4px)',transform:'scale(.94)',offset:.76},
+      {opacity:0,filter:'blur(8px)',transform:'scale(.86)'}
+    ],{duration:1375,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
+
+    fade.finished.then(()=>{
+      // Removing the instructional 1 changes the centered equation's total width.
+      // Capture every visible piece before and after that layout change, then use
+      // a FLIP translation so the small correction is shown as intentional motion
+      // rather than an instantaneous flash or horizontal jump.
+      const movingPieces=[
+        xGlyph,
+        eqEl.querySelector('.equals'),
+        ...eqEl.querySelectorAll('.term[data-type="constant"] .term-core')
+      ].filter(Boolean);
+      const beforeRects=new Map(movingPieces.map(el=>[el,el.getBoundingClientRect()]));
+      coeff.remove();
+      const translations=movingPieces.map(el=>{
+        const beforeRect=beforeRects.get(el);
+        const afterRect=el.getBoundingClientRect();
+        const dx=beforeRect.left-afterRect.left;
+        const dy=beforeRect.top-afterRect.top;
+        return el.animate([
+          {transform:`translate(${dx}px,${dy}px)`},
+          {transform:'translate(0,0)'}
+        ],{duration:850,easing:'cubic-bezier(.22,.8,.25,1)',fill:'both'});
+      });
+      Promise.all(translations.map(a=>a.finished)).then(finishCelebration).catch(finishCelebration);
+    }).catch(finishCelebration);
+  }else{
+    finishCelebration();
+  }
+}
+function shuffled(values){
+  const a=[...values];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function buildDivisionChoices(data){
+  divisionChoices.innerHTML='';
+  divisionChoices.classList.remove('two-options');
+  const coeff=data.x.v;
+  const constant=data.c.v;
+
+  // Keep each number directly above its opposite. In a two-column grid the
+  // row-major order below displays:
+  // coefficient | constant
+  // opposite    | opposite
+  // If both pairs are identical, show only one vertical pair.
+  const choices=Math.abs(coeff)===Math.abs(constant)
+    ? [coeff,-coeff]
+    : [coeff,constant,-coeff,-constant];
+
+  if(choices.length===2)divisionChoices.classList.add('two-options');
+
+  choices.forEach(value=>{
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='division-choice';
+    btn.textContent=String(value).replace('-','−');
+    btn.dataset.value=String(value);
+    btn.addEventListener('click',()=>chooseDivision(value,btn));
+    divisionChoices.appendChild(btn);
+  });
+}
+function chooseDivision(chosen,button){
+  // A division prompt can appear a fraction of a second before the preceding
+  // equation animation releases its lock. Preserve that first tap instead of
+  // silently discarding it, then apply the choice as soon as the animation ends.
+  if(button.disabled||divisionChoicePending)return;
+  if(locked){
+    divisionChoicePending=true;
+    button.classList.add('correct');
+    const waitForEquation=()=>{
+      if(!locked){
+        divisionChoicePending=false;
+        button.classList.remove('correct');
+        chooseDivision(chosen,button);
+      }else{
+        setTimeout(waitForEquation,40);
+      }
+    };
+    setTimeout(waitForEquation,40);
+    return;
+  }
+  const data=getDivisionData();if(!data)return;
+  if(chosen!==data.x.v){
+    button.classList.remove('wrong');void button.offsetWidth;button.classList.add('wrong');
+    setMessage('That will not make the coefficient of x equal to 1. Try again.','bad');
+    setTimeout(()=>button.classList.remove('wrong'),520);
+    return;
+  }
+  divisionChoicePending=false;
+  button.classList.add('correct');
+  divisionChoices.querySelectorAll('button').forEach(b=>b.disabled=true);
+  setTimeout(()=>performDivision(chosen),180);
+}
+function checkFinal(){
+  divisionChoicePending=false;
+  divisionZone.classList.remove('show');divisionPrompt.style.display='';divisionEntry.classList.remove('hidden');divisionContinue.classList.remove('show');divisionContinue.disabled=false;divisionWork.classList.remove('show');divisionWork.innerHTML='';divisionInput.value='';divisionChoices.innerHTML='';
+  const data=getDivisionData();if(!data)return;
+  if(data.x.v===1){
+    setMessage(`The coefficient is 1, so the equation is solved.`,'good');
+    setTimeout(()=>celebrateWithoutDivision(data),locked?3300:120);
+    return;
+  }
+  buildDivisionChoices(data);
+  divisionZone.classList.add('show');
+  setMessage('What should we divide both sides by?','good');
+}
+function submitDivision(){
+  // Kept as a compatibility fallback for older saved versions of the page.
+  const chosen=Number(divisionInput.value.trim().replace('−','-'));
+  if(Number.isFinite(chosen)&&chosen!==0)performDivision(chosen);
+}
+function performDivision(chosen){
+  divisionSteps=[];divisionStepBusy=false;divisionAdvancePending=false;
+  const data=getDivisionData();if(!data)return;
+  const required=data.x.v;
+  if(chosen!==required){setMessage('That will not make the coefficient of x equal to 1. Try again.','bad');return;}
+  locked=true;
+  const before=equationText(state);
+  const divisor=data.x.v;
+  const divisorText=String(divisor).replace('-','−');
+  const result=data.c.v/divisor;
+  const resultText=String(result).replace('-','−');
+  // During division, write the coefficient explicitly—even when it is 1
+  // or −1—so the entered divisor is visibly present in both fractions.
+  const xCoeffText=String(data.x.v).replace('-','−');
+  const xNum=`<span class="cancel-coeff">${xCoeffText}</span><span class="keep-x">x</span>`;
+  const otherNum=`<span class="other-num">${signedText(data.c)}</span><span class="answer-value">${resultText}</span>`;
+  const xFraction=`<span class="inplace-fraction x-fraction"><span class="num">${xNum}</span><span class="bar fraction-bar"></span><span class="den cancel-x-den">${divisorText}</span></span>`;
+  const otherFraction=`<span class="inplace-fraction other-fraction"><span class="num">${otherNum}</span><span class="bar fraction-bar"></span><span class="den other-den">${divisorText}</span></span>`;
+  divisionZone.classList.add('show');
+  divisionPrompt.style.display='none';
+  divisionEntry.classList.add('hidden');
+  eqEl.classList.add('compact-final');
+  eqEl.innerHTML=data.xs==='left'
+    ?`<div class="inplace-division" id="inplaceDivision">${xFraction}<span class="equals">=</span>${otherFraction}</div>`
+    :`<div class="inplace-division" id="inplaceDivision">${otherFraction}<span class="equals">=</span>${xFraction}</div>`;
+  updateDivisionContinue();
+  setMessage('Tap Continue to begin the division animation.','good');
+
+  const root=document.getElementById('inplaceDivision');
+  const coeff=root.querySelector('.cancel-coeff');
+  const xden=root.querySelector('.cancel-x-den');
+  const keepX=root.querySelector('.keep-x');
+  const xbar=root.querySelector('.x-fraction .fraction-bar');
+  const otherNumEl=root.querySelector('.other-num');
+  const otherDenEl=root.querySelector('.other-den');
+  const otherBar=root.querySelector('.other-fraction .fraction-bar');
+  const answer=root.querySelector('.answer-value');
+
+  // Stage 1: only the coefficient, its denominator, and the fraction bar dissolve.
+  // The x stays perfectly still so students can isolate one visual event at a time.
+  queueDivisionStep(()=>{
+    coeff.animate([
+      {transform:'scale(1)',opacity:1,filter:'blur(0)'},
+      {transform:'scale(.96)',opacity:.58,filter:'blur(2px)',offset:.58},
+      {transform:'scale(.84)',opacity:0,filter:'blur(7px)'}
+    ],{duration:1325,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
+    xden.animate([
+      {transform:'translateY(0) scale(1)',opacity:1,filter:'blur(0)'},
+      {transform:'translateY(0) scale(.96)',opacity:.58,filter:'blur(2px)',offset:.58},
+      {transform:'translateY(0) scale(.84)',opacity:0,filter:'blur(7px)'}
+    ],{duration:1325,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
+    xbar.animate([
+      {opacity:1,transform:'scaleX(1)'},
+      {opacity:0,transform:'scaleX(.18)'}
+    ],{duration:1180,easing:'ease',fill:'forwards'});
+  },1550);
+
+  // Stage 2: keep the x exactly where it is. The final centering movement
+  // is saved for the completed equation so students never lose track of it.
+
+  // Stage 2: mirror the x-side cancellation on the constant side.
+  // The numerator, denominator, and bar dissolve in place; the quotient is
+  // revealed exactly where the numerator was and does not travel yet.
+  queueDivisionStep(()=>{
+    const fraction=otherNumEl.closest('.other-fraction');
+    const fr=fraction.getBoundingClientRect();
+    const nr=otherNumEl.getBoundingClientRect();
+    const numeratorCenterX=nr.left+nr.width/2-fr.left;
+    const numeratorCenterY=nr.top+nr.height/2-fr.top;
+    answer.style.left=numeratorCenterX+'px';
+    answer.style.top=numeratorCenterY+'px';
+
+    otherNumEl.animate([
+      {transform:'scale(1)',opacity:1,filter:'blur(0)'},
+      {transform:'scale(.96)',opacity:.58,filter:'blur(2px)',offset:.58},
+      {transform:'scale(.84)',opacity:0,filter:'blur(7px)'}
+    ],{duration:1325,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
+    otherDenEl.animate([
+      {transform:'translateY(0) scale(1)',opacity:1,filter:'blur(0)'},
+      {transform:'translateY(0) scale(.96)',opacity:.58,filter:'blur(2px)',offset:.58},
+      {transform:'translateY(0) scale(.84)',opacity:0,filter:'blur(7px)'}
+    ],{duration:1325,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
+    otherBar.animate([
+      {opacity:1,transform:'scaleX(1)'},
+      {opacity:0,transform:'scaleX(.18)'}
+    ],{duration:1180,easing:'ease',fill:'forwards'});
+    const answerReveal=answer.animate([
+      {transform:'translate(-50%,-50%) scale(.92)',opacity:0,filter:'blur(5px)'},
+      {transform:'translate(-50%,-50%) scale(.97)',opacity:.25,filter:'blur(2px)',offset:.48},
+      {transform:'translate(-50%,-50%) scale(1)',opacity:1,filter:'blur(0)'}
+    ],{duration:1425,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
+    setMessage('The constants divide, then the finished terms slide directly into the final equation.','good');
+
+    // Continue automatically into the final translation as the constant-side
+    // division finishes. This keeps the second and third visual events in one
+    // uninterrupted animation and removes the need for another spacebar press.
+    answerReveal.finished.then(()=>{
+    // Final phase: make one seamless handoff. Capture the exact visible
+    // coordinates, replace the fraction with a single travel layer at those
+    // same pixels, and move those same three pieces into the final equation.
+    const eqSign=root.querySelector('.equals');
+    const xRect=keepX.getBoundingClientRect();
+    const eqRect=eqSign.getBoundingClientRect();
+    const ansRect=answer.getBoundingClientRect();
+    const stageRectNow=stage.getBoundingClientRect();
+
+    const measure=document.createElement('div');
+    measure.className='final-measure';
+    measure.innerHTML=`<span class="fm-x">x</span><span class="fm-eq">=</span><span class="fm-a">${resultText}</span>`;
+    stage.appendChild(measure);
+    const tx=measure.querySelector('.fm-x').getBoundingClientRect();
+    const te=measure.querySelector('.fm-eq').getBoundingClientRect();
+    const ta=measure.querySelector('.fm-a').getBoundingClientRect();
+
+    const layer=document.createElement('div');
+    layer.className='final-travel-layer';
+    const makePiece=(text,r,cls)=>{
+      const el=document.createElement('span');
+      el.className='final-travel-piece '+cls;
+      el.textContent=text;
+      el.style.transform=`translate(${r.left-stageRectNow.left}px,${r.top-stageRectNow.top}px)`;
+      layer.appendChild(el);
+      return el;
+    };
+    const px=makePiece('x',xRect,'travel-x');
+    const pe=makePiece('=',eqRect,'travel-eq');
+    const pa=makePiece(resultText,ansRect,'travel-answer');
+    stage.appendChild(layer);
+
+    // The travel layer is now pixel-for-pixel over the originals. Hide the
+    // entire fraction once—rather than hiding individual pieces—so no second
+    // answer can remain visible underneath it.
+    root.style.visibility='hidden';
+
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      const move=(el,from,to)=>el.animate([
+        {transform:`translate(${from.left-stageRectNow.left}px,${from.top-stageRectNow.top}px)`},
+        {transform:`translate(${to.left-stageRectNow.left}px,${to.top-stageRectNow.top}px)`}
+      ],{duration:1425,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
+      const ax=move(px,xRect,tx);
+      const ae=move(pe,eqRect,te);
+      const aa=move(pa,ansRect,ta);
+      setMessage('Keep your eyes on the x and the answer as they slide into the finished equation.','good');
+
+      Promise.all([ax.finished,ae.finished,aa.finished]).then(()=>{
+        data.c.v=result;
+        data.x.v=1;
+        addHistory(`${before}  →  ${equationText(state)}`);
+
+        // Keep the same three traveling elements as the final answer. There is
+        // no second render, so the quotient cannot duplicate or flash.
+        px.style.transform=`translate(${tx.left-stageRectNow.left}px,${tx.top-stageRectNow.top}px)`;
+        pe.style.transform=`translate(${te.left-stageRectNow.left}px,${te.top-stageRectNow.top}px)`;
+        pa.style.transform=`translate(${ta.left-stageRectNow.left}px,${ta.top-stageRectNow.top}px)`;
+        eqEl.innerHTML='';
+        measure.remove();
+        divisionZone.classList.remove('show');
+
+        // Celebration begins only after the mathematical motion is complete.
+        // Keep it restrained: a soft green board and one green checkmark just
+        // to the right of the finished expression.
+        board.classList.add('completed');
+        const check=document.createElement('span');
+        check.className='completion-check-inline';
+        check.textContent='';
+        const checkGap=Math.max(18,parseFloat(getComputedStyle(eqEl).fontSize)*.28);
+        check.style.left=(ta.right-stageRectNow.left+checkGap)+'px';
+        check.style.top=(ta.top-stageRectNow.top+(ta.height/2))+'px';
+        check.style.transform='translateY(-50%) scale(.45)';
+        layer.appendChild(check);
+        layer.classList.add('celebrate');
+        requestAnimationFrame(()=>check.classList.add('show'));
+        setMessage(`Solved! x = ${resultText}`,'good');
+        revealCompletionActions(result);
+        locked=false;
+      });
+    }));
+    });
+  },3300);
+  updateDivisionContinue();
+}
+divisionSubmit.addEventListener('click',submitDivision);
+divisionContinue.addEventListener('click',advanceDivisionStep);
+divisionInput.addEventListener('keydown',e=>{if(e.key==='Enter')submitDivision();});
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'&&locked&&(divisionSteps.length||divisionStepBusy)){
+    e.preventDefault();
+    if(e.repeat)return;
+    advanceDivisionStep();
+  }
+});
+function start(eq){clearTimeout(checkRevealTimer);hideVerification();currentSolution=null;currentSolvedRecorded=false;currentChecked=false;nextBtn.hidden=true;checkWorkBtn.hidden=true;checkWorkBtn.classList.remove('reveal');arithmeticStarted=false;divisionSteps=[];divisionStepBusy=false;divisionAdvancePending=false;divisionChoicePending=false;divisionPrompt.style.display='';divisionEntry.classList.remove('hidden');divisionChoices.innerHTML='';divisionContinue.classList.remove('show');divisionContinue.disabled=false;board.classList.remove('completed');eqEl.classList.remove('static-celebrate');stage.querySelectorAll('.final-travel-layer,.final-measure,.completion-check-inline').forEach(el=>el.remove());const normalized={left:[eq.left[0]||null,eq.left[1]||null],right:[eq.right[0]||null,eq.right[1]||null]};original=clone(normalized);state=clone(normalized);addHistory(equationText(state));render();}
+document.getElementById('newBtn').onclick=()=>start(generateEquation());document.getElementById('restartBtn').onclick=()=>start(original);nextBtn.addEventListener('click',()=>start(generateEquation()));checkWorkBtn.addEventListener('click',runVerification);updateSessionStats();start(generateEquation());
+})();
+</script>
+</body>
+</html>
