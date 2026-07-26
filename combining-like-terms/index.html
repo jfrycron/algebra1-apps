@@ -3,9 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Combining Like Terms</title>
+  <title>Combining Like Terms · Carron UI</title>
   <style>
     :root{
+      --cui-bg:#e9eef5;
+      --cui-panel:#fbfcfe;
+      --cui-line:#d4dce8;
+      --cui-ink:#20242c;
+      --cui-muted:#667085;
+      --cui-accent:#3757d5;
       --bg:#f6f7fb;
       --panel:#ffffff;
       --ink:#20242c;
@@ -538,16 +544,248 @@
     .card.incorrect .live-preview-label{display:none;}
     .card.incorrect .live-error{display:flex;}
     .card.incorrect .live-preview-expression{color:#7f1d1d;}
+
+    /* Combining Like Terms · Carron UI 1.0 layout
+       The original activity logic is unchanged. Only its shell and spacing
+       have been rebuilt so the full activity works naturally at 100% zoom. */
+
+    :root{
+      --cui-page-max:1040px;
+      --cui-workspace-min-height:0px;
+      --cui-title-size:clamp(1.8rem,2.8vw,2.3rem);
+      --cui-space-5:22px;
+    }
+
+    body.cui-page{
+      display:block;
+      padding:14px;
+      background:var(--cui-bg);
+    }
+
+    .app.cui-app{
+      width:min(var(--cui-page-max),100%);
+      margin:0 auto;
+    }
+
+    .cui-header{
+      margin:0;
+      padding:18px 24px 14px;
+      text-align:left;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:4px 20px;
+      align-items:start;
+    }
+
+    .cui-title{
+      text-align:left;
+    }
+
+    .directions.cui-directions{
+      grid-column:1;
+      margin:6px 0 0;
+      max-width:780px;
+      font-size:1rem;
+      line-height:1.32;
+    }
+
+    .card.cui-workspace{
+      min-height:0;
+      padding:16px 22px 14px;
+      border:0;
+      border-radius:0;
+      box-shadow:none;
+      background:var(--cui-panel);
+    }
+
+    .prompt{
+      margin-bottom:6px;
+      font-size:clamp(1.05rem,2vw,1.28rem);
+    }
+
+    .bank{
+      min-height:54px;
+      padding:6px 6px 9px;
+      margin-bottom:10px;
+      line-height:1.45;
+    }
+
+    .expr-term{
+      font-size:clamp(1.65rem,3vw,2.15rem);
+    }
+
+    .buckets{
+      gap:12px;
+    }
+
+    .bucket{
+      min-height:174px;
+      padding:10px;
+      border-radius:16px;
+    }
+
+    .bucket[data-type="x2"]{background:#eaf3fb;}
+    .bucket[data-type="x"]{background:#f1ecfa;}
+    .bucket[data-type="c"]{background:#fff6dc;}
+
+    .bucket-title{
+      margin-bottom:3px;
+      font-size:1.08rem;
+    }
+
+    .bucket-subtitle{
+      margin-bottom:5px;
+      font-size:.82rem;
+    }
+
+    .bucket-items{
+      min-height:74px;
+      gap:5px;
+      padding:2px 0 7px;
+    }
+
+    .bucket-items .expr-term{
+      padding:5px 7px;
+      font-size:clamp(1.35rem,2.6vw,1.8rem);
+    }
+
+    .combine-area{
+      padding-top:8px;
+    }
+
+    .combine-area label{
+      margin-bottom:5px;
+      font-size:.83rem;
+    }
+
+    .term-entry input{
+      width:70px;
+      height:42px;
+      font-size:1.25rem;
+    }
+
+    .term-suffix{
+      font-size:1.35rem;
+    }
+
+    .live-preview{
+      min-height:82px;
+      margin-top:12px;
+      padding:10px 14px;
+      border-radius:15px;
+    }
+
+    .live-preview-label{
+      margin-bottom:3px;
+      font-size:.84rem;
+    }
+
+    .live-preview-expression{
+      font-size:clamp(1.9rem,4.5vw,3rem);
+    }
+
+    .card.celebrating .live-preview-expression{
+      font-size:clamp(2.15rem,5vw,3.45rem);
+    }
+
+    .controls{
+      margin-top:10px;
+      gap:8px;
+    }
+
+    .cui-new-round{
+      grid-column:2;
+      grid-row:1 / span 2;
+      align-self:start;
+      white-space:nowrap;
+      border:0;
+      border-radius:12px;
+      padding:12px 16px;
+      background:#b95525;
+      color:#fff;
+      font-size:15px;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    .cui-new-round:hover{
+      background:#a64c20;
+      color:#fff;
+    }
+
+    .controls button,
+    .final button{
+      min-height:42px;
+      padding:9px 17px;
+    }
+
+    .feedback{
+      min-height:24px;
+      margin-top:4px;
+      font-size:.94rem;
+    }
+
+    .term-entry.no-terms input{
+      width:112px;
+      font-size:.92rem;
+      font-weight:800;
+      color:#64748b;
+      background:#f1f5f9;
+      border-style:dashed;
+      cursor:default;
+    }
+
+    .term-entry.no-terms .term-suffix{
+      display:none;
+    }
+
+    .final{
+      margin-top:6px;
+    }
+
+    .statusbar{
+      margin:0;
+      padding:9px 22px;
+      border-top:1px solid var(--cui-line);
+      background:#fff;
+      font-size:.84rem;
+    }
+
+    @media (max-width:760px){
+      body.cui-page{padding:8px}
+      .cui-header{padding:16px 16px 12px}
+      .card.cui-workspace{padding:14px}
+      .buckets{grid-template-columns:1fr}
+      .bucket{min-height:150px}
+      .bucket-items{min-height:58px}
+      .statusbar{padding:9px 14px}
+      .cui-header{grid-template-columns:minmax(0,1fr) auto;column-gap:10px}
+      .cui-new-round{padding:8px 12px;min-height:38px}
+    }
+
+    @media (max-height:760px) and (min-width:761px){
+      body.cui-page{padding:8px}
+      .cui-header{padding-top:13px;padding-bottom:10px}
+      .card.cui-workspace{padding-top:11px;padding-bottom:10px}
+      .bank{min-height:48px;padding-top:2px;padding-bottom:5px}
+      .bucket{min-height:160px}
+      .bucket-items{min-height:64px}
+      .live-preview{min-height:72px;margin-top:9px}
+      .controls{margin-top:7px}
+      .statusbar{padding-top:7px;padding-bottom:7px}
+    }
+
     </style>
 </head>
-<body>
-  <main class="app">
-    <header>
-      <h1>Combining Like Terms</h1>
-      <p class="directions">Sort every term into the correct bucket. Then combine the coefficients in each bucket to build the simplified expression.</p>
+<body class="cui-page">
+  <main class="app cui-app">
+    <header class="cui-header">
+      <h1 class="cui-title">Combining Like Terms</h1>
+      <p class="directions cui-directions">Sort every term into the correct bucket. Then combine the coefficients in each bucket to build the simplified expression.</p>
+      <button id="newRoundBtn" class="secondary cui-button cui-button--secondary cui-new-round">New Round</button>
     </header>
 
-    <section class="card">
+    <section class="card cui-workspace">
       <div id="prompt" class="prompt">Drag or tap each term into a bucket.</div>
 
       <div id="bank" class="bank" aria-label="Term bank"></div>
@@ -601,20 +839,20 @@
       </div>
 
       <div class="controls">
-        <button id="checkBtn" class="primary">Check Work</button>
-        <button id="resetBtn" class="secondary">Reset Problem</button>
+        <button id="resetBtn" class="secondary cui-button cui-button--secondary">Reset</button>
+        <button id="checkBtn" class="primary cui-button cui-button--primary">Check Work</button>
       </div>
 
       <div id="feedback" class="feedback" aria-live="polite"></div>
 
       <div id="final" class="final">
-        <button id="nextBtn" class="primary">Next Problem →</button>
+        <button id="nextBtn" class="primary cui-button cui-button--primary">Next Problem →</button>
       </div>
     </section>
 
     <div class="statusbar">
       <div id="status">0 completed</div>
-      <div>Sort first · Combine second</div>
+      <div>Sort first · Combine second · Carron UI 1.0</div>
     </div>
   </main>
 
@@ -822,6 +1060,21 @@
     return out;
   }
 
+  function updateEmptyCategories(){
+    const counts={x2:0,x:0,c:0};
+    originalTerms.forEach(term=>counts[term.type]++);
+
+    TYPES.forEach(type=>{
+      const input=inputs[type];
+      const entry=input.closest('.term-entry');
+      const hasNoTerms=counts[type]===0;
+      input.disabled=hasNoTerms;
+      input.placeholder=hasNoTerms?'No terms':'';
+      if(hasNoTerms)input.value='';
+      entry.classList.toggle('no-terms',hasNoTerms);
+    });
+  }
+
 
   function updateLivePreview(){
     const values={
@@ -866,16 +1119,24 @@
   }
 
   function checkWork(){
-const answers={};
+    const correct=totals();
+    const answers={};
+
     for(const type of TYPES){
-      if(inputs[type].value===''){
+      const raw=inputs[type].value.trim();
+      // A blank answer is mathematically complete when that category totals zero.
+      // This includes both absent categories and terms that cancel to zero.
+      if(raw===''){
+        if(correct[type]===0){
+          answers[type]=0;
+          continue;
+        }
         showInlineError();
         return;
       }
-      answers[type]=Number(inputs[type].value);
+      answers[type]=Number(raw);
     }
 
-    const correct=totals();
     const wrong=TYPES.filter(type=>answers[type]!==correct[type]);
 
     if(wrong.length){
@@ -900,6 +1161,7 @@ const answers={};
     final.className='final';
     card.classList.remove('celebrating');
     card.classList.remove('incorrect');
+    updateEmptyCategories();
     render();
   }
 
@@ -913,6 +1175,7 @@ const answers={};
     final.className='final';
     card.classList.remove('celebrating');
     card.classList.remove('incorrect');
+    updateEmptyCategories();
     render();
   }
 
@@ -924,6 +1187,7 @@ const answers={};
   Object.values(inputs).forEach(input=>input.addEventListener('input',updateLivePreview));
   document.getElementById('checkBtn').addEventListener('click',checkWork);
   document.getElementById('resetBtn').addEventListener('click',resetProblem);
+  document.getElementById('newRoundBtn').addEventListener('click',newProblem);
   document.getElementById('nextBtn').addEventListener('click',newProblem);
 
   newProblem();
