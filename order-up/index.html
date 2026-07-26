@@ -14,6 +14,8 @@
       --accent-dark:#173f78;
       --good:#237a3b;
       --bad:#a52a2a;
+      --round:#b95525;
+      --round-hover:#a64c20;
     }
     *{box-sizing:border-box}
     body{
@@ -191,7 +193,7 @@
     .receipt-success .round-icon{background:var(--good)}
     .receipt-error .round-icon{background:#b63a3a}
     .receipt-output{
-      font-size:clamp(1.75rem,4.8vw,2.8rem);
+      font-size:clamp(1.4rem,3.4vw,2.15rem);
       font-weight:900;
       color:var(--accent-dark);
       line-height:1.35;
@@ -205,7 +207,7 @@
     }
     .card.correct .receipt-label{display:none}
     .card.correct .receipt-success{display:flex}
-    .card.correct .receipt-output{font-size:clamp(2.1rem,5.5vw,3.35rem)}
+    .card.correct .receipt-output{font-size:clamp(1.6rem,3.8vw,2.5rem)}
     .card.incorrect .receipt{
       background:#fff1f1;
       border-color:#e0a1a1;
@@ -252,14 +254,103 @@
       .tray{min-height:180px}
       .food-item{width:58px;height:58px;font-size:2rem}
     }
+
+    /* Order Up · Carron UI 1.0 */
+    body{
+      font-family:Calibri,"Segoe UI",Arial,sans-serif;
+      background:#e9eef5;
+      padding:14px;
+    }
+    .app{width:min(1040px,100%);margin:0 auto}
+    .app-header{
+      padding:18px 24px 14px;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:4px 20px;
+      align-items:start;
+    }
+    h1{
+      text-align:left;
+      font-size:clamp(1.8rem,2.8vw,2.3rem);
+      color:var(--ink);
+    }
+    .directions{
+      grid-column:1;
+      text-align:left;
+      margin:6px 0 0;
+      max-width:780px;
+      font-size:1rem;
+      line-height:1.32;
+    }
+    .new-round{
+      grid-column:2;
+      grid-row:1 / span 2;
+      align-self:start;
+      white-space:nowrap;
+      border-radius:12px;
+      padding:12px 16px;
+      background:var(--round);
+      color:#fff;
+      font-size:15px;
+      font-weight:800;
+    }
+    .new-round:hover{background:var(--round-hover)}
+    .card{
+      background:#fbfcfe;
+      border:0;
+      border-radius:0;
+      box-shadow:none;
+      padding:16px 22px 14px;
+    }
+    .order-strip{
+      min-height:82px;
+      padding:8px 10px;
+      margin-bottom:12px;
+      border:0;
+      border-radius:0;
+      background:transparent;
+    }
+    .food-item{width:58px;height:58px;font-size:2rem}
+    .trays{gap:12px;margin-bottom:12px}
+    .tray{min-height:174px;padding:10px}
+    .tray[data-type="burger"]{background:#eaf3fb}
+    .tray[data-type="fries"]{background:#f1ecfa}
+    .tray[data-type="nuggets"]{background:#fff6dc}
+    .tray[data-type="coke"]{background:#eaf6ee}
+    .tray-title{margin-bottom:3px}
+    .tray-items{min-height:62px;padding:4px 0 8px}
+    .count-row{padding-top:8px}
+    .count-input{height:42px;font-size:1.25rem}
+    .receipt{min-height:82px;padding:10px 14px}
+    .actions{margin-top:10px}
+    .statusbar{
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      padding:9px 22px;
+      border-top:1px solid #d4dce8;
+      background:#fff;
+      color:var(--muted);
+      font-size:.84rem;
+    }
+    @media (max-width:760px){
+      body{padding:8px}
+      .app-header{padding:16px 16px 12px;column-gap:10px}
+      .new-round{padding:8px 12px;min-height:38px}
+      .card{padding:14px}
+      .tray{min-height:150px}
+      .statusbar{padding:9px 14px}
+    }
   </style>
 </head>
 <body>
   <main class="app">
-    <section class="card" id="card">
+    <header class="app-header">
       <h1>Order Up</h1>
       <p class="directions">Sort each item into its matching tray, count each category, then simplify the order.</p>
-
+      <button class="new-round" id="newRoundBtn">New Round</button>
+    </header>
+    <section class="card" id="card">
       <div class="section-label">Customer Order</div>
       <div class="order-strip" id="orderStrip" aria-label="Customer order"></div>
 
@@ -297,11 +388,15 @@
       </div>
 
       <div class="actions">
-        <button class="secondary" id="resetBtn">Reset Order</button>
+        <button class="secondary" id="resetBtn">Reset</button>
         <button class="primary check" id="checkBtn">Check Order</button>
         <button class="primary next" id="nextBtn">Next Order →</button>
       </div>
     </section>
+    <div class="statusbar">
+      <div id="status">0 completed</div>
+      <div>Sort first · Count second · Carron UI 1.0</div>
+    </div>
   </main>
 
 <script>
@@ -327,8 +422,10 @@
     coke:document.getElementById('cokeTray')
   };
   const receiptOutput=document.getElementById('receiptOutput');
+  const status=document.getElementById('status');
   let items=[];
   let activeId=null;
+  let completed=0;
 
   function shuffle(a){
     for(let i=a.length-1;i>0;i--){
@@ -344,12 +441,17 @@
     Object.values(trays).forEach(t=>t.innerHTML='');
     orderStrip.innerHTML='';
 
-    const counts={
-      burger:Math.floor(Math.random()*4)+2,
-      fries:Math.floor(Math.random()*4)+2,
-      nuggets:Math.floor(Math.random()*5)+2,
-      coke:Math.floor(Math.random()*4)+2
-    };
+    const counts={burger:1,fries:1,nuggets:1,coke:1};
+    const types=Object.keys(counts);
+    const targetTotal=Math.floor(Math.random()*4)+7;
+    let remaining=targetTotal-4;
+    while(remaining>0){
+      const type=types[Math.floor(Math.random()*types.length)];
+      if(counts[type]<3){
+        counts[type]++;
+        remaining--;
+      }
+    }
 
     items=[];
     let id=0;
@@ -357,6 +459,14 @@
       for(let i=0;i<count;i++) items.push({id:`food-${id++}`,type,location:'bank'});
     });
     shuffle(items);
+    render();
+    updateReceipt();
+  }
+
+  function resetOrder(){
+    card.classList.remove('correct','incorrect');
+    Object.values(inputs).forEach(input=>input.value='');
+    items.forEach(item=>item.location='bank');
     render();
     updateReceipt();
   }
@@ -473,6 +583,8 @@
     if(sortedCorrect && valuesCorrect && complete){
       card.classList.remove('incorrect');
       card.classList.add('correct');
+      completed++;
+      status.textContent=`${completed} completed`;
     }else{
       card.classList.remove('correct');
       card.classList.add('incorrect');
@@ -481,7 +593,8 @@
 
   document.getElementById('checkBtn').addEventListener('click',checkOrder);
   document.getElementById('nextBtn').addEventListener('click',newOrder);
-  document.getElementById('resetBtn').addEventListener('click',newOrder);
+  document.getElementById('resetBtn').addEventListener('click',resetOrder);
+  document.getElementById('newRoundBtn').addEventListener('click',newOrder);
 
   newOrder();
 </script>
