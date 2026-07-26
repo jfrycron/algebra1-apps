@@ -138,10 +138,9 @@ let divisionSteps=[],divisionStepBusy=false,divisionAdvancePending=false,divisio
 function queueDivisionStep(action,busyMs){divisionSteps.push({action,busyMs});}
 function updateDivisionContinue(){
   if(!divisionContinue)return;
-  // Division now plays continuously, so the old step-by-step Continue
-  // control remains hidden. The function stays for compatibility.
-  divisionContinue.classList.remove('show');
-  divisionContinue.disabled=true;
+  const hasWork=locked&&(divisionSteps.length||divisionStepBusy);
+  divisionContinue.classList.toggle('show',hasWork);
+  divisionContinue.disabled=divisionStepBusy||!divisionSteps.length;
 }
 function advanceDivisionStep(){
   if(!locked||!divisionSteps.length)return;
@@ -153,12 +152,9 @@ function advanceDivisionStep(){
   step.action();
   setTimeout(()=>{
     divisionStepBusy=false;
+    updateDivisionContinue();
     if(divisionSteps.length){
-      // Continue directly into the next visual step. Division is now one
-      // uninterrupted mathematical animation rather than a series of prompts.
-      setTimeout(advanceDivisionStep,120);
-    }else{
-      updateDivisionContinue();
+      setMessage('Tap Continue for the next step.','good');
     }
   },step.busyMs);
 }
@@ -917,17 +913,29 @@ function celebrateWithoutDivision(data){
       ].filter(Boolean);
       const beforeRects=new Map(movingPieces.map(el=>[el,el.getBoundingClientRect()]));
       coeff.remove();
-      const translations=movingPieces.map(el=>{
+
+      // Set each inverse translation synchronously. This prevents the constant
+      // from briefly painting in its new centered position before it begins moving.
+      const motionData=movingPieces.map(el=>{
         const beforeRect=beforeRects.get(el);
         const afterRect=el.getBoundingClientRect();
         const dx=beforeRect.left-afterRect.left;
         const dy=beforeRect.top-afterRect.top;
-        return el.animate([
+        el.style.transform=`translate(${dx}px,${dy}px)`;
+        return {el,dx,dy};
+      });
+      void eqEl.offsetWidth;
+
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        const translations=motionData.map(({el,dx,dy})=>el.animate([
           {transform:`translate(${dx}px,${dy}px)`},
           {transform:'translate(0,0)'}
-        ],{duration:1050,easing:'cubic-bezier(.22,.8,.25,1)',fill:'both'});
-      });
-      Promise.all(translations.map(a=>a.finished)).then(finishCelebration).catch(finishCelebration);
+        ],{duration:1050,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'}));
+        Promise.all(translations.map(a=>a.finished)).then(()=>{
+          motionData.forEach(({el})=>el.style.transform='');
+          finishCelebration();
+        }).catch(finishCelebration);
+      }));
     }).catch(finishCelebration);
   }else{
     finishCelebration();
@@ -1033,6 +1041,18 @@ function performDivision(chosen){
   const otherNum=`<span class="other-num">${signedText(data.c)}</span><span class="answer-value">${resultText}</span>`;
   const xFraction=`<span class="inplace-fraction x-fraction"><span class="num">${xNum}</span><span class="bar fraction-bar"></span><span class="den cancel-x-den">${divisorText}</span></span>`;
   const otherFraction=`<span class="inplace-fraction other-fraction"><span class="num">${otherNum}</span><span class="bar fraction-bar"></span><span class="den other-den">${divisorText}</span></span>`;
+
+  // Remember where the three visible parts of the solved equation currently are.
+  // The new fraction layout will begin at these exact screen coordinates.
+  const oldXCore=eqEl.querySelector(`.term[data-side="${data.xs}"][data-type="x"] .term-core`);
+  const oldCCore=eqEl.querySelector(`.term[data-side="${data.cs}"][data-type="constant"] .term-core`);
+  const oldEquals=eqEl.querySelector('.equals');
+  const oldRects={
+    x:oldXCore?.getBoundingClientRect(),
+    c:oldCCore?.getBoundingClientRect(),
+    eq:oldEquals?.getBoundingClientRect()
+  };
+
   divisionZone.classList.add('show');
   divisionPrompt.style.display='none';
   divisionEntry.classList.add('hidden');
@@ -1040,10 +1060,12 @@ function performDivision(chosen){
   eqEl.innerHTML=data.xs==='left'
     ?`<div class="inplace-division" id="inplaceDivision">${xFraction}<span class="equals">=</span>${otherFraction}</div>`
     :`<div class="inplace-division" id="inplaceDivision">${otherFraction}<span class="equals">=</span>${xFraction}</div>`;
-  updateDivisionContinue();
-  setMessage('Watch both sides divide continuously.','good');
-
   const root=document.getElementById('inplaceDivision');
+
+  // Show the complete division setup immediately after the divisor is chosen.
+  // The existing guided animations begin when the student presses Continue.
+  setMessage('Tap Continue to cancel the coefficient with the divisor.','good');
+
   const coeff=root.querySelector('.cancel-coeff');
   const xden=root.querySelector('.cancel-x-den');
   const keepX=root.querySelector('.keep-x');
@@ -1106,7 +1128,7 @@ function performDivision(chosen){
       {transform:'translate(-50%,-50%) scale(.97)',opacity:.25,filter:'blur(2px)',offset:.48},
       {transform:'translate(-50%,-50%) scale(1)',opacity:1,filter:'blur(0)'}
     ],{duration:1425,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
-    setMessage('The constants divide, then the finished terms slide directly into the final equation.','good');
+    setMessage('The constants divide. Then the finished equation will slide into place.','good');
 
     // Continue automatically into the final translation as the constant-side
     // division finishes. This keeps the second and third visual events in one
@@ -1194,9 +1216,9 @@ function performDivision(chosen){
     }));
     });
   },3300);
+
+  // Both guided steps are now queued, so the Continue button can appear.
   updateDivisionContinue();
-  // Begin immediately; each queued phase now hands off automatically.
-  advanceDivisionStep();
 }
 divisionSubmit.addEventListener('click',submitDivision);
 divisionContinue.addEventListener('click',advanceDivisionStep);
