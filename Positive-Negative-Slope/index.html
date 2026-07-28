@@ -1,1 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Which Way Does the Line Go?</title>
+<style>
+:root{
+  --page:#eef2f7;
+  --workspace:#fbfcff;
+  --border:#cbd5e1;
+  --accent:#3757d5;
+  --positive:#1F75FE;
+  --negative:#EE204D;
+  --zero:#344054;
+  --grid:#dbe3ee;
+  --axis:#667085;
+  --text:#172033;
+  --muted:#667085;
+  --slider-color:#1769aa;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--page);
+  color:var(--text);
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+}
+.app{
+  width:min(980px,calc(100% - 28px));
+  margin:24px auto;
+}
+header{
+  margin-bottom:13px;
+}
+h1{
+  margin:0;
+  font-size:clamp(25px,4vw,38px);
+  font-weight:750;
+  letter-spacing:-.025em;
+}
+.direction{
+  margin:8px 0 11px;
+  font-size:clamp(15px,2vw,18px);
+  color:var(--muted);
+}
+.accent-line{
+  height:3px;
+  border-radius:999px;
+  background:var(--accent);
+}
+.workspace{
+  background:var(--workspace);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:clamp(15px,2.5vw,24px);
+  overflow:hidden;
+}
+.graph-wrap{
+  position:relative;
+  width:min(680px,100%);
+  margin:0 auto;
+  aspect-ratio:1.35/1;
+}
+canvas{
+  display:block;
+  width:100%;
+  height:100%;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:white;
+}
+.line-label{
+  position:absolute;
+  left:50%;
+  top:50%;
+  padding:2px 4px;
+  background:transparent;
+  border-radius:0;
+  font-size:clamp(15px,2.25vw,21px);
+  font-weight:850;
+  white-space:nowrap;
+  transform-origin:center;
+  pointer-events:none;
+  text-shadow:
+    -2px -2px 0 #fff,
+     2px -2px 0 #fff,
+    -2px  2px 0 #fff,
+     2px  2px 0 #fff,
+     0 0 4px #fff;
+}
+.equation{
+  margin:18px auto 8px;
+  min-height:58px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:Cambria,"Times New Roman",serif;
+  font-size:clamp(32px,5.5vw,54px);
+  font-style:italic;
+  font-weight:600;
+}
+.control{
+  width:min(680px,100%);
+  margin:17px auto 3px;
+}
+.slider-label{
+  display:block;
+  margin-bottom:12px;
+  text-align:center;
+  font-size:16px;
+  font-weight:700;
+}
+input[type=range]{
+  width:100%;
+  height:34px;
+  accent-color:var(--slider-color);
+  cursor:pointer;
+}
+input[type=range]::-webkit-slider-runnable-track{
+  height:8px;
+  border-radius:999px;
+  background:var(--slider-color);
+}
+input[type=range]::-webkit-slider-thumb{
+  margin-top:-6px;
+}
+input[type=range]::-moz-range-track{
+  height:8px;
+  border-radius:999px;
+  background:var(--slider-color);
+}
+input[type=range]::-moz-range-progress{
+  height:8px;
+  border-radius:999px;
+  background:var(--slider-color);
+}
+.slider-ends{
+  display:flex;
+  justify-content:space-between;
+  color:var(--muted);
+  font-size:14px;
+  margin-top:1px;
+}
+.zero-mark{
+  text-align:center;
+  margin-top:-18px;
+  pointer-events:none;
+  color:var(--muted);
+  font-size:13px;
+}
+@media(max-width:560px){
+  .app{width:min(100% - 16px,980px);margin:12px auto}
+  .workspace{border-radius:15px;padding:10px}
+  .graph-wrap{aspect-ratio:1/1}
+  .line-label{padding:5px 7px}
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <h1>Which Way Does the Line Go?</h1>
+    <p class="direction">Drag the slider and watch what happens to the line.</p>
+    <div class="accent-line"></div>
+  </header>
 
+  <section class="workspace">
+    <div class="graph-wrap" id="graphWrap">
+      <canvas id="graph" aria-label="Coordinate graph showing a line through the origin"></canvas>
+      <div class="line-label" id="lineLabel" aria-live="polite">Positive Slope</div>
+    </div>
+
+    <div class="equation" id="equation" aria-live="polite"><span>y = </span><span id="coefficient">1</span><span>x</span></div>
+
+    <div class="control">
+      <label class="slider-label" for="slopeSlider">Move the slider</label>
+      <input id="slopeSlider" type="range" min="-3" max="3" value="1" step="0.1">
+      <div class="slider-ends"><span>Negative</span><span>Positive</span></div>
+      <div class="zero-mark">0</div>
+    </div>
+  </section>
+</main>
+
+<script>
+const canvas = document.getElementById('graph');
+const ctx = canvas.getContext('2d');
+const slider = document.getElementById('slopeSlider');
+const equation = document.getElementById('equation');
+const coefficient = document.getElementById('coefficient');
+const lineLabel = document.getElementById('lineLabel');
+const graphWrap = document.getElementById('graphWrap');
+
+let slope = 1;
+
+function resizeCanvas(){
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  draw();
+}
+
+function graphToCanvas(x,y,w,h){
+  const xmin=-5, xmax=5, ymin=-5, ymax=5;
+  return {
+    x:(x-xmin)/(xmax-xmin)*w,
+    y:h-(y-ymin)/(ymax-ymin)*h
+  };
+}
+
+function draw(){
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  ctx.clearRect(0,0,w,h);
+
+  const xmin=-5, xmax=5, ymin=-5, ymax=5;
+  ctx.lineWidth=1;
+  ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--grid').trim();
+
+  for(let x=xmin;x<=xmax;x++){
+    const p=graphToCanvas(x,0,w,h);
+    ctx.beginPath(); ctx.moveTo(p.x,0); ctx.lineTo(p.x,h); ctx.stroke();
+  }
+  for(let y=ymin;y<=ymax;y++){
+    const p=graphToCanvas(0,y,w,h);
+    ctx.beginPath(); ctx.moveTo(0,p.y); ctx.lineTo(w,p.y); ctx.stroke();
+  }
+
+  const axisColor=getComputedStyle(document.documentElement).getPropertyValue('--axis').trim();
+  ctx.strokeStyle=axisColor;
+  ctx.lineWidth=2;
+  const origin=graphToCanvas(0,0,w,h);
+  ctx.beginPath(); ctx.moveTo(0,origin.y); ctx.lineTo(w,origin.y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(origin.x,0); ctx.lineTo(origin.x,h); ctx.stroke();
+
+  ctx.fillStyle=axisColor;
+  ctx.font='12px Segoe UI, Arial';
+  ctx.textAlign='center';
+  ctx.textBaseline='top';
+  for(let x=-4;x<=4;x++){
+    if(x===0) continue;
+    const p=graphToCanvas(x,0,w,h);
+    ctx.fillText(String(x),p.x,origin.y+6);
+  }
+  ctx.textAlign='right';
+  ctx.textBaseline='middle';
+  for(let y=-4;y<=4;y++){
+    if(y===0) continue;
+    const p=graphToCanvas(0,y,w,h);
+    ctx.fillText(String(y),origin.x-7,p.y);
+  }
+
+  const styles=getComputedStyle(document.documentElement);
+  const color = slope>0
+    ? styles.getPropertyValue('--positive').trim()
+    : slope<0
+      ? styles.getPropertyValue('--negative').trim()
+      : styles.getPropertyValue('--zero').trim();
+
+  ctx.strokeStyle=color;
+  ctx.lineWidth=5;
+  ctx.lineCap='round';
+
+  ctx.setLineDash([]);
+
+  let x1=xmin, x2=xmax;
+  if(Math.abs(slope)>0.0001){
+    x1=Math.max(xmin,ymin/slope,ymax/slope);
+    x2=Math.min(xmax,ymin/slope,ymax/slope);
+    if(x1>x2){ const t=x1;x1=x2;x2=t; }
+  }
+  const p1=graphToCanvas(x1,slope*x1,w,h);
+  const p2=graphToCanvas(x2,slope*x2,w,h);
+  ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+  ctx.setLineDash([]);
+
+  updateLabel(color,w,h);
+}
+
+function formatNumber(value){
+  if(Math.abs(value-Math.round(value))<0.0001) return String(Math.round(value));
+  return value.toFixed(1).replace(/\.0$/,'');
+}
+
+function currentColor(){
+  const styles=getComputedStyle(document.documentElement);
+  if(slope>0.0001) return styles.getPropertyValue('--positive').trim();
+  if(slope<-0.0001) return styles.getPropertyValue('--negative').trim();
+  return styles.getPropertyValue('--zero').trim();
+}
+
+function updateEquation(){
+  const value=Math.abs(slope)<0.0001?0:slope;
+  const color=currentColor();
+  coefficient.textContent=formatNumber(value);
+  coefficient.style.color=color;
+  document.documentElement.style.setProperty('--slider-color', color);
+}
+
+function updateLabel(color,w,h){
+  let text;
+  if(slope>0.0001){ text='Positive Slope'; }
+  else if(slope<-0.0001){ text='Negative Slope'; }
+  else { text='Zero Slope'; }
+
+  lineLabel.textContent=text;
+  lineLabel.style.color=color;
+
+  // Place the label toward the upper/right visible portion of the line.
+  let labelX=2.1;
+  let labelY=slope*labelX;
+  if(labelY>3.7){ labelY=3.7; labelX=labelY/slope; }
+  if(labelY<-3.7){ labelY=-3.7; labelX=labelY/slope; }
+  if(Math.abs(slope)<0.0001){ labelX=1.8; labelY=.45; }
+
+  const p=graphToCanvas(labelX,labelY,w,h);
+  const pixelSlope = -slope * (h / w);
+  const angle = Math.atan(pixelSlope) * 180 / Math.PI;
+
+  lineLabel.style.left=`${p.x}px`;
+  lineLabel.style.top=`${p.y}px`;
+  lineLabel.style.transform=`translate(-50%,-50%) rotate(${angle}deg)`;
+}
+
+slider.addEventListener('input',()=>{
+  slope=Number(slider.value);
+  if(Math.abs(slope)<0.05) slope=0;
+  updateEquation();
+  draw();
+});
+
+window.addEventListener('resize',resizeCanvas);
+updateEquation();
+requestAnimationFrame(resizeCanvas);
+</script>
+</body>
+</html>
