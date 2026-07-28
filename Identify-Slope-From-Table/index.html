@@ -1,1 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Identifying the Slope from a Table</title>
+  <style>
+    :root{
+      --page:#eef2f7;
+      --workspace:#fbfcff;
+      --border:#cbd5e1;
+      --accent:#3757d5;
+      --positive:#1F75FE;
+      --negative:#EE204D;
+      --zero:#4b5563;
+      --text:#172033;
+      --muted:#64748b;
+      --gold:#d4a72c;
+      --success-bg:#ecfdf5;
+      --error-bg:#fff1f2;
+      --shadow:0 16px 40px rgba(30,41,59,.10);
+    }
 
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      background:var(--page);
+      color:var(--text);
+      font-family:Arial, Helvetica, sans-serif;
+    }
+
+    .app{
+      width:min(1040px, calc(100% - 28px));
+      margin:0 auto;
+      padding:26px 0 24px;
+    }
+
+    .header-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+    }
+
+    h1{
+      margin:0;
+      font-size:clamp(1.7rem, 4vw, 2.8rem);
+      line-height:1.08;
+      letter-spacing:-.035em;
+    }
+
+    .directions{
+      margin:10px 0 14px;
+      color:var(--muted);
+      font-size:clamp(1rem, 2vw, 1.18rem);
+    }
+
+    .accent-line{
+      height:3px;
+      width:100%;
+      background:var(--accent);
+      border-radius:999px;
+      margin-bottom:18px;
+    }
+
+    button{
+      font:inherit;
+      border:0;
+      cursor:pointer;
+      touch-action:manipulation;
+    }
+
+    .top-btn,
+    .footer-btn,
+    .choice-btn{
+      border-radius:12px;
+      transition:transform .16s ease, box-shadow .16s ease, background .2s ease;
+    }
+
+    .top-btn{
+      padding:11px 16px;
+      background:#fff;
+      color:var(--accent);
+      border:2px solid var(--accent);
+      font-weight:700;
+    }
+
+
+    .header-actions{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:6px;
+      flex:0 0 auto;
+    }
+
+    .round-counter{
+      font-size:.92rem;
+      font-weight:800;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+
+    .progress-shell{
+      width:min(520px, 100%);
+      height:8px;
+      margin:0 auto 14px;
+      border-radius:999px;
+      background:#e2e8f0;
+      overflow:hidden;
+    }
+
+    .progress-fill{
+      height:100%;
+      width:0%;
+      border-radius:inherit;
+      background:var(--accent);
+      transition:width .4s ease;
+    }
+
+    .workspace{
+      min-height:0;
+      background:var(--workspace);
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:18px 20px 16px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:flex-start;
+      overflow:hidden;
+    }
+
+    .table-wrap{
+      width:min(610px, 100%);
+      position:relative;
+      margin-top:0;
+      padding-right:88px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      table-layout:fixed;
+      background:#fff;
+      border:2px solid var(--border);
+      border-radius:16px;
+      overflow:hidden;
+    }
+
+    th, td{
+      text-align:center;
+      width:50%;
+      height:58px;
+      font-size:clamp(1.6rem, 5vw, 2.25rem);
+      border-bottom:1px solid var(--border);
+      position:relative;
+      background:#fff;
+      transition:background-color .45s ease, color .45s ease, transform .45s ease;
+    }
+
+    th{
+      height:52px;
+      font-size:clamp(1.25rem, 4vw, 1.6rem);
+      font-weight:800;
+      color:#334155;
+      background:#f8fafc;
+    }
+
+    th:first-child,
+    td:first-child{
+      border-right:1px solid var(--border);
+    }
+
+    tr:last-child td{border-bottom:0}
+
+    td.active-x{
+      background:#f3f4f6;
+      color:#374151;
+    }
+
+    td.active-positive{
+      background:color-mix(in srgb, var(--positive) 14%, white);
+      color:var(--positive);
+      font-weight:800;
+    }
+
+    td.active-negative{
+      background:color-mix(in srgb, var(--negative) 14%, white);
+      color:var(--negative);
+      font-weight:800;
+    }
+
+    td.active-zero{
+      background:#eef0f3;
+      color:var(--zero);
+      font-weight:800;
+    }
+
+    .change-label{
+      position:absolute;
+      z-index:3;
+      left:50%;
+      transform:translateX(-50%) translateY(-50%) scale(.85);
+      min-width:54px;
+      text-align:center;
+      padding:4px 8px;
+      border-radius:999px;
+      background:#fff;
+      border:2px solid currentColor;
+      font-size:1.06rem;
+      font-weight:800;
+      opacity:0;
+      transition:opacity .4s ease, transform .4s ease;
+      pointer-events:none;
+    }
+
+    .change-label.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(-50%) scale(1);
+    }
+
+    .change-label.y-positive{color:var(--positive)}
+    .change-label.y-negative{color:var(--negative)}
+    .change-label.y-zero{color:var(--zero)}
+
+    .change-arrow-layer,
+    .arrow-label-layer{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      overflow:visible;
+      pointer-events:none;
+    }
+
+    .change-arrow-layer{z-index:2}
+    .arrow-label-layer{z-index:4}
+
+    .change-arc{
+      fill:none;
+      stroke-width:4;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      stroke-dasharray:180;
+      stroke-dashoffset:180;
+      opacity:0;
+      animation:drawArc .55s ease forwards;
+    }
+
+    .change-arc.y-positive{stroke:var(--positive)}
+    .change-arc.y-negative{stroke:var(--negative)}
+    .change-arc.y-zero{stroke:var(--zero)}
+
+    .persistent-change-label{
+      position:absolute;
+      min-width:48px;
+      transform:translate(-50%,-50%) scale(.88);
+      text-align:center;
+      padding:3px 7px;
+      border-radius:999px;
+      background:#fff;
+      border:2px solid currentColor;
+      font-size:1.02rem;
+      font-weight:800;
+      opacity:0;
+      animation:showArrowLabel .4s .22s ease forwards;
+      white-space:nowrap;
+    }
+
+    .persistent-change-label.y-positive{color:var(--positive)}
+    .persistent-change-label.y-negative{color:var(--negative)}
+    .persistent-change-label.y-zero{color:var(--zero)}
+
+    @keyframes drawArc{
+      to{stroke-dashoffset:0;opacity:1}
+    }
+
+    @keyframes showArrowLabel{
+      to{opacity:1;transform:translate(-50%,-50%) scale(1)}
+    }
+
+    @media (max-width:520px){
+      .table-wrap{padding-right:70px}
+      .persistent-change-label{font-size:.94rem;min-width:42px;padding:2px 6px}
+    }
+
+    .question-panel{
+      display:none;
+      width:min(700px, 100%);
+      margin-top:14px;
+      opacity:0;
+      transform:translateY(10px);
+      pointer-events:none;
+    }
+
+    .question-panel.show{
+      display:block;
+      opacity:1;
+      transform:translateY(0);
+      pointer-events:auto;
+      animation:panelIn .35s ease both;
+    }
+
+    .question-panel h2{
+      margin:0 0 16px;
+      text-align:center;
+      font-size:clamp(1.35rem, 3vw, 1.9rem);
+    }
+
+    .choices{
+      display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      gap:12px;
+    }
+
+    .choice-btn{
+      min-height:72px;
+      padding:14px 10px;
+      background:#fff;
+      border:2px solid var(--border);
+      color:var(--text);
+      font-weight:750;
+      font-size:clamp(.96rem, 2vw, 1.08rem);
+    }
+
+    .choice-btn[data-choice="increase"]{border-top:6px solid var(--positive)}
+    .choice-btn[data-choice="decrease"]{border-top:6px solid var(--negative)}
+    .choice-btn[data-choice="same"]{border-top:6px solid var(--zero)}
+
+    .choice-btn:hover:not(:disabled),
+    .top-btn:hover,
+    .footer-btn:hover:not(:disabled){
+      transform:translateY(-2px);
+      box-shadow:0 8px 18px rgba(15,23,42,.12);
+    }
+
+    .choice-btn.correct{
+      background:var(--success-bg);
+      border-color:#86efac;
+    }
+
+    .choice-btn.incorrect{
+      background:var(--error-bg);
+      border-color:#fda4af;
+      animation:shake .34s ease;
+    }
+
+    .feedback{
+      min-height:34px;
+      margin-top:12px;
+      text-align:center;
+      font-weight:700;
+      font-size:1.05rem;
+    }
+
+    .reveal{
+      display:none;
+      width:min(700px, 100%);
+      margin-top:12px;
+      text-align:center;
+      opacity:0;
+      transform:translateY(10px);
+      pointer-events:none;
+    }
+
+    
+.reveal.show{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:16px;
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    .inline-check{
+      margin:0;
+      flex:0 0 auto;
+    }
+
+    .slope-name{
+      font-size:clamp(2rem, 6vw, 3.2rem);
+      font-weight:900;
+      letter-spacing:-.035em;
+      opacity:0;
+      transform:translateX(24px);
+      transition:opacity .45s ease, transform .55s cubic-bezier(.2,.8,.2,1);
+    }
+
+    .slope-name.show{
+      opacity:1;
+      transform:translateX(0);
+    }
+
+    .slope-name.positive{color:var(--positive)}
+    .slope-name.negative{color:var(--negative)}
+    .slope-name.zero{color:var(--zero)}
+
+    .discovered{
+      margin-top:10px;
+      font-size:1.05rem;
+      color:#475569;
+    }
+
+    .checkmark{
+      width:56px;
+      height:56px;
+      margin:0;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      background:#16a34a;
+      opacity:0;
+      transform:scale(.72);
+      transition:opacity .22s ease, transform .35s cubic-bezier(.2,1.25,.3,1);
+    }
+
+    .checkmark svg{
+      width:100%;
+      height:100%;
+    }
+
+    .check-path{
+      fill:none;
+      stroke:#fff;
+      stroke-width:5;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      stroke-dasharray:42;
+      stroke-dashoffset:42;
+    }
+
+    .checkmark.show{
+      opacity:1;
+      transform:scale(1);
+    }
+
+    .checkmark.draw .check-path{
+      animation:drawCheck .48s ease forwards;
+    }
+
+    @keyframes drawCheck{
+      to{stroke-dashoffset:0}
+    }
+
+    .footer{
+      position:static;
+      z-index:1;
+      display:grid;
+      grid-template-columns:1fr 1.3fr 1fr;
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .footer-btn{
+      min-height:52px;
+      padding:12px 14px;
+      font-weight:800;
+      background:#fff;
+      border:2px solid var(--border);
+      color:#334155;
+    }
+
+    .footer-btn.primary{
+      background:var(--accent);
+      color:white;
+      border-color:var(--accent);
+    }
+
+    .footer-btn.next{
+      background:#fff;
+      color:var(--accent);
+      border-color:var(--accent);
+      visibility:hidden;
+    }
+
+    .footer-btn.next.show{visibility:visible}
+
+    .footer-btn.next.ready{
+      box-shadow:0 0 0 4px rgba(55,87,213,.18), 0 8px 18px rgba(55,87,213,.18);
+      transform:translateY(-1px);
+    }
+
+    .footer-btn.next:focus-visible{
+      outline:3px solid rgba(55,87,213,.45);
+      outline-offset:3px;
+    }
+    .footer-btn:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+      transform:none;
+      box-shadow:none;
+    }
+
+    @keyframes panelIn{
+      from{opacity:0;transform:translateY(10px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+
+    @keyframes shake{
+      0%,100%{transform:translateX(0)}
+      25%{transform:translateX(-5px)}
+      75%{transform:translateX(5px)}
+    }
+
+    @media (max-width:700px){
+      .app{width:min(100% - 16px, 1040px); padding-top:14px}
+  
+    .header-actions{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:6px;
+      flex:0 0 auto;
+    }
+
+    .round-counter{
+      font-size:.92rem;
+      font-weight:800;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+
+    .progress-shell{
+      width:min(520px, 100%);
+      height:8px;
+      margin:0 auto 14px;
+      border-radius:999px;
+      background:#e2e8f0;
+      overflow:hidden;
+    }
+
+    .progress-fill{
+      height:100%;
+      width:0%;
+      border-radius:inherit;
+      background:var(--accent);
+      transition:width .4s ease;
+    }
+
+    .workspace{min-height:0;padding:12px 10px}
+      .choices{grid-template-columns:1fr}
+      .footer{grid-template-columns:1fr 1fr}
+      .footer-btn.next{grid-column:1/-1}
+      th,td{height:54px}
+      .top-btn{padding:9px 12px;font-size:.95rem}
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *,*::before,*::after{
+        animation-duration:.001ms !important;
+        transition-duration:.001ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="header-row">
+      <h1>Identifying the Slope from a Table</h1>
+      <div class="header-actions">
+        <button class="top-btn" id="newRoundBtn">New Round</button>
+        <div class="round-counter" id="roundCounter">Round 1 / 10</div>
+      </div>
+    </div>
+    <p class="directions">Move through the table and watch how <strong>y</strong> changes.</p>
+    <div class="accent-line"></div>
+
+    <div class="progress-shell" aria-label="Round progress">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <section class="workspace" aria-live="polite">
+      <div class="table-wrap" id="tableWrap">
+        <table aria-label="Table of x and y values">
+          <thead>
+            <tr><th>x</th><th>y</th></tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+        <svg class="change-arrow-layer" id="changeArrowLayer" aria-hidden="true">
+          <defs>
+            <marker id="arrowHeadPositive" viewBox="0 0 12 12" markerWidth="12" markerHeight="12"
+                    refX="10.5" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+              <path d="M1 1 L11 6 L1 11 L3.6 6 Z" fill="var(--positive)"></path>
+            </marker>
+            <marker id="arrowHeadNegative" viewBox="0 0 12 12" markerWidth="12" markerHeight="12"
+                    refX="10.5" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+              <path d="M1 1 L11 6 L1 11 L3.6 6 Z" fill="var(--negative)"></path>
+            </marker>
+            <marker id="arrowHeadZero" viewBox="0 0 12 12" markerWidth="12" markerHeight="12"
+                    refX="10.5" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+              <path d="M1 1 L11 6 L1 11 L3.6 6 Z" fill="var(--zero)"></path>
+            </marker>
+          </defs>
+          <g id="arrowPaths"></g>
+        </svg>
+        <div class="arrow-label-layer" id="arrowLabels"></div>
+      </div>
+
+      <section class="question-panel" id="questionPanel">
+        <h2>What did you notice?</h2>
+        <div class="choices">
+          <button class="choice-btn" data-choice="increase">The outputs increased.</button>
+          <button class="choice-btn" data-choice="decrease">The outputs decreased.</button>
+          <button class="choice-btn" data-choice="same">The outputs stayed the same.</button>
+        </div>
+        <div class="feedback" id="feedback"></div>
+      </section>
+
+      <section class="reveal" id="reveal">
+        <div class="checkmark inline-check" id="checkmark" aria-hidden="true">
+          <svg viewBox="0 0 56 56">
+            <path class="check-path" d="M15 29 L24 38 L42 18"></path>
+          </svg>
+        </div>
+        <div class="slope-name" id="slopeName"></div>
+      </section>
+    </section>
+
+    <footer class="footer">
+      <button class="footer-btn" id="resetBtn">Reset</button>
+      <button class="footer-btn primary" id="continueBtn">Continue</button>
+      <button class="footer-btn next" id="nextBtn">Next Round</button>
+    </footer>
+  </main>
+
+  <script>
+    (() => {
+      const POSITIVE = "#1F75FE";
+      const NEGATIVE = "#EE204D";
+      const ZERO = "#4b5563";
+
+      const tableBody = document.getElementById("tableBody");
+      const tableWrap = document.getElementById("tableWrap");
+      const changeArrowLayer = document.getElementById("changeArrowLayer");
+      const arrowPaths = document.getElementById("arrowPaths");
+      const arrowLabels = document.getElementById("arrowLabels");
+      const questionPanel = document.getElementById("questionPanel");
+      const feedback = document.getElementById("feedback");
+      const reveal = document.getElementById("reveal");
+      const slopeName = document.getElementById("slopeName");
+      const checkmark = document.getElementById("checkmark");
+      const continueBtn = document.getElementById("continueBtn");
+      const resetBtn = document.getElementById("resetBtn");
+      const nextBtn = document.getElementById("nextBtn");
+      const newRoundBtn = document.getElementById("newRoundBtn");
+      const roundCounter = document.getElementById("roundCounter");
+      const progressFill = document.getElementById("progressFill");
+      const choiceBtns = [...document.querySelectorAll(".choice-btn")];
+
+      let round = null;
+      let step = -1;
+      let completed = false;
+      const totalRounds = 10;
+      let currentRound = 1;
+      let completedRounds = 0;
+
+
+      function updateProgress(){
+        roundCounter.textContent = completed
+          ? `✓ ${completedRounds} of ${totalRounds} Completed`
+          : `Round ${currentRound} / ${totalRounds}`;
+        progressFill.style.width = `${(completedRounds / totalRounds) * 100}%`;
+      }
+
+      function randomInt(min, max){
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function generateRound(){
+        const types = ["positive", "negative", "zero"];
+        const type = types[randomInt(0, types.length - 1)];
+        let change = 0;
+
+        if(type === "positive") change = randomInt(1, 5);
+        if(type === "negative") change = -randomInt(1, 5);
+
+        let start;
+        if(type === "positive"){
+          start = randomInt(-8, 4);
+        } else if(type === "negative"){
+          start = randomInt(4, 14);
+        } else {
+          start = randomInt(-6, 12);
+        }
+
+        const xs = [0,1,2,3,4];
+        const ys = xs.map(x => start + change * x);
+        return {type, change, xs, ys};
+      }
+
+      function renderTable(){
+        tableBody.innerHTML = "";
+        round.xs.forEach((x, i) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td data-col="x" data-row="${i}">${x}</td>
+                          <td data-col="y" data-row="${i}">${round.ys[i]}</td>`;
+          tableBody.appendChild(tr);
+        });
+      }
+
+      function clearHighlights(){
+        document.querySelectorAll("td").forEach(td => {
+          td.classList.remove("active-x","active-positive","active-negative","active-zero");
+        });
+      }
+
+      function clearArrows(){
+        arrowPaths.innerHTML = "";
+        arrowLabels.innerHTML = "";
+      }
+
+      function arrowGeometry(pairIndex){
+        const firstY = document.querySelector(`td[data-col="y"][data-row="${pairIndex}"]`);
+        const secondY = document.querySelector(`td[data-col="y"][data-row="${pairIndex+1}"]`);
+        const wrapRect = tableWrap.getBoundingClientRect();
+        const ay = firstY.getBoundingClientRect();
+        const by = secondY.getBoundingClientRect();
+
+        const startX = ay.right - wrapRect.left + 8;
+        const startY = (ay.top + ay.bottom)/2 - wrapRect.top;
+        const endY = (by.top + by.bottom)/2 - wrapRect.top;
+        const bulgeX = Math.min(tableWrap.clientWidth - 16, startX + 48);
+        const midY = (startY + endY) / 2;
+
+        return {
+          startX, startY, endY, bulgeX, midY,
+          d:`M ${startX} ${startY} C ${bulgeX} ${startY}, ${bulgeX} ${endY}, ${startX} ${endY}`
+        };
+      }
+
+      function positionAllArrows(){
+        changeArrowLayer.setAttribute("viewBox", `0 0 ${tableWrap.clientWidth} ${tableWrap.clientHeight}`);
+        arrowPaths.querySelectorAll(".change-arc").forEach(path => {
+          const pairIndex = Number(path.dataset.pair);
+          path.setAttribute("d", arrowGeometry(pairIndex).d);
+        });
+        arrowLabels.querySelectorAll(".persistent-change-label").forEach(label => {
+          const pairIndex = Number(label.dataset.pair);
+          const g = arrowGeometry(pairIndex);
+          label.style.left = `${g.bulgeX - 2}px`;
+          label.style.top = `${g.midY}px`;
+        });
+      }
+
+      function addPersistentArrow(pairIndex){
+        if(arrowPaths.querySelector(`[data-pair="${pairIndex}"]`)) return;
+
+        const changeClass =
+          round.type === "positive" ? "y-positive" :
+          round.type === "negative" ? "y-negative" : "y-zero";
+        const markerId =
+          round.type === "positive" ? "arrowHeadPositive" :
+          round.type === "negative" ? "arrowHeadNegative" : "arrowHeadZero";
+        const g = arrowGeometry(pairIndex);
+
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", g.d);
+        path.setAttribute("marker-end", `url(#${markerId})`);
+        path.setAttribute("class", `change-arc ${changeClass}`);
+        path.dataset.pair = pairIndex;
+        arrowPaths.appendChild(path);
+
+        const label = document.createElement("div");
+        label.className = `persistent-change-label ${changeClass}`;
+        label.dataset.pair = pairIndex;
+        label.textContent = round.change > 0 ? `+${round.change}` : `${round.change}`;
+        label.style.left = `${g.bulgeX - 2}px`;
+        label.style.top = `${g.midY}px`;
+        arrowLabels.appendChild(label);
+      }
+
+      function showStep(pairIndex){
+        clearHighlights();
+
+        const yCells = [
+          document.querySelector(`td[data-col="y"][data-row="${pairIndex}"]`),
+          document.querySelector(`td[data-col="y"][data-row="${pairIndex+1}"]`)
+        ];
+
+        const yClass = round.type === "positive"
+          ? "active-positive"
+          : round.type === "negative"
+            ? "active-negative"
+            : "active-zero";
+
+        yCells.forEach(c => c.classList.add(yClass));
+        addPersistentArrow(pairIndex);
+      }
+
+      function showQuestion(){
+        continueBtn.disabled = true;
+        continueBtn.textContent = "Continue";
+        questionPanel.classList.add("show");
+      }
+
+      function advance(){
+        if(completed) return;
+        step += 1;
+        if(step <= 3){
+          showStep(step);
+          if(step === 3){
+            continueBtn.textContent = "What did you notice?";
+          }
+        } else {
+          clearHighlights();
+          showQuestion();
+        }
+      }
+
+      function correctChoice(){
+        return round.type === "positive" ? "increase" :
+               round.type === "negative" ? "decrease" : "same";
+      }
+
+      function handleChoice(btn){
+        if(completed) return;
+        const chosen = btn.dataset.choice;
+        choiceBtns.forEach(b => b.classList.remove("correct","incorrect"));
+
+        if(chosen !== correctChoice()){
+          btn.classList.add("incorrect");
+          feedback.textContent = "Look again at how the y-values changed.";
+          return;
+        }
+
+        completed = true;
+        completedRounds = Math.min(totalRounds, completedRounds + 1);
+        updateProgress();
+        btn.classList.add("correct");
+        feedback.textContent = "Exactly.";
+
+        choiceBtns.forEach(b => b.disabled = true);
+
+        const className = round.type;
+        const label = round.type === "positive" ? "Positive Slope" :
+                      round.type === "negative" ? "Negative Slope" :
+                      "Zero Slope";
+
+        slopeName.textContent = label;
+        slopeName.className = `slope-name ${className}`;
+        reveal.classList.add("show");
+
+        requestAnimationFrame(() => {
+          checkmark.classList.add("show");
+          setTimeout(() => checkmark.classList.add("draw"), 100);
+          setTimeout(() => slopeName.classList.add("show"), 520);
+          setTimeout(() => {
+            nextBtn.classList.add("show", "ready");
+            nextBtn.focus({ preventScroll: true });
+          }, 850);
+        });
+
+        document.querySelectorAll('td[data-col="y"]').forEach(td => {
+          td.classList.add(
+            round.type === "positive" ? "active-positive" :
+            round.type === "negative" ? "active-negative" : "active-zero"
+          );
+        });
+      }
+
+      function startRound(){
+        if(completed && currentRound < totalRounds){
+          currentRound += 1;
+        } else if(completed && currentRound >= totalRounds){
+          currentRound = 1;
+          completedRounds = 0;
+        }
+        round = generateRound();
+        step = -1;
+        completed = false;
+        renderTable();
+        clearHighlights();
+        clearArrows();
+        questionPanel.classList.remove("show");
+        reveal.classList.remove("show");
+        checkmark.classList.remove("show","draw");
+        nextBtn.classList.remove("show", "ready");
+        if (document.activeElement === nextBtn) nextBtn.blur();
+        feedback.textContent = "";
+        slopeName.textContent = "";
+        slopeName.className = "slope-name";
+        choiceBtns.forEach(b => {
+          b.disabled = false;
+          b.classList.remove("correct","incorrect");
+        });
+        continueBtn.disabled = false;
+        continueBtn.textContent = "Continue";
+        updateProgress();
+        window.scrollTo({top:0, behavior:"smooth"});
+      }
+
+      function resetRound(){
+        step = -1;
+        completed = false;
+        clearHighlights();
+        clearArrows();
+        questionPanel.classList.remove("show");
+        reveal.classList.remove("show");
+        checkmark.classList.remove("show","draw");
+        nextBtn.classList.remove("show", "ready");
+        if (document.activeElement === nextBtn) nextBtn.blur();
+        feedback.textContent = "";
+        choiceBtns.forEach(b => {
+          b.disabled = false;
+          b.classList.remove("correct","incorrect");
+        });
+        document.querySelectorAll('td[data-col="y"]').forEach(td => {
+          td.classList.remove("active-positive","active-negative","active-zero");
+        });
+        continueBtn.disabled = false;
+        continueBtn.textContent = "Continue";
+        updateProgress();
+      }
+
+      continueBtn.addEventListener("click", advance);
+      resetBtn.addEventListener("click", resetRound);
+      nextBtn.addEventListener("click", startRound);
+      newRoundBtn.addEventListener("click", startRound);
+      choiceBtns.forEach(btn => btn.addEventListener("click", () => handleChoice(btn)));
+      window.addEventListener("resize", () => {
+        if(step >= 0) positionAllArrows();
+      });
+
+      updateProgress();
+      startRound();
+    })();
+  </script>
+</body>
+</html>
