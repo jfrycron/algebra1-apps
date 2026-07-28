@@ -1,1 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Identifying the Slope from an Equation</title>
+<style>
+:root{
+  --page:#eef2f7;
+  --workspace:#fbfcff;
+  --border:#cbd5e1;
+  --accent:#3757d5;
+  --positive:#168447;
+  --negative:#c63b3b;
+  --zero:#5b6472;
+  --gold:#d4a017;
+  --muted:#667085;
+  --shadow:0 14px 36px rgba(30,41,59,.10);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:Arial, Helvetica, sans-serif;
+  background:var(--page);
+  color:#172033;
+}
+button{font:inherit;cursor:pointer}
+.app{
+  width:min(1040px, calc(100% - 28px));
+  margin:0 auto;
+  padding:22px 0 26px;
+}
+.header-row{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+}
+h1{
+  margin:0;
+  font-size:clamp(1.65rem,4vw,2.55rem);
+  line-height:1.08;
+  letter-spacing:-.035em;
+}
+.header-actions{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:7px;
+}
+.top-btn{
+  border:2px solid var(--accent);
+  background:#fff;
+  color:var(--accent);
+  font-weight:800;
+  border-radius:12px;
+  padding:10px 15px;
+}
+.round-counter{
+  color:var(--muted);
+  font-weight:800;
+  white-space:nowrap;
+}
+.directions{
+  margin:8px 0 12px;
+  color:var(--muted);
+  font-size:1.02rem;
+}
+.accent-line{
+  height:4px;
+  border-radius:999px;
+  background:var(--accent);
+  margin-bottom:12px;
+}
+.progress-shell{
+  width:min(520px,100%);
+  height:8px;
+  margin:0 auto 14px;
+  background:#dfe5ee;
+  border-radius:999px;
+  overflow:hidden;
+}
+.progress-fill{
+  height:100%;
+  width:0;
+  background:var(--accent);
+  border-radius:inherit;
+  transition:width .35s ease;
+}
+.workspace{
+  min-height:370px;
+  background:var(--workspace);
+  border:1px solid var(--border);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  padding:22px 20px 18px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+}
+.prompt{
+  color:var(--muted);
+  font-weight:800;
+  text-align:center;
+  min-height:24px;
+}
+.equation{
+  position:relative;
+  margin-top:34px;
+  min-height:92px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-wrap:wrap;
+  font-family:Cambria,"Times New Roman",serif;
+  font-size:clamp(3rem,9vw,5.6rem);
+  line-height:1;
+  letter-spacing:.01em;
+}
+.eq-piece{
+  display:inline-flex;
+  align-items:center;
+  transition:opacity .55s ease, transform .55s ease, color .4s ease;
+}
+.eq-piece.fade{
+  opacity:.16;
+}
+.eq-piece.hidden-operator.revealed.fade{
+  opacity:.16;
+}
+.eq-piece.focus{
+  color:var(--accent);
+  font-weight:700;
+  transform:scale(1.05);
+}
+.coefficient{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  min-width:.84em;
+  min-height:1.12em;
+  line-height:1;
+  border-radius:10px;
+  padding:.11em .16em;
+  vertical-align:middle;
+  transition:
+    background .55s ease,
+    color .55s ease,
+    box-shadow .55s ease,
+    transform .55s ease;
+}
+.coefficient-value{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+  padding:0;
+  margin:0;
+}
 
+.hidden-one-digit{
+  display:inline-block;
+  line-height:1;
+  opacity:0;
+  transform:translateY(12px);
+  transition:
+    opacity 1.35s ease .16s,
+    transform 1.6s cubic-bezier(.22,.72,.18,1);
+}
+.hidden-one-digit.revealed{
+  opacity:1;
+  transform:translateY(0);
+}
+.variable,
+.coefficient-sign{
+  display:inline-block;
+}
+.zero-xterm{
+  display:inline-flex;
+  align-items:center;
+  white-space:nowrap;
+  opacity:0;
+  transform:translateY(14px);
+  transition:
+    opacity 1.55s ease .12s,
+    transform 1.75s cubic-bezier(.22,.72,.18,1);
+}
+.zero-xterm.revealed{
+  opacity:1;
+  transform:translateY(0);
+}
+.hidden-operator{
+  display:inline-flex;
+  align-items:center;
+  white-space:pre;
+  opacity:0;
+  transform:translateY(14px);
+  transition:
+    opacity 1.55s ease .12s,
+    transform 1.75s cubic-bezier(.22,.72,.18,1);
+}
+.hidden-operator.revealed{
+  opacity:1;
+  transform:translateY(0);
+}
+
+.equation .constant,
+.equation .xterm,
+.equation .lhs,
+.equation .operator{
+  transition:
+    opacity .55s ease,
+    transform .75s cubic-bezier(.22,.72,.18,1),
+    color .4s ease;
+}
+.coefficient.glow{
+  color:var(--accent);
+  background:#edf4ff;
+  box-shadow:0 0 0 4px rgba(55,87,213,.15);
+  transform:scale(1.08);
+}
+.question-panel{
+  display:none;
+  width:min(720px,100%);
+  margin-top:28px;
+  text-align:center;
+}
+.question-panel.show{
+  display:block;
+  animation:panelIn .35s ease both;
+}
+.question-panel h2{
+  margin:0 0 14px;
+  font-size:clamp(1.25rem,3.5vw,1.7rem);
+}
+.choices{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+.choice-btn{
+  min-height:58px;
+  border:2px solid var(--border);
+  border-radius:14px;
+  background:#fff;
+  color:#273247;
+  font-size:1.35rem;
+  font-weight:900;
+  transition:transform .18s ease, border-color .18s ease, background .18s ease;
+}
+.choice-btn:hover{transform:translateY(-1px);border-color:#9aa8bd}
+.choice-btn.correct{
+  background:#e8f6ed;
+  color:var(--positive);
+  border-color:#78bc8e;
+}
+.choice-btn.incorrect{
+  background:#fdeaea;
+  color:var(--negative);
+  border-color:#e3a0a0;
+  animation:shake .28s ease;
+}
+.feedback{
+  min-height:28px;
+  margin-top:12px;
+  font-weight:800;
+}
+.reveal{
+  display:none;
+  width:min(720px,100%);
+  margin-top:24px;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+}
+.reveal.show{display:flex}
+.checkmark{
+  width:56px;height:56px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:#16a34a;
+  opacity:0;
+  transform:scale(.72);
+  transition:opacity .22s ease, transform .35s cubic-bezier(.2,1.25,.3,1);
+}
+.checkmark.show{opacity:1;transform:scale(1)}
+.checkmark svg{width:100%;height:100%}
+.check-path{
+  fill:none;stroke:#fff;stroke-width:5;
+  stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:42;stroke-dashoffset:42;
+}
+.checkmark.draw .check-path{animation:drawCheck .48s ease forwards}
+.slope-name{
+  font-size:clamp(2rem,6vw,3.2rem);
+  font-weight:900;
+  letter-spacing:-.035em;
+  opacity:0;
+  transform:translateX(24px);
+  transition:opacity .45s ease, transform .55s cubic-bezier(.2,.8,.2,1);
+}
+.slope-name.show{opacity:1;transform:translateX(0)}
+.slope-name.positive{color:var(--positive)}
+.slope-name.negative{color:var(--negative)}
+.slope-name.zero{color:var(--zero)}
+.footer{
+  display:grid;
+  grid-template-columns:1fr 1.3fr 1fr;
+  gap:12px;
+  margin-top:12px;
+}
+.footer-btn{
+  min-height:52px;
+  padding:12px 14px;
+  font-weight:800;
+  border-radius:12px;
+  background:#fff;
+  border:2px solid var(--border);
+  color:#334155;
+}
+.footer-btn.primary{
+  background:var(--accent);
+  color:#fff;
+  border-color:var(--accent);
+}
+.footer-btn.next{
+  color:var(--accent);
+  border-color:var(--accent);
+  visibility:hidden;
+}
+.footer-btn.next.show{visibility:visible}
+.footer-btn.next.ready{
+  box-shadow:0 0 0 4px rgba(55,87,213,.18),0 8px 18px rgba(55,87,213,.18);
+  transform:translateY(-1px);
+}
+.footer-btn:disabled{opacity:.45;cursor:not-allowed}
+@keyframes panelIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes drawCheck{to{stroke-dashoffset:0}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@media(max-width:700px){
+  .app{width:min(100% - 16px,1040px);padding-top:14px}
+  .workspace{min-height:345px;padding:18px 10px 14px}
+  .equation{margin-top:28px}
+  .choices{grid-template-columns:1fr}
+  .footer{grid-template-columns:1fr 1fr}
+  .footer-btn.next{grid-column:1/-1}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <div class="header-row">
+    <h1>Identifying the Slope from an Equation</h1>
+    <div class="header-actions">
+      <button class="top-btn" id="newRoundBtn">New Round</button>
+      <div class="round-counter" id="roundCounter">Round 1 / 10</div>
+    </div>
+  </div>
+  <p class="directions">Look for the number that tells how quickly <strong>y</strong> changes.</p>
+  <div class="accent-line"></div>
+
+  <div class="progress-shell"><div class="progress-fill" id="progressFill"></div></div>
+
+  <section class="workspace" aria-live="polite">
+    <div class="prompt" id="prompt">Study the equation.</div>
+    <div class="equation" id="equation"></div>
+
+    <section class="question-panel" id="questionPanel">
+      <h2>Which number is the slope?</h2>
+      <div class="choices" id="choices"></div>
+      <div class="feedback" id="feedback"></div>
+    </section>
+
+    <section class="reveal" id="reveal">
+      <div class="checkmark" id="checkmark" aria-hidden="true">
+        <svg viewBox="0 0 56 56"><path class="check-path" d="M15 29 L24 38 L42 18"></path></svg>
+      </div>
+      <div class="slope-name" id="slopeName"></div>
+    </section>
+  </section>
+
+  <footer class="footer">
+    <button class="footer-btn" id="resetBtn">Reset</button>
+    <button class="footer-btn primary" id="continueBtn">Continue</button>
+    <button class="footer-btn next" id="nextBtn">Next Round</button>
+  </footer>
+</main>
+
+<script>
+const totalRounds = 10;
+let roundIndex=0;
+let currentRound=null;
+let previousEquationKey="";
+
+function randomInt(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
+}
+
+function generateRound(){
+  let m,b,key;
+  do{
+    // Every fourth equation is guaranteed to contain hidden notation:
+    // either a missing x-term (slope 0) or an invisible coefficient (±1).
+    if((roundIndex+1)%4===0){
+      const specialCycle=Math.floor(roundIndex/4)%2;
+      if(specialCycle===0){
+        m=0;
+      }else{
+        m=Math.random()<.5 ? 1 : -1;
+      }
+    }else{
+      m=randomInt(-4,4);
+    }
+
+    b=randomInt(-6,6);
+    key=`${m},${b}`;
+  }while(key===previousEquationKey);
+
+  previousEquationKey=key;
+  return {m,b};
+}
+let step=0;
+let answered=false;
+
+const equation=document.getElementById("equation");
+const promptEl=document.getElementById("prompt");
+const questionPanel=document.getElementById("questionPanel");
+const choices=document.getElementById("choices");
+const feedback=document.getElementById("feedback");
+const reveal=document.getElementById("reveal");
+const checkmark=document.getElementById("checkmark");
+const slopeName=document.getElementById("slopeName");
+const continueBtn=document.getElementById("continueBtn");
+const resetBtn=document.getElementById("resetBtn");
+const nextBtn=document.getElementById("nextBtn");
+const newRoundBtn=document.getElementById("newRoundBtn");
+const roundCounter=document.getElementById("roundCounter");
+const progressFill=document.getElementById("progressFill");
+
+function signedConstant(b){
+  if(b===0) return "";
+  return b>0 ? ` + ${b}` : ` − ${Math.abs(b)}`;
+}
+function equationHTML(r){
+  if(r.m===0){
+    const constantText = r.b<0 ? `−${Math.abs(r.b)}` : `${r.b}`;
+    return `<span class="eq-piece lhs">y = </span><span class="eq-piece constant">${constantText}</span>`;
+  }
+
+  if(r.m===1){
+    return `<span class="eq-piece lhs">y = </span>
+            <span class="eq-piece xterm"><span class="variable">x</span></span>
+            <span class="eq-piece constant">${signedConstant(r.b)}</span>`;
+  }
+
+  if(r.m===-1){
+    return `<span class="eq-piece lhs">y = </span>
+            <span class="eq-piece xterm"><span class="coefficient-sign">−</span><span class="variable">x</span></span>
+            <span class="eq-piece constant">${signedConstant(r.b)}</span>`;
+  }
+
+  const coeff = r.m<0 ? `−${Math.abs(r.m)}` : `${r.m}`;
+  return `<span class="eq-piece lhs">y = </span>
+          <span class="eq-piece xterm"><span class="coefficient"><span class="coefficient-value">${coeff}</span></span>x</span>
+          <span class="eq-piece constant">${signedConstant(r.b)}</span>`;
+}
+function expandedOneEquationHTML(r){
+  const coefficient = r.m===1
+    ? `<span class="coefficient"><span class="hidden-one-digit">1</span></span>`
+    : `<span class="coefficient"><span class="coefficient-sign">−</span><span class="hidden-one-digit">1</span></span>`;
+
+  return `<span class="eq-piece lhs">y = </span>
+          <span class="eq-piece xterm">${coefficient}<span class="variable">x</span></span>
+          <span class="eq-piece constant">${signedConstant(r.b)}</span>`;
+}
+
+function expandedZeroEquationHTML(r){
+  const constantText = r.b<0 ? `−${Math.abs(r.b)}` : `${r.b}`;
+  const operator = r.b>=0
+    ? `<span class="eq-piece operator hidden-operator"> + </span>`
+    : ``;
+
+  return `<span class="eq-piece lhs">y = </span>
+          <span class="eq-piece xterm zero-xterm">
+            <span class="coefficient"><span class="coefficient-value">0</span></span>x
+          </span>
+          ${operator}
+          <span class="eq-piece constant">${constantText}</span>`;
+}
+
+function renderRound(makeNew=true){
+  if(makeNew || !currentRound) currentRound=generateRound();
+  const r=currentRound;
+  step=0;answered=false;
+  equation.innerHTML=equationHTML(r);
+  promptEl.textContent="Study the equation.";
+  questionPanel.classList.remove("show");
+  reveal.classList.remove("show");
+  checkmark.classList.remove("show","draw");
+  slopeName.textContent="";
+  slopeName.className="slope-name";
+  choices.innerHTML="";
+  feedback.textContent="";
+  continueBtn.disabled=false;
+  continueBtn.style.visibility="visible";
+  nextBtn.classList.remove("show","ready");
+  if(document.activeElement===nextBtn) nextBtn.blur();
+  roundCounter.textContent=`Round ${roundIndex+1} / ${totalRounds}`;
+  progressFill.style.width=`${(roundIndex/totalRounds)*100}%`;
+}
+function advance(){
+  const r=currentRound;
+  step++;
+
+  // Reveal hidden notation by dissolving it in while the rest of the
+  // equation translates naturally to make room.
+  if((r.m===0 || Math.abs(r.m)===1) && step===1){
+    if(r.m===0){
+      promptEl.textContent="Make the hidden x-term visible.";
+      const oldConstant=document.querySelector(".constant");
+      const oldLeft=oldConstant.getBoundingClientRect().left;
+
+      // Insert the complete y = 0x ± b form only now, so the original
+      // y = constant equation has perfectly natural spacing.
+      equation.innerHTML=expandedZeroEquationHTML(r);
+
+      const zeroTerm=document.querySelector(".zero-xterm");
+      const hiddenOperator=document.querySelector(".hidden-operator");
+      const constant=document.querySelector(".constant");
+      const newLeft=constant.getBoundingClientRect().left;
+      const offset=oldLeft-newLeft;
+
+      // Visually keep the constant in its original location, then let it
+      // glide right while 0x and the sign rise and dissolve into place.
+      constant.style.transform=`translateX(${offset}px)`;
+
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          zeroTerm.classList.add("revealed");
+          if(hiddenOperator) hiddenOperator.classList.add("revealed");
+
+          constant.animate(
+            [
+              {transform:`translateX(${offset}px)`},
+              {transform:"translateX(0)"}
+            ],
+            {
+              duration:1750,
+              easing:"cubic-bezier(.22,.72,.18,1)",
+              fill:"forwards"
+            }
+          ).onfinish=()=>{
+            constant.style.transform="";
+          };
+        });
+      });
+    }else{
+      promptEl.textContent="Make the invisible coefficient visible.";
+
+      const oldLhs=document.querySelector(".lhs");
+      const oldVariable=document.querySelector(".variable");
+      const oldConstant=document.querySelector(".constant");
+      const oldSign=document.querySelector(".coefficient-sign");
+
+      const oldPositions={
+        lhs:oldLhs.getBoundingClientRect().left,
+        variable:oldVariable.getBoundingClientRect().left,
+        constant:oldConstant.getBoundingClientRect().left,
+        sign:oldSign ? oldSign.getBoundingClientRect().left : null
+      };
+
+      // Insert the complete ±1 coefficient only after Continue, so the
+      // starting equation has no empty space where the 1 will appear.
+      equation.innerHTML=expandedOneEquationHTML(r);
+
+      const lhs=document.querySelector(".lhs");
+      const variable=document.querySelector(".variable");
+      const constant=document.querySelector(".constant");
+      const sign=document.querySelector(".coefficient-sign");
+      const hiddenDigit=document.querySelector(".hidden-one-digit");
+
+      const pieces=[
+        [lhs,oldPositions.lhs],
+        [variable,oldPositions.variable],
+        [constant,oldPositions.constant]
+      ];
+      if(sign && oldPositions.sign!==null) pieces.push([sign,oldPositions.sign]);
+
+      pieces.forEach(([el,oldLeft])=>{
+        const newLeft=el.getBoundingClientRect().left;
+        el.style.transform=`translateX(${oldLeft-newLeft}px)`;
+      });
+
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          hiddenDigit.classList.add("revealed");
+
+          pieces.forEach(([el,oldLeft])=>{
+            const currentOffset=parseFloat(
+              el.style.transform.replace("translateX(","").replace("px)","")
+            ) || 0;
+
+            el.animate(
+              [
+                {transform:`translateX(${currentOffset}px)`},
+                {transform:"translateX(0)"}
+              ],
+              {
+                duration:1600,
+                easing:"cubic-bezier(.22,.72,.18,1)",
+                fill:"forwards"
+              }
+            ).onfinish=()=>{
+              el.style.transform="";
+            };
+          });
+        });
+      });
+    }
+    return;
+  }
+
+  const hasHiddenNotation = r.m===0 || Math.abs(r.m)===1;
+  const adjustedStep = hasHiddenNotation ? step-1 : step;
+
+  if(adjustedStep===1){
+    promptEl.textContent="Focus on the term containing x.";
+    document.querySelectorAll(".eq-piece").forEach(el=>el.classList.add("fade"));
+    const xterm=document.querySelector(".xterm");
+    xterm.classList.remove("fade");
+    xterm.classList.add("focus");
+  }else if(adjustedStep===2){
+    promptEl.textContent="The coefficient of x tells the slope.";
+    const coeff=document.querySelector(".coefficient");
+    if(coeff) coeff.classList.add("glow");
+  }else if(adjustedStep===3){
+    promptEl.textContent="Choose the slope.";
+    buildChoices(r);
+    questionPanel.classList.add("show");
+    continueBtn.disabled=true;
+  }
+}
+function buildChoices(r){
+  let pool;
+  if(r.m===0){
+    pool=[0,r.b,1];
+  }else{
+    pool=[r.m,r.b, r.m>0 ? -r.m : Math.abs(r.m)];
+  }
+  pool=[...new Set(pool)];
+  let filler=1;
+  while(pool.length<3){
+    if(!pool.includes(filler)) pool.push(filler);
+    filler++;
+  }
+  pool=pool.sort(()=>Math.random()-.5);
+  choices.innerHTML="";
+  pool.forEach(value=>{
+    const btn=document.createElement("button");
+    btn.className="choice-btn";
+    btn.textContent=value;
+    btn.addEventListener("click",()=>checkAnswer(btn,value,r.m));
+    choices.appendChild(btn);
+  });
+}
+function checkAnswer(btn,value,correct){
+  if(answered) return;
+  if(value===correct){
+    answered=true;
+    btn.classList.add("correct");
+    feedback.textContent="";
+    [...choices.children].forEach(b=>b.disabled=true);
+    showSuccess(correct);
+  }else{
+    btn.classList.add("incorrect");
+    feedback.textContent="Try again.";
+    setTimeout(()=>btn.classList.remove("incorrect"),450);
+  }
+}
+function showSuccess(m){
+  const type=m>0?"positive":m<0?"negative":"zero";
+  const label=m>0?"Positive Slope":m<0?"Negative Slope":"Zero Slope";
+  slopeName.textContent=label;
+  slopeName.className=`slope-name ${type}`;
+  reveal.classList.add("show");
+  progressFill.style.width=`${((roundIndex+1)/totalRounds)*100}%`;
+  setTimeout(()=>checkmark.classList.add("show"),100);
+  setTimeout(()=>checkmark.classList.add("draw"),220);
+  setTimeout(()=>slopeName.classList.add("show"),620);
+  setTimeout(()=>{
+    nextBtn.classList.add("show","ready");
+    nextBtn.focus({preventScroll:true});
+  },930);
+}
+continueBtn.addEventListener("click",advance);
+resetBtn.addEventListener("click",()=>renderRound(false));
+newRoundBtn.addEventListener("click",()=>{
+  roundIndex=(roundIndex+1)%totalRounds;
+  renderRound(true);
+});
+nextBtn.addEventListener("click",()=>{
+  nextBtn.classList.remove("ready");
+  roundIndex=(roundIndex+1)%totalRounds;
+  renderRound(true);
+});
+renderRound(true);
+</script>
+</body>
+</html>
