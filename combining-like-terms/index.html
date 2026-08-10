@@ -775,19 +775,95 @@
       .statusbar{padding-top:7px;padding-bottom:7px}
     }
 
+    /* Carron Algebra 1 App Framework — current shell */
+    :root{
+      --cui-bg:#f5f7fb;
+      --cui-panel:#ffffff;
+      --cui-line:#d8e0ec;
+      --cui-ink:#172033;
+      --cui-muted:#667085;
+      --cui-accent:#2474e5;
+      --cui-accent-dark:#1459b9;
+      --good:#15805f;
+      --good-bg:#e4f7ee;
+      --bad:#a92335;
+    }
+    body.cui-page{padding:7px 12px 8px;background:var(--cui-bg);}
+    .app.cui-app{width:min(1360px,calc(100% - 0px));}
+    .cui-header{padding:7px 8px 9px;grid-template-columns:minmax(0,1fr) auto;gap:2px 18px;align-items:center;}
+    .cui-title{font-size:clamp(1.72rem,2.5vw,2.25rem);color:var(--cui-ink);letter-spacing:-.035em;}
+    .directions.cui-directions{margin-top:2px;max-width:930px;font-size:.98rem;line-height:1.28;}
+    .cui-header-actions{grid-column:2;grid-row:1 / span 2;display:flex;align-items:center;gap:10px;align-self:center;}
+    .cui-progress-pill{display:flex;align-items:center;gap:7px;padding:5px 8px;border:1px solid #cbd8ea;border-radius:999px;background:#fff;color:#344054;box-shadow:0 3px 10px rgba(23,32,51,.06);font-weight:800;white-space:nowrap;}
+    .cui-progress-pill strong{color:var(--cui-accent-dark);font-size:1.05rem;}
+    .pill-arrow{width:32px;height:32px;display:grid;place-items:center;padding:0;border-radius:50%;background:#eaf3ff;color:var(--cui-accent-dark);font-size:1.05rem;}
+    .pill-arrow:disabled{opacity:.3;cursor:default;}
+    .cui-new-round{position:static;align-self:auto;padding:10px 15px;border-radius:12px;background:#b95525;color:#fff;}
+    .expr-term.returning{animation:returnToExpression .34s ease-out;}
+    .expression-drop-gap{
+      flex:0 0 54px;
+      align-self:stretch;
+      min-height:52px;
+      margin:0 3px;
+      border:2px dashed rgba(36,116,229,.42);
+      border-radius:10px;
+      background:rgba(234,243,255,.72);
+      transition:flex-basis .14s ease,opacity .14s ease;
+      pointer-events:none;
+    }
+    @keyframes returnToExpression{0%{transform:translateY(18px) scale(.94);opacity:.45}70%{transform:translateY(-3px) scale(1.02)}100%{transform:translateY(0) scale(1);opacity:1}}
+    .review-mode .expr-term,.review-mode input{pointer-events:none;}
+    .review-mode .controls,.review-mode .final{display:none!important;}
+    .review-banner{display:none;margin:0 auto 8px;width:max-content;padding:5px 12px;border-radius:999px;background:#eaf3ff;color:#1459b9;font-size:.86rem;font-weight:800;}
+    .review-mode .review-banner{display:block;}
+    .card.cui-workspace{position:relative;min-height:min(716px,calc(100vh - 102px));padding:15px 24px 13px;border:2px solid #e0e6ef;border-radius:16px;box-shadow:0 12px 30px rgba(31,47,75,.08);overflow:hidden;}
+    .bank{margin-bottom:13px;}
+    .bucket{min-height:250px;border-color:#cfd8e6;}
+    .bucket[data-type="x2"]{background:#eaf3fb;}
+    .bucket[data-type="x"]{background:#f1ecfa;}
+    .bucket[data-type="c"]{background:#fff6dc;}
+    .bucket[data-type="x2"] .bucket-title{color:#176a9a;}
+    .bucket[data-type="x"] .bucket-title{color:#6546a6;}
+    .bucket[data-type="c"] .bucket-title{color:#8a6414;}
+    .live-preview{margin-top:17px;max-width:790px;}
+    .primary{background:var(--cui-accent)}
+    .primary:hover{background:var(--cui-accent-dark)}
+    .statusbar{display:none;}
+    .card.incorrect{animation:workspaceIncorrect .28s ease-in-out;}
+    @keyframes workspaceIncorrect{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+    .answer-incorrect{border:2px solid #c90834!important;outline:3px solid rgba(237,10,63,.18);background:#ed0a3f!important;}
+    .answer-incorrect input{background:#fff!important;}
+    .milestone{display:none;position:absolute;inset:0;z-index:20;align-items:center;justify-content:center;padding:24px;background:#e4f7ee;overflow:hidden;isolation:isolate;}
+    .milestone.show{display:flex;}
+    .milestone::before,.milestone::after{content:"";position:absolute;z-index:-1;border-radius:50%;}
+    .milestone::before{width:440px;height:440px;left:-115px;top:-155px;background:rgba(91,196,151,.22);box-shadow:760px 430px 0 45px rgba(36,116,229,.08),410px 610px 0 -100px rgba(91,196,151,.2);}
+    .milestone::after{width:170px;height:170px;right:9%;top:9%;background:rgba(255,255,255,.62);box-shadow:-620px 420px 0 -28px rgba(255,255,255,.58),90px 470px 0 55px rgba(91,196,151,.13);}
+    .milestone-card{width:min(560px,100%);padding:38px 32px;text-align:center;background:rgba(255,255,255,.96);border:1px solid #b8e4cf;border-radius:22px;box-shadow:0 18px 50px rgba(21,128,95,.15);}
+    .milestone-check{width:92px;height:92px;margin:0 auto 18px;display:grid;place-items:center;border-radius:50%;background:var(--good);color:#fff;font-size:3.55rem;font-weight:900;box-shadow:0 12px 28px rgba(21,128,95,.22);}
+    .milestone-card h2{margin:0 0 8px;font-size:2rem;color:#134e3d;}
+    .milestone-card p{margin:0 0 23px;color:#48635b;font-size:1.05rem;}
+    .milestone-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+    @media(max-width:760px){.card.cui-workspace{min-height:0}.bucket{min-height:160px}.cui-header-actions{gap:6px}.cui-progress-pill{padding:4px 6px}.cui-progress-pill span{display:none}.cui-new-round{padding:9px 10px}}
+
     </style>
 </head>
 <body class="cui-page">
   <main class="app cui-app">
     <header class="cui-header">
       <h1 class="cui-title">Combining Like Terms</h1>
-      <p class="directions cui-directions">Sort every term into the correct bucket. Then combine the coefficients in each bucket to build the simplified expression.</p>
-      <button id="newRoundBtn" class="secondary cui-button cui-button--secondary cui-new-round">New Round</button>
+      <p class="directions cui-directions">Combine the like terms. Drag terms into buckets to organize your work, or enter the combined coefficients directly.</p>
+      <div class="cui-header-actions">
+        <div class="cui-progress-pill" aria-label="Problem history">
+          <button id="pillBack" class="pill-arrow" aria-label="Previous problem" disabled>←</button>
+          <strong id="pillProgress">0 of 10</strong>
+          <button id="pillForward" class="pill-arrow" aria-label="Next problem" disabled>→</button>
+        </div>
+        <button id="newRoundBtn" class="cui-new-round">New Round</button>
+      </div>
     </header>
 
     <section class="card cui-workspace">
-      <div id="prompt" class="prompt">Drag or tap each term into a bucket.</div>
-
+      <div class="review-banner">Reviewing a completed problem</div>
       <div id="bank" class="bank" aria-label="Term bank"></div>
 
       <div class="buckets">
@@ -848,11 +924,23 @@
       <div id="final" class="final">
         <button id="nextBtn" class="primary cui-button cui-button--primary">Next Problem →</button>
       </div>
+
+      <div id="milestone" class="milestone" role="dialog" aria-modal="true" aria-labelledby="milestoneTitle">
+        <div class="milestone-card">
+          <div class="milestone-check">✓</div>
+          <h2 id="milestoneTitle">Great work!</h2>
+          <p>You successfully simplified 10 expressions by combining like terms.</p>
+          <div class="milestone-actions">
+            <button id="practiceAgainBtn" class="primary">Practice 10 More</button>
+            <button id="reviewBtn" class="secondary">Review Last Problem</button>
+          </div>
+        </div>
+      </div>
     </section>
 
     <div class="statusbar">
       <div id="status">0 completed</div>
-      <div>Sort first · Combine second · Carron UI 1.0</div>
+      <div>Combining Like Terms · Framework Preview v8</div>
     </div>
   </main>
 
@@ -867,6 +955,10 @@
   const status=document.getElementById('status');
   const card=document.querySelector('.card');
   const livePreview=document.getElementById('livePreview');
+  const pillProgress=document.getElementById('pillProgress');
+  const milestone=document.getElementById('milestone');
+  const pillBack=document.getElementById('pillBack');
+  const pillForward=document.getElementById('pillForward');
 
   const inputs={
     x2:document.getElementById('input-x2'),
@@ -878,6 +970,18 @@
   let originalTerms=[];
   let selectedId=null;
   let completed=0;
+  let completedSnapshots=[];
+  let historyIndex=null;
+  let expressionDropGap=null;
+  let expressionDropTargetId=null;
+  let expressionDropAfter=false;
+  let draggingTermId=null;
+  let activeSnapshot=null;
+  let celebrationAvailable=false;
+  let showingCelebration=false;
+  let returningId=null;
+  let currentSetStart=0;
+  let currentSolved=false;
 
   const randInt=(min,max)=>Math.floor(Math.random()*(max-min+1))+min;
 
@@ -911,10 +1015,10 @@
     return out;
   }
 
-  function termParts(term, isFirst=false){
+  function termParts(term, isFirst=false,showUnitCoefficient=false){
     const abs=Math.abs(term.coeff);
     const variable=SYMBOLS[term.type];
-    const hideOne=variable && abs===1;
+    const hideOne=variable && abs===1 && !showUnitCoefficient;
     const body=`${hideOne?'':abs}${variable}`;
 
     if(isFirst){
@@ -962,20 +1066,84 @@
     }).join('');
   }
 
-  function createTermButton(term, isFirst=false){
+  function reorderInExpression(id,targetId,placeAfter=false){
+    const from=terms.findIndex(t=>t.id===id);
+    const target=terms.findIndex(t=>t.id===targetId);
+    if(from<0 || target<0 || from===target)return;
+    const [moved]=terms.splice(from,1);
+    let insertAt=terms.findIndex(t=>t.id===targetId)+(placeAfter?1:0);
+    moved.location='bank';
+    terms.splice(insertAt,0,moved);
+    clearFeedback();
+    final.className='final';
+    render();
+  }
+
+  function clearExpressionDropGap(){
+    if(expressionDropGap)expressionDropGap.remove();
+    expressionDropGap=null;
+    expressionDropTargetId=null;
+    expressionDropAfter=false;
+  }
+
+  function showExpressionDropGap(target,placeAfter,draggedId){
+    if(target.dataset.id===draggedId){
+      clearExpressionDropGap();
+      return;
+    }
+    if(!expressionDropGap){
+      expressionDropGap=document.createElement('span');
+      expressionDropGap.className='expression-drop-gap';
+    }
+    expressionDropTargetId=target.dataset.id;
+    expressionDropAfter=placeAfter;
+    const dragged=bank.querySelector(`.expr-term[data-id="${draggedId}"]`);
+    if(dragged)expressionDropGap.style.flexBasis=`${Math.max(46,dragged.getBoundingClientRect().width)}px`;
+    target[placeAfter?'after':'before'](expressionDropGap);
+  }
+
+  function createTermButton(term, isFirst=false, inExpression=false, showUnitCoefficient=false){
     const btn=document.createElement('button');
     btn.className='expr-term';
     if(isFirst)btn.classList.add('first');
     if(term.id===selectedId)btn.classList.add('selected');
+    if(term.id===returningId)btn.classList.add('returning');
 
-    const parts=termParts(term,isFirst);
+    const parts=termParts(term,isFirst,showUnitCoefficient);
     btn.innerHTML=`<span class="op">${parts.sign}</span><span class="term-body">${parts.body}</span>`;
     btn.draggable=true;
     btn.dataset.id=term.id;
 
     btn.addEventListener('dragstart',e=>{
+      draggingTermId=term.id;
       e.dataTransfer.setData('text/plain',term.id);
+      e.dataTransfer.effectAllowed='move';
+      requestAnimationFrame(()=>btn.classList.add('dragging'));
     });
+    btn.addEventListener('dragend',()=>{
+      draggingTermId=null;
+      btn.classList.remove('dragging');
+      clearExpressionDropGap();
+    });
+
+    if(inExpression){
+      btn.addEventListener('dragover',e=>{
+        e.preventDefault();
+        e.stopPropagation();
+        const id=draggingTermId || e.dataTransfer.getData('text/plain');
+        const rect=btn.getBoundingClientRect();
+        showExpressionDropGap(btn,e.clientX>rect.left+rect.width/2,id);
+      });
+      btn.addEventListener('drop',e=>{
+        e.preventDefault();
+        e.stopPropagation();
+        const id=draggingTermId || e.dataTransfer.getData('text/plain');
+        const rect=btn.getBoundingClientRect();
+        reorderInExpression(id,term.id,e.clientX>rect.left+rect.width/2);
+        clearExpressionDropGap();
+        selectedId=null;
+      });
+    }
 
     btn.addEventListener('click',()=>{
       if(selectedId===term.id){
@@ -993,11 +1161,12 @@
   }
 
   function render(){
+    clearExpressionDropGap();
     bank.innerHTML='';
     TYPES.forEach(type=>document.getElementById(`bucket-${type}`).innerHTML='');
 
     terms.forEach((term,index)=>{
-      const bankBtn=createTermButton(term,index===0);
+      const bankBtn=createTermButton(term,index===0,true);
 
       if(term.location==='bank'){
         bank.appendChild(bankBtn);
@@ -1007,18 +1176,100 @@
         ghost.draggable=false;
         bank.appendChild(ghost);
 
-        const bucketBtn=createTermButton(term,false);
+        const bucketBtn=createTermButton(term,false,false,true);
         bucketBtn.classList.remove('first');
         document.getElementById(`bucket-${term.location}`).appendChild(bucketBtn);
       }
     });
+    if(returningId)window.setTimeout(()=>{returningId=null;},360);
   }
 
   function moveTerm(id,location){
     const term=terms.find(t=>t.id===id);
-    if(term)term.location=location;
+    if(!term)return;
+    if(location!=='bank' && location!==term.type){
+      term.location='bank';
+      returningId=id;
+    }else{
+      term.location=location;
+    }
     clearFeedback();
     final.className='final';
+  }
+
+  function snapshotCurrent(){
+    return {
+      terms:terms.map(t=>({...t})),
+      originalTerms:originalTerms.map(t=>({...t})),
+      values:Object.fromEntries(TYPES.map(type=>[type,inputs[type].value]))
+    };
+  }
+
+  function loadSnapshot(snapshot,reviewing=false){
+    terms=snapshot.terms.map(t=>({...t}));
+    originalTerms=snapshot.originalTerms.map(t=>({...t}));
+    TYPES.forEach(type=>inputs[type].value=snapshot.values[type]??'');
+    selectedId=null;
+    clearFeedback();
+    clearIncorrectTargets();
+    card.classList.remove('incorrect','celebrating');
+    card.classList.toggle('review-mode',reviewing);
+    final.className='final';
+    currentSolved=reviewing;
+    updateEmptyCategories();
+    updateLivePreview();
+    render();
+  }
+
+  function updatePill(){
+    const reviewing=historyIndex!==null;
+    const completedInSet=Math.min(10,Math.max(0,completedSnapshots.length-currentSetStart));
+    const activePage=currentSolved
+      ? Math.max(1,completedInSet)
+      : Math.min(10,completedInSet+1);
+    const viewedPage=reviewing?historyIndex-currentSetStart+1:activePage;
+
+    pillProgress.textContent=`${viewedPage} of 10`;
+    pillBack.disabled=showingCelebration
+      ? false
+      : reviewing
+        ? viewedPage<=1
+        : activePage<=1;
+    pillForward.disabled=showingCelebration
+      ? true
+      : reviewing
+        ? false
+        : !(celebrationAvailable && activePage===10);
+  }
+
+  function showHistory(index){
+    const availableCount=Math.min(10,Math.max(0,completedSnapshots.length-currentSetStart));
+    if(availableCount===0)return;
+    const lastIndex=currentSetStart+availableCount-1;
+    milestone.classList.remove('show');
+    showingCelebration=false;
+    if(historyIndex===null && !activeSnapshot)activeSnapshot=snapshotCurrent();
+    historyIndex=Math.max(currentSetStart,Math.min(index,lastIndex));
+    loadSnapshot(completedSnapshots[historyIndex],true);
+    updatePill();
+  }
+
+  function showCelebration(){
+    if(!celebrationAvailable)return;
+    showingCelebration=true;
+    historyIndex=null;
+    card.classList.remove('review-mode');
+    milestone.classList.add('show');
+    updatePill();
+  }
+
+  function returnToActive(){
+    milestone.classList.remove('show');
+    showingCelebration=false;
+    if(activeSnapshot)loadSnapshot(activeSnapshot,false);
+    historyIndex=null;
+    activeSnapshot=null;
+    updatePill();
   }
 
   function setupDropZone(el,location){
@@ -1030,8 +1281,17 @@
     el.addEventListener('drop',e=>{
       e.preventDefault();
       el.classList.remove('dragover');
-      const id=e.dataTransfer.getData('text/plain');
+      const id=draggingTermId || e.dataTransfer.getData('text/plain');
+      if(location==='bank' && expressionDropTargetId){
+        const targetId=expressionDropTargetId;
+        const placeAfter=expressionDropAfter;
+        clearExpressionDropGap();
+        reorderInExpression(id,targetId,placeAfter);
+        selectedId=null;
+        return;
+      }
       moveTerm(id,location);
+      clearExpressionDropGap();
       render();
     });
     el.addEventListener('click',e=>{
@@ -1113,12 +1373,20 @@
 
   function showInlineError(){
     card.classList.remove('celebrating');
+    card.classList.remove('incorrect');
+    void card.offsetWidth;
     card.classList.add('incorrect');
     final.className='final';
     clearFeedback();
   }
 
+  function clearIncorrectTargets(){
+    document.querySelectorAll('.answer-incorrect').forEach(el=>el.classList.remove('answer-incorrect'));
+  }
+
   function checkWork(){
+    if(currentSolved || historyIndex!==null || showingCelebration)return;
+    clearIncorrectTargets();
     const correct=totals();
     const answers={};
 
@@ -1132,6 +1400,7 @@
           continue;
         }
         showInlineError();
+        inputs[type].closest('.term-entry').classList.add('answer-incorrect');
         return;
       }
       answers[type]=Number(raw);
@@ -1140,16 +1409,26 @@
     const wrong=TYPES.filter(type=>answers[type]!==correct[type]);
 
     if(wrong.length){
+      wrong.forEach(type=>inputs[type].closest('.term-entry').classList.add('answer-incorrect'));
       showInlineError();
       return;
     }
 
     completed++;
+    completedSnapshots.push(snapshotCurrent());
     status.textContent=`${completed} completed`;
+    currentSolved=true;
+    updatePill();
     clearFeedback();
     card.classList.remove('incorrect');
     final.className='final show';
     card.classList.add('celebrating');
+    if(completed%10===0){
+      celebrationAvailable=true;
+      document.getElementById('nextBtn').textContent='See Celebration →';
+    }else{
+      document.getElementById('nextBtn').textContent='Next Problem →';
+    }
   }
 
   function resetProblem(){
@@ -1159,13 +1438,25 @@
     updateLivePreview();
     clearFeedback();
     final.className='final';
+    document.getElementById('nextBtn').textContent='Next Problem →';
     card.classList.remove('celebrating');
     card.classList.remove('incorrect');
+    card.classList.remove('review-mode');
+    clearIncorrectTargets();
     updateEmptyCategories();
     render();
+    historyIndex=null;
+    activeSnapshot=null;
+    currentSolved=false;
+    updatePill();
   }
 
   function newProblem(){
+    milestone.classList.remove('show');
+    showingCelebration=false;
+    historyIndex=null;
+    activeSnapshot=null;
+    currentSolved=false;
     terms=generate();
     originalTerms=terms.map(t=>({...t}));
     selectedId=null;
@@ -1173,10 +1464,13 @@
     updateLivePreview();
     clearFeedback();
     final.className='final';
+    document.getElementById('nextBtn').textContent='Next Problem →';
     card.classList.remove('celebrating');
     card.classList.remove('incorrect');
+    clearIncorrectTargets();
     updateEmptyCategories();
     render();
+    updatePill();
   }
 
   setupDropZone(bank,'bank');
@@ -1184,11 +1478,53 @@
     setupDropZone(bucket,bucket.dataset.type);
   });
 
-  Object.values(inputs).forEach(input=>input.addEventListener('input',updateLivePreview));
+  Object.values(inputs).forEach(input=>{
+    input.addEventListener('input',updateLivePreview);
+    input.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        if(currentSolved){
+          if(celebrationAvailable)showCelebration();
+          else newProblem();
+        }
+        else checkWork();
+      }
+    });
+  });
   document.getElementById('checkBtn').addEventListener('click',checkWork);
   document.getElementById('resetBtn').addEventListener('click',resetProblem);
+  document.getElementById('nextBtn').addEventListener('click',()=>{
+    if(celebrationAvailable && currentSolved)showCelebration();
+    else newProblem();
+  });
   document.getElementById('newRoundBtn').addEventListener('click',newProblem);
-  document.getElementById('nextBtn').addEventListener('click',newProblem);
+  pillBack.addEventListener('click',()=>{
+    if(showingCelebration){
+      showHistory(currentSetStart+9);
+      return;
+    }
+    if(historyIndex!==null){
+      showHistory(historyIndex-1);
+      return;
+    }
+    const completedInSet=Math.min(10,Math.max(0,completedSnapshots.length-currentSetStart));
+    const activePage=currentSolved?Math.max(1,completedInSet):Math.min(10,completedInSet+1);
+    showHistory(currentSetStart+activePage-2);
+  });
+  pillForward.addEventListener('click',()=>{
+    const lastIndex=currentSetStart+Math.min(10,completedSnapshots.length-currentSetStart)-1;
+    if(historyIndex<lastIndex)showHistory(historyIndex+1);
+    else if(celebrationAvailable)showCelebration();
+    else returnToActive();
+  });
+  document.getElementById('practiceAgainBtn').addEventListener('click',()=>{
+    milestone.classList.remove('show');
+    celebrationAvailable=false;
+    currentSetStart=completed;
+    newProblem();
+    updatePill();
+  });
+  document.getElementById('reviewBtn').addEventListener('click',()=>showHistory(currentSetStart+Math.min(10,completedSnapshots.length-currentSetStart)-1));
 
   newProblem();
   updateLivePreview();
