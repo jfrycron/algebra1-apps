@@ -3,20 +3,25 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Equation ↔ Graph Matcher</title>
+<title>Equation to Graph Matcher</title>
 <style>
   :root{
     --bg:#f5f7fb;--card:#ffffff;--card2:#f8fafc;--ink:#162033;--muted:#667085;--accent:#2563eb;--good:#16a34a;--bad:#5b1020;--warn:#d97706;
     --line:#334155;
   }
   *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);transition:background-color .7s ease;}
+  body.celebrate{background:#e9f8ee}
+  body.celebrate h1{color:#166534;transition:color .7s ease}
+  body.celebrate .good{background:var(--good);transition:background-color .7s ease}
   .wrap{max-width:1180px;margin:0 auto;padding:14px 12px 18px;}
   header{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
   h1{font-size:clamp(22px,3vw,36px);margin:0;font-weight:900;letter-spacing:-.03em}
   .subtitle{color:var(--muted);margin:3px 0 0;font-size:14px}
   .kicker{color:#475467;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
   .pill{background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:999px;padding:6px 10px;font-weight:700;font-size:.82rem}
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .roundPill{background:#eef2f7;border:1px solid #d7dce7;color:#475467;border-radius:999px;padding:7px 11px;font-weight:800;font-size:.86rem;white-space:nowrap}
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 8px;align-items:center}
   button{border:0;border-radius:12px;padding:8px 10px;font-weight:800;font-size:.9rem;cursor:pointer;background:var(--accent);color:white;box-shadow:0 8px 24px rgba(16,24,40,.10)}
   button:disabled{opacity:.55;cursor:not-allowed}
@@ -29,7 +34,7 @@
   .score span{color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em}
 
   .frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1;font-weight:800;margin:0 .08rem}
-  .frac .num{border-bottom:2px solid currentColor;padding:0 .22rem .08rem}
+  .frac .num{width:100%;border-bottom:2px solid currentColor;padding:0 .22rem .08rem;text-align:center}
   .frac .den{padding:.08rem .22rem 0;white-space:nowrap}
   .eq-line{vertical-align:middle}
   .answer-eq{display:inline-flex;align-items:center;gap:.05rem}
@@ -46,7 +51,7 @@
   .graph-card.incorrect::after{content:'✕';position:absolute;top:7px;right:7px;width:32px;height:32px;border-radius:999px;background:#5b1020;color:white;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:1000;z-index:6}
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
   .graph-label{position:absolute;top:6px;left:8px;font-weight:900;color:#475467;background:rgba(255,255,255,.88);border-radius:999px;padding:2px 7px;font-size:.72rem}
-  .eq-card{display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(1.15rem,2.1vw,1.5rem);line-height:1.2;font-weight:850;color:#162033;cursor:grab;user-select:none;padding:10px}
+  .eq-card{aspect-ratio:auto;min-height:74px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(1.15rem,2.1vw,1.5rem);line-height:1.2;font-weight:850;color:#162033;cursor:grab;user-select:none;padding:10px}
   .eq-card:active,.placed-eq:active{cursor:grabbing}
   .eq-card.placed{visibility:hidden;pointer-events:none}
   .svg-wrap{flex:1;min-height:0}
@@ -74,6 +79,15 @@
   .modal-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
   .modal-title{font-weight:900;color:#344054}
   .modal svg{height:min(56vh,420px);border-radius:16px}
+  .celebration-screen{position:fixed;inset:0;z-index:50;display:none;place-items:center;overflow:auto;background:#e9f8ee;padding:28px}
+  .celebration-screen.show{display:grid}
+  .celebration-card{width:min(760px,100%);border:2px solid #bbdfc7;border-radius:24px;background:white;box-shadow:0 18px 50px rgba(22,101,52,.16);padding:42px 30px;text-align:center}
+  .celebration-check{display:grid;width:72px;height:72px;margin:0 auto 14px;place-items:center;border-radius:50%;background:#15803d;color:white;font-size:42px;font-weight:1000}
+  .celebration-card h2{margin:0;font-size:clamp(28px,4vw,42px);color:#166534}
+  .celebration-card p{color:#667085;font-weight:650}
+  .celebration-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin:22px 0}
+  .celebration-chip{border-radius:999px;background:#e9f8ee;color:#166534;padding:8px 5px;font-size:13px;font-weight:850}
+  .celebration-card button{min-width:210px;padding:13px 24px;background:#15803d}
 
   @media(min-width:761px) and (max-height:760px){
     .wrap{padding-top:6px}
@@ -105,7 +119,7 @@
       <h1>Equation ↔ Graph Matcher</h1>
       <div class="subtitle">Drag each equation onto the graph it matches. Then submit.</div>
     </div>
-    <div class="controls"><button class="secondary" onclick="newRound()">New Round</button></div>
+    <div class="controls"><span id="roundCounter" class="roundPill">Round: 1</span><button class="secondary" onclick="newRound()">New Round</button></div>
   </header>
 
   <div class="board">
@@ -119,9 +133,11 @@
     </section>
   </div>
   <div class="bottom-actions"><button id="submitBtn" class="good" onclick="primaryAction()">Submit</button></div>
-  <div id="feedbackBox" class="feedback" style="display:none"><div class="feedback-inner"><div id="message" class="message"></div></div></div>
   <div id="answers" class="match-list"></div>
 </div>
+<main id="celebrationScreen" class="celebration-screen" aria-live="polite">
+  <section class="celebration-card"><div class="celebration-check">✓</div><div class="kicker">Ten rounds complete</div><h2>Equation to Graph Complete</h2><p>You matched ten full sets of equations and graphs.</p><div class="celebration-grid"><div class="celebration-chip">✓ Round 1</div><div class="celebration-chip">✓ Round 2</div><div class="celebration-chip">✓ Round 3</div><div class="celebration-chip">✓ Round 4</div><div class="celebration-chip">✓ Round 5</div><div class="celebration-chip">✓ Round 6</div><div class="celebration-chip">✓ Round 7</div><div class="celebration-chip">✓ Round 8</div><div class="celebration-chip">✓ Round 9</div><div class="celebration-chip">✓ Round 10</div></div><button onclick="practiceAgain()">Practice Again</button></section>
+</main>
 <div id="graphModal" class="modal" onclick="closeGraphModal(event)">
   <div class="modal-card" onclick="event.stopPropagation()">
     <div class="modal-top"><div id="modalTitle" class="modal-title">Graph preview</div><button class="secondary" onclick="closeGraphModal()">Close</button></div>
@@ -131,7 +147,7 @@
 
 <script>
 const families = ["linear","quadratic","exponential","rational","absolute value"];
-let round = [], graphOrder=[], eqOrder=[], assignments = {}, locked = new Set(), lastWrong = new Set(), draggedEqId = null;
+let round = [], graphOrder=[], eqOrder=[], assignments = {}, locked = new Set(), lastWrong = new Set(), draggedEqId = null, needsReset=false, roundCount=1;
 let stats = JSON.parse(localStorage.getItem('shapeMatcherStats')||'{"attempts":0,"correct":0}');
 
 function rnd(arr){return arr[Math.floor(Math.random()*arr.length)]}
@@ -146,7 +162,7 @@ function updateStats(){
   if(attemptsEl) attemptsEl.textContent=stats.attempts;
   if(roundEl) roundEl.textContent=locked.size+'/5';
 }
-function setMsg(t){document.getElementById('message').textContent=t;}
+function setMsg(t){const el=document.getElementById('message'); if(el) el.textContent=t;}
 
 function makeProblem(family){
   let eq, fn, hint;
@@ -185,15 +201,15 @@ function makeProblem(family){
     hint='Parabolic pattern';
 
   } else if(family==='exponential'){
-    const variant=rnd(['parent','decay','left','right','up','down']);
+    const variant=rnd(['parent','decay','stretch','faster','up','down']);
     if(variant==='parent'){
       fn=x=>Math.pow(2,x); eq='y = 2ˣ';
     } else if(variant==='decay'){
       fn=x=>Math.pow(0.5,x); eq='y = (½)ˣ';
-    } else if(variant==='left'){
-      fn=x=>Math.pow(2,x+1); eq='y = 2ˣ⁺¹';
-    } else if(variant==='right'){
-      fn=x=>Math.pow(2,x-1); eq='y = 2ˣ⁻¹';
+    } else if(variant==='stretch'){
+      fn=x=>2*Math.pow(2,x); eq='y = 2(2)ˣ';
+    } else if(variant==='faster'){
+      fn=x=>Math.pow(3,x); eq='y = 3ˣ';
     } else if(variant==='up'){
       fn=x=>Math.pow(2,x)+1; eq='y = 2ˣ + 1';
     } else {
@@ -229,14 +245,16 @@ function makeProblem(family){
   }
   return {id:crypto.randomUUID(),family,eq,fn,hint};
 }
-function newRound(){
+function newRound(completed=false){
+  if(completed) roundCount++;
   round = families.map(makeProblem);
   graphOrder=shuffle(round.map(p=>p.id));
   eqOrder=shuffle(round.map(p=>p.id));
-  assignments = {}; locked = new Set(); lastWrong = new Set(); draggedEqId=null;
+  assignments = {}; locked = new Set(); lastWrong = new Set(); draggedEqId=null; needsReset=false;
+  document.body.classList.remove('celebrate');
+  document.getElementById('roundCounter').textContent=`Round: ${roundCount}`;
   const btn=document.getElementById('submitBtn'); if(btn){btn.textContent='Submit';btn.disabled=false;}
-  render(); updateStats(); setMsg('');
-  const fb=document.getElementById('feedbackBox'); if(fb) fb.style.display='none';
+  render(); updateStats();
   document.getElementById('answers').classList.remove('show');
 }
 
@@ -266,7 +284,7 @@ function graphCard(p,i){
   const assigned=assignedId?byId(assignedId):null;
   const isLocked=locked.has(p.id);
   const wrong=lastWrong.has(p.id) && !isLocked;
-  return `<div class="graph-card ${isLocked?'correct locked':''} ${wrong?'incorrect':''}" data-graph-id="${p.id}" ondragover="allowDrop(event)" ondrop="dropOnGraph(event,'${p.id}')">
+  return `<div class="graph-card ${isLocked?'correct locked':''} ${wrong?'incorrect':''}" data-graph-id="${p.id}" ondragover="allowDrop(event)" ondragleave="this.classList.remove('drag-over')" ondrop="dropOnGraph(event,'${p.id}')">
     <div class="graph-label">Graph ${i+1}</div>
     <div class="svg-wrap" onclick="openGraphModal('${p.id}')">${drawSVG(p.fn,p.family,false)}</div>
     <div class="drop-slot">${assigned?placedEq(assigned,isLocked):''}</div>
@@ -300,7 +318,6 @@ function dropOnGraph(e,graphId){
   assignments[graphId]=eqId;
   lastWrong.delete(graphId);
   render();
-  setMsg(''); const fb=document.getElementById('feedbackBox'); if(fb) fb.style.display='none';
 }
 function unassignEq(eqId,doRender=true){
   for(const gid of Object.keys(assignments)){
@@ -308,17 +325,23 @@ function unassignEq(eqId,doRender=true){
       delete assignments[gid]; lastWrong.delete(gid);
     }
   }
-  if(doRender){render(); setMsg(''); const fb=document.getElementById('feedbackBox'); if(fb) fb.style.display='none';}
+  if(doRender){render();}
 }
 
 function primaryAction(){
-  if(locked.size===5){newRound(); return;}
+  if(locked.size===5){if(roundCount>=10) showCelebration(); else newRound(true); return;}
+  if(needsReset){resetIncorrect(); return;}
   submitMatches();
 }
 
+function resetIncorrect(){
+  for(const gid of Object.keys(assignments)) if(!locked.has(gid)) delete assignments[gid];
+  needsReset=false; lastWrong=new Set(); draggedEqId=null;
+  render();
+  const btn=document.getElementById('submitBtn'); if(btn){btn.textContent='Submit';btn.disabled=false;}
+}
+
 function submitMatches(){
-  const placed=Object.keys(assignments).length;
-  if(placed<5){const fb=document.getElementById('feedbackBox'); if(fb) fb.style.display='block'; setMsg(`You have ${placed} of 5 pairs placed. Place all five before submitting.`);return;}
   stats.attempts++;
   let correctThisSubmit=0, newlyLocked=0;
   lastWrong=new Set();
@@ -326,7 +349,7 @@ function submitMatches(){
     if(assignments[gid]===gid){
       correctThisSubmit++;
       if(!locked.has(gid)){locked.add(gid); newlyLocked++;}
-    } else if(!locked.has(gid)){
+    } else if(!locked.has(gid) && assignments[gid]){
       lastWrong.add(gid);
     }
   }
@@ -334,15 +357,17 @@ function submitMatches(){
   save();
   render();
   const btn=document.getElementById('submitBtn');
-  const fb=document.getElementById('feedbackBox'); if(fb) fb.style.display='block';
   if(correctThisSubmit===5){
-    setMsg('Perfect — all 5 pairs are correct.');
-    if(btn){btn.textContent='Next Round';btn.disabled=false;}
+    needsReset=false;
+    document.body.classList.add('celebrate');
+    if(btn){btn.textContent=roundCount>=10?'See Celebration':'Next Round';btn.disabled=false;}
   } else {
-    setMsg(`You got ${correctThisSubmit} of 5 pairs correct. ✓ Solid green pairs are locked. ✕ Dashed burgundy striped pairs need to be fixed.`);
-    if(btn){btn.textContent='Check Again';btn.disabled=false;}
+    needsReset=true;
+    if(btn){btn.textContent='Reset Incorrect';btn.disabled=false;}
   }
 }
+function showCelebration(){document.getElementById('celebrationScreen').classList.add('show')}
+function practiceAgain(){roundCount=1;document.getElementById('celebrationScreen').classList.remove('show');newRound(false)}
 function checkRoundDone(){submitMatches();}
 function toggleAnswers(){document.getElementById('answers').classList.toggle('show');}
 function renderAnswers(){
