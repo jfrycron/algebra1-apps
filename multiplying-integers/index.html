@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Multiplying Integers</title><meta name="description" content="Build equal groups of integer tiles and find the product."><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232474e5'/%3E%3Ccircle cx='32' cy='32' r='22' fill='%23b82539'/%3E%3Cpath d='M20 32h24' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E"><style>
+:root{--ink:#172033;--muted:#667085;--page:#f5f7fb;--blue:#2474e5;--blue-dark:#1459b9;--green:#15805f}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:var(--page);color:var(--ink);font-family:Geist,"Segoe UI",Arial,sans-serif}
+button,input{font:inherit}
+.app-shell{width:min(1360px,calc(100% - 24px));margin:auto;padding:8px 0 14px}
+.app-header{display:grid;grid-template-columns:minmax(0,1fr) 190px;align-items:center;gap:16px;min-height:78px}
+.app-header h1{margin:0;font-size:clamp(24px,2.35vw,34px);line-height:1.05;font-weight:900;letter-spacing:-.035em}
+.title-group p{margin:8px 0 6px;color:var(--muted);font-size:.93rem}
+.header-slot{display:flex;justify-content:flex-end}
+.round-pill{border:1px solid #d7dce7;border-radius:999px;background:#eef2f7;color:#475467;padding:10px 22px;font-size:.9rem;font-weight:800;text-align:center}
+.workspace{position:relative;border:2px solid #d7dce7;border-radius:16px;background:#fff;box-shadow:0 8px 24px #1018281a;height:calc(100vh - 100px);min-height:590px;max-height:790px;overflow:hidden}
+.multiplication-workspace{display:flex;flex-direction:column;padding:18px 22px 24px}
+.new-round{position:absolute;right:18px;top:16px;border:1px solid #cbd2de;background:#eef1f6;border-radius:12px;padding:10px 15px;color:#344054;font-weight:800;cursor:pointer}
+.mode-tabs{display:flex;gap:4px;background:#eef2f7;border-radius:999px;padding:4px;width:max-content;max-width:calc(100% - 135px)}
+.mode-tabs button{border:0;background:transparent;color:#475467;border-radius:999px;padding:8px 16px;font-size:.86rem;font-weight:800;cursor:pointer}
+.mode-tabs button.selected{background:#fff;color:#1459b9;box-shadow:0 1px 5px #10182824}
+.problem-heading{text-align:center;min-height:122px}
+.expression{font-size:clamp(42px,5vw,64px);font-weight:900;letter-spacing:-.035em}
+.problem-heading p{margin:1px 0;color:#475467;font-size:1.05rem}
+.tile-stage{flex:1;min-height:0;border-radius:18px;background:#f8fafc;display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto}
+.empty-stage{color:#98a2b3;font-size:1.3rem;font-weight:700;text-align:center}
+.groups{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:18px;width:100%}
+.tile-group{background:#fff;border:2px solid #d8dfe9;border-radius:18px;min-width:145px;max-width:225px;flex:1;padding:13px 12px 10px;text-align:center;box-shadow:0 3px 10px #1018280b}
+.group-label{color:#667085;font-size:.87rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.tiles{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;align-content:center;min-height:104px;padding:10px 0}
+.integer-tile{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;font-size:28px;line-height:1;font-weight:800}
+.integer-tile.negative{background:#b82539;color:#fff;box-shadow:inset 0 -3px 0 #811829}
+.integer-tile.positive{background:#ffe000;color:#172033;box-shadow:inset 0 -3px 0 #c5a900}
+.group-value{font-size:1.1rem;font-weight:800;color:#9e1e31}
+.tile-group:has(.positive) .group-value{color:#725d00}
+.bottom-controls{min-height:132px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding-top:8px}
+.group-progress{font-weight:800;color:#475467}
+.primary-button{border:0;border-radius:12px;background:var(--blue);color:#fff;padding:12px 25px;font-size:1.05rem;font-weight:850;cursor:pointer;box-shadow:0 3px 0 var(--blue-dark)}
+.primary-button:hover{background:var(--blue-dark)}
+.answer-row{display:flex;align-items:center;gap:12px}
+.answer-row label{font-size:1.1rem;font-weight:800}
+.answer-row input{width:100px;height:48px;border:2px solid #a9b4c5;border-radius:10px;text-align:center;font-size:1.4rem;font-weight:800;outline-color:var(--blue)}
+.feedback{min-height:24px;color:#667085;text-align:center;font-weight:650}
+.feedback.good{color:var(--green)}
+.feedback.bad{color:#a92335}
+body.success{background:#bdf1d6}
+.answer-row input.answer-incorrect{border:2px dashed #172033;outline:2px solid #939393;background:repeating-linear-gradient(135deg,#fff 0 8px,#e7e7e7 8px 16px)}
+.workspace.workspace-incorrect{animation:workspaceShake .26s linear 1}
+@keyframes workspaceShake{0%,100%{transform:translateX(0)}
+25%{transform:translateX(-5px)}
+50%{transform:translateX(5px)}
+75%{transform:translateX(-3px)}
+}
+@media(max-width:700px){.app-header{grid-template-columns:1fr auto}
+.round-pill{padding:8px 12px}
+.workspace{min-height:600px;height:calc(100dvh - 100px)}
+.multiplication-workspace{padding:12px}
+.new-round{right:10px;top:10px;padding:8px}
+.mode-tabs{margin-top:38px;max-width:100%}
+.mode-tabs button{padding:7px 11px}
+.problem-heading{min-height:112px}
+.expression{font-size:40px}
+.tile-stage{padding:12px}
+.groups{gap:8px}
+.tile-group{min-width:112px;padding:8px}
+.integer-tile{width:32px;height:32px;font-size:24px}
+.tiles{gap:5px;min-height:80px}
+.answer-row{gap:7px}
+.answer-row input{width:75px}
+.primary-button{padding:11px 13px;font-size:.95rem}
+}
+
+</style></head><body><main class="app-shell"><header class="app-header"><div class="title-group"><h1>Multiplying Integers</h1><p>Make equal groups of tiles. Then find the product.</p></div><div class="header-slot"><span class="round-pill" id="round">Round 1</span></div></header><section class="workspace multiplication-workspace" id="workspace"><button class="new-round" id="new-round">New Round</button><div class="mode-tabs" role="group" aria-label="Practice mode"><button id="mixed" class="selected" aria-pressed="true">Mixed Signs</button><button id="positive" aria-pressed="false">Positive × Positive</button></div><div class="problem-heading"><div class="expression" id="expression">−3 × 4</div><p id="group-description">4 groups of <strong>−3</strong></p></div><div class="tile-stage" id="stage" aria-label="0 of 4 groups shown"><div class="empty-stage">Start with one group of −3.</div></div><div class="bottom-controls"><div class="group-progress" id="progress">0 of 4 groups</div><div id="action"><button class="primary-button" id="duplicate">Make first group</button></div><div class="feedback" id="feedback" aria-live="polite">Each group has the same value.</div></div></section></main><script>
+(() => { let mode='mixed',problem={magnitude:3,groups:4,reversed:false},count=0,answer='',status='building',round=1;
+const $=id=>document.getElementById(id), value=()=>mode==='mixed'?-problem.magnitude:problem.magnitude, fmt=n=>n<0?'−'+(-n):String(n);
+function expression(){const {magnitude:m,groups:g,reversed:r}=problem;return mode==='mixed'?(r?`${g} × (−${m})`:`−${m} × ${g}`):(r?`${g} × ${m}`:`${m} × ${g}`)}
+function render(){document.body.classList.toggle('success',status==='correct');$('round').textContent=`Round ${round}`;$('mixed').classList.toggle('selected',mode==='mixed');$('positive').classList.toggle('selected',mode==='positive');$('mixed').setAttribute('aria-pressed',String(mode==='mixed'));$('positive').setAttribute('aria-pressed',String(mode==='positive'));$('expression').textContent=expression();$('group-description').innerHTML=`${problem.groups} groups of <strong>${fmt(value())}</strong>`;$('progress').textContent=`${count} of ${problem.groups} groups`;$('stage').setAttribute('aria-label',`${count} of ${problem.groups} groups shown`);
+$('stage').replaceChildren();if(count===0){const empty=document.createElement('div');empty.className='empty-stage';empty.textContent=`Start with one group of ${fmt(value())}.`;$('stage').append(empty)}else{const groups=document.createElement('div');groups.className='groups';for(let g=0;g<count;g++){const group=document.createElement('div');group.className='tile-group';const label=document.createElement('div');label.className='group-label';label.textContent=`Group ${g+1}`;const tiles=document.createElement('div');tiles.className='tiles';for(let i=0;i<problem.magnitude;i++){const tile=document.createElement('span');tile.className=`integer-tile ${mode==='mixed'?'negative':'positive'}`;tile.textContent=mode==='mixed'?'−':'+';tile.setAttribute('aria-label',mode==='mixed'?'negative one':'positive one');tiles.append(tile)}const total=document.createElement('div');total.className='group-value';total.textContent=fmt(value());group.append(label,tiles,total);groups.append(group)}$('stage').append(groups)}
+$('action').replaceChildren();if(count<problem.groups){const button=document.createElement('button');button.className='primary-button';button.textContent=count===0?'Make first group':'Duplicate group';button.onclick=()=>{count++;status=count===problem.groups?'ready':'building';render();if(status==='ready')$('product').focus()};$('action').append(button)}else{const row=document.createElement('div');row.className='answer-row';const label=document.createElement('label');label.htmlFor='product';label.textContent='Product';const input=document.createElement('input');input.id='product';input.type='text';input.inputMode='numeric';input.autocomplete='off';input.spellcheck=false;input.value=answer;input.disabled=status==='correct';input.setAttribute('aria-invalid',String(status==='wrong'));if(status==='wrong')input.className='answer-incorrect';input.oninput=e=>{answer=e.target.value;if(status==='wrong'){status='ready';input.classList.remove('answer-incorrect');input.setAttribute('aria-invalid','false');$('feedback').className='feedback';$('feedback').textContent='How many tiles altogether?'}};input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();check()}};const button=document.createElement('button');button.className='primary-button';button.textContent=status==='correct'?'Correct – Next Problem':'Check';button.onclick=check;row.append(label,input,button);$('action').append(row)}
+$('feedback').className='feedback '+(status==='correct'?'good':status==='wrong'?'bad':'');$('feedback').textContent=status==='correct'?`Correct. ${problem.groups} groups of ${fmt(value())} make ${fmt(value()*problem.groups)}.`:status==='wrong'?'Count all the tiles and check their signs.':count===problem.groups?'How many tiles altogether?':'Each group has the same value.'}
+function reset(next=mode){mode=next;problem={magnitude:2+Math.floor(Math.random()*5),groups:2+Math.floor(Math.random()*5),reversed:Math.random()<.5};count=0;answer='';status='building';round++;render()}
+function check(){if(status==='correct'){reset();return}if(count!==problem.groups||!answer.trim())return;if(Number(answer.trim().replace(/−/g,'-'))===value()*problem.groups){status='correct';render()}else{status='wrong';render();$('workspace').classList.remove('workspace-incorrect');void $('workspace').offsetWidth;$('workspace').classList.add('workspace-incorrect')}}
+$('workspace').addEventListener('animationend',()=>$('workspace').classList.remove('workspace-incorrect'));$('new-round').onclick=()=>reset();$('mixed').onclick=()=>{if(mode!=='mixed')reset('mixed')};$('positive').onclick=()=>{if(mode!=='positive')reset('positive')};document.addEventListener('keydown',e=>{if(e.key==='Enter'&&status==='correct'){e.preventDefault();reset()}});render();
+})();
+</script></body></html>
