@@ -6,24 +6,23 @@
 <style>
 :root{--ink:#172033;--muted:#667085;--page:#f5f7fb;--blue:#2474e5;--blue-dark:#1459b9;--green:#15805f;--line:#d7dce7}
 *{box-sizing:border-box}html,body{min-height:100%}body{margin:0;background:var(--page);color:var(--ink);font-family:Geist,"Segoe UI",Arial,sans-serif}button,input{font:inherit}
-.shell{width:min(1360px,calc(100% - 24px));margin:auto;padding:8px 0 14px;display:block;min-height:100vh}
-.app{position:relative;border:2px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 8px 24px #1018281a;height:calc(100vh - 100px);min-height:590px;max-height:790px;overflow:hidden;padding:18px 22px 24px;margin-top:78px}
-.top{position:absolute;left:0;right:0;top:-78px;height:78px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:16px}
-.eyebrow{font-size:clamp(24px,2.35vw,34px);line-height:1.05;font-weight:900;letter-spacing:-.035em;text-transform:none;color:var(--ink)}
-.pills{display:flex;gap:4px;background:#eef2f7;border-radius:999px;padding:4px}.pill{width:24px;height:9px;border-radius:999px;background:#d5dbe5}.pill.on{background:var(--blue)}
-h1{text-align:center;font-size:clamp(30px,3vw,42px);margin:34px 0 8px;font-weight:900;letter-spacing:-.035em}.lead{text-align:center;font-size:1.05rem;color:#475467;margin:0 0 22px}
-.stack{display:grid;gap:12px;margin:18px auto 72px;max-width:760px}.q{border:2px solid #d8dfe9;border-radius:16px;padding:15px 18px;font-size:clamp(22px,2.5vw,30px);display:flex;align-items:center;gap:12px;min-height:70px;transition:.25s;background:#fff}.q.locked{display:none}.q.done{border-color:#b8dbc8;background:#f5fbf7}
-input{font:inherit;width:95px;border:2px solid #a9b4c5;border-radius:10px;height:48px;outline-color:var(--blue);text-align:center;background:#fff}.q.done input{color:var(--green);border-color:var(--green)}
+.app-shell{width:min(1360px,calc(100% - 24px));margin:auto;padding:8px 0 14px}
+.app-header{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:16px;min-height:78px}
+.app-header h1{margin:0;font-size:clamp(24px,2.35vw,34px);line-height:1.05;font-weight:900;letter-spacing:-.035em}.title-group p{margin:8px 0 6px;color:var(--muted);font-size:.93rem}.header-slot{display:flex;justify-content:flex-end;align-items:center}
+.pills{display:flex;gap:4px;background:#eef2f7;border-radius:999px;padding:4px}.pill{width:28px;height:9px;border-radius:999px;background:#d5dbe5}.pill.on{background:var(--blue)}
+.workspace{position:relative;border:2px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 8px 24px #1018281a;height:calc(100vh - 100px);min-height:590px;max-height:790px;overflow:hidden;padding:18px 22px 24px}
+.workspace h1{text-align:center;font-size:clamp(30px,3vw,42px);margin:28px 0 8px;font-weight:900;letter-spacing:-.035em}.lead{text-align:center;font-size:1.05rem;color:#475467;margin:0 0 22px}
+.stack{display:grid;gap:12px;margin:18px auto 72px;max-width:760px}.q{border:2px solid #d8dfe9;border-radius:16px;padding:15px 18px;font-size:clamp(22px,2.5vw,30px);display:flex;align-items:center;gap:12px;min-height:70px;transition:.25s}.q.locked{display:none}.q.done{border-color:#b8dbc8;background:#f5fbf7}
+input{width:95px;height:48px;border:2px solid #a9b4c5;border-radius:10px;outline-color:var(--blue);text-align:center;font-size:1.25rem;font-weight:800}.q.done input{color:var(--green);border-color:var(--green)}
 .check,.next{border:0;border-radius:12px;background:var(--blue);color:#fff;padding:12px 22px;font-weight:850;cursor:pointer;box-shadow:0 3px 0 var(--blue-dark)}.feedback{font-size:15px;font-weight:700;margin-left:auto}.good{color:var(--green)}.bad{color:#a92335}
 .shake{animation:workspaceShake .26s linear 1}@keyframes workspaceShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
 .next{position:absolute;right:22px;bottom:24px}.next[hidden]{display:none}.back{position:absolute;left:22px;bottom:24px;border:1px solid #cbd2de;background:#eef1f6;color:#344054;border-radius:12px;padding:11px 18px;font-weight:800;cursor:pointer}
 .reveal{margin:70px auto 0;max-width:700px;text-align:center;border-radius:18px;background:#f8fafc;padding:38px}.reveal h2{font-size:clamp(30px,3vw,42px);margin:0 0 18px;font-weight:900}.reveal .rule{font-size:24px;font-weight:750;line-height:1.45}.reveal .example{font-size:32px;margin-top:24px;font-weight:850}
 .prompt{text-align:center;font-size:clamp(24px,2.6vw,34px);font-weight:850;margin:46px auto 22px;max-width:800px}.mc{display:grid;gap:12px;margin:0 auto 72px;max-width:760px}.choice{width:100%;text-align:left;padding:15px 18px;border:2px solid #d8dfe9;background:white;border-radius:14px;cursor:pointer;font-size:18px;font-weight:700}.choice:hover{border-color:#91a4c8}.choice.correct{border-color:#78bd98;background:#f2fbf6}.choice.wrong{border-color:#a92335;background:#fff5f5}
-.finish{text-align:center;padding:120px 20px}.finish h2{font-size:42px;margin:0 0 12px}.finish p{font-size:20px;color:var(--muted)}
-body.success{background:#bdf1d6}
-@media(max-width:700px){.app{padding:12px;min-height:600px;height:calc(100dvh - 100px)}.eyebrow{font-size:24px}.pills{gap:3px}.pill{width:16px}.q{font-size:21px;flex-wrap:wrap}.next{right:12px}.back{left:12px}h1{font-size:29px;margin-top:26px}}
+.finish{text-align:center;padding:120px 20px}.finish h2{font-size:42px;margin:0 0 12px}.finish p{font-size:20px;color:var(--muted)}body.success{background:#bdf1d6}
+@media(max-width:700px){.app-header{grid-template-columns:1fr auto}.workspace{min-height:600px;height:calc(100dvh - 100px);padding:12px}.pill{width:18px}.q{font-size:21px;flex-wrap:wrap}.next{right:12px}.back{left:12px}}
 </style></head>
-<body><div class="shell"><main class="app" id="app"></main></div>
+<body><main class="app-shell"><header class="app-header"><div class="title-group"><h1>Identity Property of Multiplication</h1><p id="subtitle">Discover what happens when a number is multiplied by 1.</p></div><div class="header-slot" id="nav-slot"></div></header><section class="workspace" id="app"></section></main>
 <script>
 const pages=[
 {type:"fill",title:"What happens when we multiply by 1?",lead:"Fill in each blank. A new question will appear after each correct answer.",qs:[["8 × 1 =","8"],["1 × 14 =","14"],["23 × 1 =","23"],["1 × 37 =","37"]]},
@@ -36,7 +35,7 @@ const pages=[
 {type:"mc",title:"Identify the property.",prompt:"Which equation demonstrates the Identity Property of Multiplication?",choices:[["18 × 1 = 18",1],["8 + 0 = 8",0],["2 × 9 = 9 × 2",0],["5 × (2 + 4) = 10 + 20",0]]},
 {type:"finish"}];
 const params=new URLSearchParams(location.search);let page=Math.max(0,Math.min(pages.length-1,(parseInt(params.get("page")||"1",10)||1)-1));const app=document.getElementById("app");
-function chrome(title){return '<div class="top"><div class="eyebrow">'+(page<2?'Multiplication Pattern':'Identity Property of Multiplication')+'</div><div class="pills">'+pages.map((_,i)=>'<span class="pill '+(i===page?'on':'')+'"></span>').join('')+'</div></div>'+(title?'<h1>'+title+'</h1>':'')+(page>0?'<button class="back" type="button" onclick="back()">← Back</button>':'')}
+function chrome(title){document.getElementById("nav-slot").innerHTML='<div class="pills" aria-label="Page progress">'+pages.map((_,i)=>'<span class="pill '+(i===page?'on':'')+'"></span>').join('')+'</div>';return (title?'<h1>'+title+'</h1>':'')+(page>0?'<button class="back" type="button" onclick="back()">← Back</button>':'')}
 function render(){const p=pages[page];
 if(p.type==="fill"){app.innerHTML=chrome(p.title)+'<p class="lead">'+p.lead+'</p><div class="stack" id="stack"></div><button class="next" id="next" hidden>Next →</button>';const stack=document.getElementById("stack");p.qs.forEach((q,i)=>{const d=document.createElement("div");d.className="q "+(i?"locked":"");let display=q[0];if(q[2]==="left"||q[2]==="mid")display=display.replace("___",'<input inputmode="numeric" aria-label="answer">');else display+=' <input inputmode="numeric" aria-label="answer">';d.innerHTML='<span>'+display+'</span><button class="check">Check</button><span class="feedback"></span>';stack.appendChild(d)});wireFill(p)}
 else if(p.type==="reveal"){app.innerHTML=chrome("")+'<div class="reveal"><h2>Identity Property of Multiplication</h2><div class="rule">When a number is multiplied by 1,<br>its value stays the same.</div><div class="example">a × 1 = a &nbsp;&nbsp; and &nbsp;&nbsp; 1 × a = a</div></div><button class="next" id="next">Practice It →</button>';document.getElementById("next").onclick=advance}
