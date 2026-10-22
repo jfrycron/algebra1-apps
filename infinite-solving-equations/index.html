@@ -2,8 +2,8 @@
 const el=id=>document.getElementById(id),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,nz=(a,b)=>{let v;do{v=rand(a,b)}while(!v);return v},term=(a,b)=>{let s=a===0?'':a===1?'x':a===-1?'-x':a+'x';return s+(b===0&&a!==0?'':a===0?String(b):b<0?' − '+(-b):' + '+b)},step=(eq,note)=>({eq,note});let cur,at=-1,solved=0,last='';
 function variable(a){return a===1?'x':a===-1?'-x':a+'x'}
 function expression(a,b,reverse=false){if(!a)return String(b);if(!b)return variable(a);if(reverse)return b+(a<0?' − ':' + ')+variable(Math.abs(a));return variable(a)+(b<0?' − ':' + ')+Math.abs(b)}
-function change(value,kind=''){const abs=Math.abs(value);const word=value<0?'Added ':'Subtracted ';return word+abs+kind+(value<0?' to both sides.':' from both sides.')}
-function divide(a){return 'Divided both sides by '+a+'.'}
+function change(value,kind=''){if(value===0)return 'No term to move.';const label=Math.abs(value)+kind;return 'Moved '+(value<0?'−':'+')+label+' across as '+(value<0?'+':'−')+label+'.'}
+function divide(a){return 'Divided by '+a+'.'}
 function flip(e){return e.split(' = ').reverse().join(' = ')}
 function generate(mode){
  if(mode==='mixed')mode=['two','both','dist','combine','special'][rand(0,4)];
