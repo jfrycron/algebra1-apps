@@ -72,35 +72,25 @@ function generate(mode){
  return {eq,S:steps,mode};
 }
 function reset(){let p;for(let j=0;j<25;j++){p=generate(el('mode').value);if(p.eq!==last)break}cur=p;last=p.eq;at=-1;el('steps').replaceChildren();delete el('steps').dataset.previousEquation;renderRow(cur.eq,'');el('action').textContent='Continue'}
-function tokenizeSide(text){
- const tokens=[];
- const re=/[+−-]?\s*(?:\d+(?:x)?|x|\([^()]*\))/g;
- let m;while((m=re.exec(text))!==null){let raw=m[0].trim();if(!raw)continue;tokens.push(raw.replace(/\s+/g,''))}
- return tokens.length?tokens:[text.trim()];
+function splitTerms(text){
+ const matches=[...text.matchAll(/(?:^|[+−-])\s*(?:\d*x|\d+)(?!\w)/g)];
+ return matches.map(m=>({start:m.index,end:m.index+m[0].length,raw:m[0],key:m[0].replace(/\s/g,'').replace(/−/g,'-').replace(/^\+/,'')}));
 }
-function normalizedTerm(token){return token.replace(/^[+]/,'').replace(/−/g,'-')}
-function termTokens(text){return tokenizeSide(text)}
 function appendTerms(node,text,priorText,highlight){
  if(!highlight||priorText===null){node.textContent=text;return}
- const tokens=termTokens(text),oldTokens=termTokens(priorText);
- const remaining=new Map();
- for(const t of oldTokens){const k=normalizedTerm(t);remaining.set(k,(remaining.get(k)||0)+1)}
- const fragments=[];
- for(const token of tokens){
-  const key=normalizedTerm(token),count=remaining.get(key)||0;
-  const changed=count===0;
-  if(count)remaining.set(key,count-1);
-  fragments.push({token,changed});
- }
- for(let i=0;i<fragments.length;i++){
-  const {token,changed}=fragments[i];
-  const match=token.match(/^([+−-]?)(.*)$/),sign=match[1],body=match[2];
-  const printed=i===0?(sign==='+'?'':sign==='-'?'−':sign)+body:(sign==='-'||sign==='−'?' − ':' + ')+body;
+ const old=splitTerms(priorText),now=splitTerms(text),remaining=new Map();
+ for(const t of old)remaining.set(t.key,(remaining.get(t.key)||0)+1);
+ let cursor=0;
+ for(const t of now){
+  if(t.start>cursor)node.append(document.createTextNode(text.slice(cursor,t.start)));
+  const count=remaining.get(t.key)||0;
   const span=document.createElement('span');
-  if(changed)span.className='changed-term';
-  span.textContent=printed;
-  node.append(span);
+  if(!count)span.className='changed-term';
+  else remaining.set(t.key,count-1);
+  span.textContent=text.slice(t.start,t.end);
+  node.append(span);cursor=t.end;
  }
+ if(cursor<text.length)node.append(document.createTextNode(text.slice(cursor)));
 }
 function renderRow(eq,note){
  const grid=el('steps'),parts=eq.split(' = ');
