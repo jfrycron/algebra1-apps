@@ -74,8 +74,8 @@ function generate(mode){
 function reset(){let p;for(let j=0;j<25;j++){p=generate(el('mode').value);if(p.eq!==last)break}cur=p;last=p.eq;at=-1;el('steps').replaceChildren();delete el('steps').dataset.previousEquation;renderRow(cur.eq,'');el('action').textContent='Continue'}
 function tokenizeSide(text){
  const tokens=[];
- const re=/[+−-]?\\s*(?:\\d+(?:x)?|x|\\([^()]*\\))/g;
- let m;while((m=re.exec(text))!==null){let raw=m[0].trim();if(!raw)continue;tokens.push(raw.replace(/\\s+/g,''))}
+ const re=/[+−-]?\s*(?:\d+(?:x)?|x|\([^()]*\))/g;
+ let m;while((m=re.exec(text))!==null){let raw=m[0].trim();if(!raw)continue;tokens.push(raw.replace(/\s+/g,''))}
  return tokens.length?tokens:[text.trim()];
 }
 function normalizedTerm(token){return token.replace(/^[+]/,'').replace(/−/g,'-')}
