@@ -43,9 +43,9 @@ function generate(mode){
    c=rand(-5,5);if(c===z)c++;
    d=(z-c)*x+k*v;
    const reverse=rand(0,1)===1,swapped=rand(0,1)===1;
-   eq=k+'('+expression(u,v,reverse)+') = '+expression(c,d,rand(0,1)===1);
-   steps.push(step(expression(z,k*v)+' = '+expression(c,d),'Distributed '+k+'.'));
-   if(c!==0)steps.push(step(expression(z-c,k*v)+' = '+d,change(c,'x')));
+   const reverseRight=rand(0,1)===1;eq=k+'('+expression(u,v,reverse)+') = '+expression(c,d,reverseRight);
+   steps.push(step(expression(z,k*v,reverse)+' = '+expression(c,d,reverseRight),'Distributed '+k+'.'));
+   if(c!==0)steps.push(step(expression(z-c,k*v,reverse)+' = '+d,change(c,'x')));
    steps.push(step(variable(z-c)+' = '+(d-k*v),change(k*v)));
    steps.push(step('x = '+x,divide(z-c)));
    if(swapped){eq=flip(eq);for(const item of steps)item.eq=flip(item.eq)}
@@ -53,8 +53,8 @@ function generate(mode){
  if(mode==='special'){
    const k=nz(-5,5),u=nz(-5,5),v=rand(-9,9),z=k*u,q=k*v,inf=rand(0,1)===0;
    d=inf?q:q+nz(-9,9);
-   eq=k+'('+expression(u,v,rand(0,1)===1)+') = '+expression(z,d,rand(0,1)===1);
-   steps.push(step(expression(z,q)+' = '+expression(z,d),'Distributed '+k+'.'));
+   const reverse=rand(0,1)===1,reverseRight=rand(0,1)===1;eq=k+'('+expression(u,v,reverse)+') = '+expression(z,d,reverseRight);
+   steps.push(step(expression(z,q,reverse)+' = '+expression(z,d,reverseRight),'Distributed '+k+'.'));
    if(z!==0)steps.push(step(q+' = '+d,change(z,'x')));
    steps.push(step(inf?'Infinitely Many Solutions':'No Solution',inf?'The statement is true for every value of x.':'The statement is false for every value of x.'));
    if(rand(0,1)){eq=flip(eq);for(const item of steps)if(item.eq.includes(' = '))item.eq=flip(item.eq)}
