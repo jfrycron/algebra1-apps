@@ -45,7 +45,7 @@ function generate(mode){
    const reverse=rand(0,1)===1,swapped=rand(0,1)===1;
    eq=k+'('+expression(u,v,reverse)+') = '+expression(c,d,rand(0,1)===1);
    steps.push(step(expression(z,k*v)+' = '+expression(c,d),'Distributed '+k+'.'));
-   steps.push(step(expression(z-c,k*v)+' = '+d,change(c,'x')));
+   if(c!==0)steps.push(step(expression(z-c,k*v)+' = '+d,change(c,'x')));
    steps.push(step(variable(z-c)+' = '+(d-k*v),change(k*v)));
    steps.push(step('x = '+x,divide(z-c)));
    if(swapped){eq=flip(eq);for(const item of steps)item.eq=flip(item.eq)}
@@ -55,7 +55,7 @@ function generate(mode){
    d=inf?q:q+nz(-9,9);
    eq=k+'('+expression(u,v,rand(0,1)===1)+') = '+expression(z,d,rand(0,1)===1);
    steps.push(step(expression(z,q)+' = '+expression(z,d),'Distributed '+k+'.'));
-   steps.push(step(q+' = '+d,change(z,'x')));
+   if(z!==0)steps.push(step(q+' = '+d,change(z,'x')));
    steps.push(step(inf?'Infinitely Many Solutions':'No Solution',inf?'The statement is true for every value of x.':'The statement is false for every value of x.'));
    if(rand(0,1)){eq=flip(eq);for(const item of steps)if(item.eq.includes(' = '))item.eq=flip(item.eq)}
  }
