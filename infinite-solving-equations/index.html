@@ -29,12 +29,22 @@ function generate(mode){
    let u=nz(-7,7),v=nz(-7,7),z=u+v;
    if(z===0){v=v===7?v-1:v+1;z=u+v}
    b=rand(-12,12);d=z*x+b;
-   const parts=[variable(u),variable(v),String(b)].filter((t,i)=>i!==2||b!==0);
    const order=rand(0,1)===1?[2,0,1]:[0,2,1];
-   let arr=order.map(i=>parts[i]).filter(Boolean);
-   eq=arr.map((p,i)=>i===0?p:(p.startsWith('-')?' − '+p.slice(1):' + '+p)).join('')+' = '+d;
-   steps.push(step(expression(z,b)+' = '+d,'Combined like terms.'));
-   steps.push(step(variable(z)+' = '+(d-b),change(b)));
+   const signed=[{type:'x',value:u},{type:'x',value:v},{type:'constant',value:b}];
+   function writeTerms(items){
+     return items.map((item,i)=>{
+       const val=item.value;
+       const core=item.type==='x'?variable(Math.abs(val)):String(Math.abs(val));
+       return i===0?(val<0?'-':'')+core:(val<0?' − ':' + ')+core;
+     }).join('');
+   }
+   const arranged=order.map(i=>signed[i]).filter(item=>item.value!==0);
+   eq=writeTerms(arranged)+' = '+d;
+   if(b!==0){
+     const withoutConstant=arranged.filter(item=>item.type==='x');
+     steps.push(step(writeTerms(withoutConstant)+' = '+(d-b),change(b)));
+   }
+   steps.push(step(variable(z)+' = '+(d-b),'Combined like terms.'));
    steps.push(step('x = '+x,divide(z)));
    if(rand(0,1)){eq=flip(eq);for(const item of steps)item.eq=flip(item.eq)}
  }
