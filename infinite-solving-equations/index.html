@@ -20,7 +20,7 @@ function generate(mode){
    const z=nz(-7,7);a=nz(-7,7);c=a-z;b=rand(-12,12);d=z*x+b;
    const reverse=rand(0,1)===1,reverseRight=rand(0,1)===1,swapped=rand(0,1)===1;
    eq=expression(a,b,reverse)+' = '+expression(c,d,reverseRight);
-   steps.push(step(expression(z,b,reverse)+' = '+d,change(c,'x')));
+   if(c!==0)steps.push(step(expression(z,b,reverse)+' = '+d,change(c,'x')));
    steps.push(step(variable(z)+' = '+(d-b),change(b)));
    if(Math.abs(z)!==1)steps.push(step('x = '+x,divide(z)));
    if(swapped){eq=flip(eq);for(const item of steps)item.eq=flip(item.eq)}
