@@ -13,7 +13,7 @@ function generate(mode){
    const reverse=rand(0,1)===1,swapped=rand(0,1)===1;
    eq=expression(a,b,reverse)+' = '+d;
    steps.push(step(variable(a)+' = '+(d-b),change(b)));
-   if(Math.abs(a)!==1)steps.push(step('x = '+x,divide(a)));
+   if(a!==1)steps.push(step('x = '+x,divide(a)));
    if(swapped){eq=flip(eq);for(const item of steps)item.eq=flip(item.eq)}
  }
  if(mode==='both'){
@@ -22,7 +22,7 @@ function generate(mode){
    eq=expression(a,b,reverse)+' = '+expression(c,d,reverseRight);
    if(c!==0)steps.push(step(expression(z,b,reverse)+' = '+d,change(c,'x')));
    steps.push(step(variable(z)+' = '+(d-b),change(b)));
-   if(Math.abs(z)!==1)steps.push(step('x = '+x,divide(z)));
+   if(z!==1)steps.push(step('x = '+x,divide(z)));
    if(swapped){eq=flip(eq);for(const item of steps)item.eq=flip(item.eq)}
  }
  if(mode==='combine'){
@@ -45,7 +45,7 @@ function generate(mode){
      steps.push(step(writeTerms(withoutConstant)+' = '+(d-b),change(b)));
    }
    steps.push(step(variable(z)+' = '+(d-b),'Combined like terms.'));
-   if(Math.abs(z)!==1)steps.push(step('x = '+x,divide(z)));
+   if(z!==1)steps.push(step('x = '+x,divide(z)));
    if(rand(0,1)){eq=flip(eq);for(const item of steps)item.eq=flip(item.eq)}
  }
  if(mode==='dist'){
@@ -57,7 +57,7 @@ function generate(mode){
    steps.push(step(expression(z,k*v,reverse)+' = '+expression(c,d,reverseRight),'Distributed '+k+'.'));
    if(c!==0)steps.push(step(expression(z-c,k*v,reverse)+' = '+d,change(c,'x')));
    steps.push(step(variable(z-c)+' = '+(d-k*v),change(k*v)));
-   if(Math.abs(z-c)!==1)steps.push(step('x = '+x,divide(z-c)));
+   if(z-c!==1)steps.push(step('x = '+x,divide(z-c)));
    if(swapped){eq=flip(eq);for(const item of steps)item.eq=flip(item.eq)}
  }
  if(mode==='special'){
