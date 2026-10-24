@@ -7,7 +7,7 @@ function divide(a){return 'Divided by '+a+'.'}
 function flip(e){return e.split(' = ').reverse().join(' = ')}
 function generate(mode){
  if(mode==='mixed')mode=['two','both','dist','combine','special'][rand(0,4)];
- const x=rand(-15,15),steps=[];let eq='',a,b,c,d;
+ const x=rand(-15,15),steps=[];let eq='',a,b,c,d,specialResult=null;
  if(mode==='two'){
    a=nz(-8,8);b=nz(-14,14);d=a*x+b;
    const reverse=rand(0,1)===1,swapped=rand(0,1)===1;
@@ -62,14 +62,14 @@ function generate(mode){
  }
  if(mode==='special'){
    const k=nz(-5,5),u=nz(-5,5),v=rand(-9,9),z=k*u,q=k*v,inf=rand(0,1)===0;
-   d=inf?q:q+nz(-9,9);
+   d=inf?q:q+nz(-9,9);specialResult=inf?'infinite':'none';
    const reverse=rand(0,1)===1,reverseRight=rand(0,1)===1;eq=k+'('+expression(u,v,reverse)+') = '+expression(z,d,reverseRight);
    steps.push(step(expression(z,q,reverse)+' = '+expression(z,d,reverseRight),'Distributed '+k+'.'));
    if(z!==0)steps.push(step(q+' = '+d,change(z,'x')));
    steps.push(step(inf?'Infinitely Many Solutions':'No Solution',inf?'The statement is true for every value of x.':'The statement is false for every value of x.'));
    if(rand(0,1)){eq=flip(eq);for(const item of steps)if(item.eq.includes(' = '))item.eq=flip(item.eq)}
  }
- return {eq,S:steps,mode,answer:mode==='special'?(inf?'infinite':'none'):x};
+ return {eq,S:steps,mode,answer:mode==='special'?specialResult:x};
 }
 let unlocked=false;
 function prepareAnswer(){
