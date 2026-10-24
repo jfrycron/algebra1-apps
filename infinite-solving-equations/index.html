@@ -21,7 +21,7 @@ function generate(mode){
    const reverse=rand(0,1)===1,reverseRight=rand(0,1)===1,swapped=rand(0,1)===1;
    eq=expression(a,b,reverse)+' = '+expression(c,d,reverseRight);
    if(c!==0)steps.push(step(expression(z,b,reverse)+' = '+d,change(c,'x')));
-   steps.push(step(variable(z)+' = '+(d-b),change(b)));
+   if(b!==0)steps.push(step(variable(z)+' = '+(d-b),change(b)));
    if(z!==1)steps.push(step('x = '+x,divide(z)));
    if(swapped){eq=flip(eq);for(const item of steps)item.eq=flip(item.eq)}
  }
