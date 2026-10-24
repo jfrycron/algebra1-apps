@@ -128,7 +128,13 @@ function reset(){
 }
 function restartEquation(){
  at=-1;el('steps').replaceChildren();renderRow(cur.eq,'');
- el('action').textContent='Continue';prepareAnswer();
+ el('action').textContent='Continue';
+ if(unlocked){
+  el('answerGate').hidden=true;
+  el('action').disabled=false;
+ }else{
+  prepareAnswer();
+ }
 }
 function renderRow(eq,note){const grid=el('steps');const parts=eq.split(' = ');if(parts.length!==2){const special=document.createElement('div');special.className='classification';special.textContent=eq;grid.append(special);if(note){const n=document.createElement('div');n.className='special-note';n.textContent=note;grid.append(n)}return}for(const [i,txt] of [parts[0],'=',parts[1]].entries()){const node=document.createElement('div');node.className='mathcell '+['lhs','equalscol','rhs'][i];node.textContent=txt;grid.append(node)}if(note){const n=document.createElement('span');n.className='annotation';n.textContent=note;grid.lastElementChild.append(n)}/* notes are absolutely positioned, never changing the grid width or anchor */} 
 function advance(){
