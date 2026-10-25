@@ -146,7 +146,11 @@ function advance(){
   if(cur.answer==='none'){
    const lastEquation=cur.S[at-1].eq;
    const parts=lastEquation.split(' = ');
-   if(parts.length===2)renderRow(parts[0]+' ≠ '+parts[1],'These values are not equal.');
+   if(parts.length===2){
+    const rows=el('steps');
+    const eqCells=rows.querySelectorAll('.equalscol');
+    if(eqCells.length)eqCells[eqCells.length-1].textContent='≠';
+   }
   }
   renderRow(current.eq,current.note);
  }else renderRow(current.eq,current.note);
