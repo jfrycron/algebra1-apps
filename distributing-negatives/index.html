@@ -286,7 +286,7 @@ function distributeGroup(side,index){
  if(!coeff||!inside){locked=false;return;}
  const cr=coeff.getBoundingClientRect(),ir=inside.getBoundingClientRect();
  const sx=cr.left+cr.width/2,sy=cr.top;
- const goals=[{x:ir.left+ir.width*.30,y:ir.top},{x:ir.left+ir.width*.77,y:ir.top}];
+ const goals=[{x:ir.left+ir.width*.30,y:ir.top+ir.height*.55},{x:ir.left+ir.width*.77,y:ir.top+ir.height*.55}];
  const layer=document.createElement('div');layer.className='distribution-layer';document.body.appendChild(layer);
  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
  svg.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;overflow:visible;pointer-events:none';
@@ -330,13 +330,12 @@ function distributeGroup(side,index){
    }
   });
   await Promise.all(bursts);
-  layer.remove();svg.remove();
+  layer.remove();
   const old=new Map();
   eqEl.querySelectorAll('.term,.equals').forEach(el=>{
    old.set(el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index,el.getBoundingClientRect());
   });
-  const oldGroup=node.getBoundingClientRect();
-  state[side]=[{v:t.v*t.u,t:'x'},{v:t.v*t.vInside,t:'c'}];
+  state[side].splice(index,1,{v:t.v*t.u,t:'x'},{v:t.v*t.vInside,t:'c'});
   arithmeticStarted=true;
   render();
   const animations=[];
@@ -344,11 +343,10 @@ function distributeGroup(side,index){
    const key=el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index;
    const previous=old.get(key);
    const now=el.getBoundingClientRect();
-   if(key===side+'-0'||key===side+'-1'){
-    const from=key===side+'-0'?oldGroup:oldGroup;
-    const dx=from.left+from.width/2-now.left-now.width/2;
-    const dy=from.top+from.height/2-now.top-now.height/2;
-    animations.push(el.animate([{transform:'translate('+dx+'px,'+dy+'px)',opacity:0,filter:'blur(9px)'},{transform:'translate(0,0)',opacity:1,filter:'blur(0px)'}],{duration:1850,easing:'cubic-bezier(.22,.8,.25,1)'}).finished);
+   if(key===side+'-'+index||key===side+'-'+(index+1)){
+    // Products appear at their final locations. No return trip to the
+    // old parentheses, and no translation during the dissolve.
+    animations.push(el.animate([{opacity:0,filter:'blur(9px)'},{opacity:1,filter:'blur(0px)'}],{duration:1850,easing:'ease-out'}).finished);
    }else if(previous){
     const dx=previous.left-now.left,dy=previous.top-now.top;
     animations.push(el.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0,0)'}],{duration:1850,easing:'cubic-bezier(.22,.8,.25,1)'}).finished);
