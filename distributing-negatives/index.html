@@ -190,9 +190,6 @@ function transferAcross(side,index,at,dropPoint=null){
  eqEl.querySelectorAll('.term,.equals').forEach(el=>before.set(el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index,el.getBoundingClientRect()));
  const previewEquals=document.getElementById('equals');
  const previewEqualsRect=previewEquals?.getBoundingClientRect();
- const previewEqualsStyle=previewEquals?getComputedStyle(previewEquals):null;
- const source=eqEl.querySelector('.term[data-side="'+side+'"][data-index="'+index+'"]');
- const sourceRect=source?.getBoundingClientRect();
  const dest=state[other];
  at=Math.max(0,Math.min(at,dest.length));
  state[side][index]=null;
@@ -214,10 +211,9 @@ function transferAcross(side,index,at,dropPoint=null){
   const key=el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index;
   let previous=before.get(key);
   if(key===other+'-'+at){
-   // The student's actual release point is the origin of the new term.
-   // Never send it back to its original location before placing it.
-   if(dropPoint){const now=el.getBoundingClientRect();previous={left:dropPoint.x-now.width/2,top:dropPoint.y-now.height/2,width:now.width,height:now.height};}
-   else previous=sourceRect;
+   // The dropped term is the stationary anchor. It is already rendered
+   // inside the chosen landing position; only its neighbors reflow.
+   return;
   }
   else if(el.dataset.side===other&&Number(el.dataset.index)>at)previous=before.get(other+'-'+(Number(el.dataset.index)-1));
   if(!previous)return;
