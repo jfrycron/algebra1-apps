@@ -56,10 +56,10 @@ button{border:0;border-radius:12px;padding:12px 16px;font-size:15px;font-weight:
 .drop-spacer{display:flex;align-items:center;justify-content:center;width:0;min-width:0;height:1.35em;overflow:visible;opacity:0;transition:width .95s cubic-bezier(.22,.8,.25,1),opacity .45s ease;flex:0 0 auto}
 .drop-spacer.show{opacity:1}
 .drop-slot{position:relative;z-index:18;display:flex;align-items:baseline;justify-content:center;height:1.18em;padding:4px 9px;border:2px dashed rgba(92,84,77,.24);border-radius:9px;background:rgba(92,84,77,.025);font-family:"Cambria Math",Cambria,Georgia,serif;font-size:inherit;font-weight:600;white-space:nowrap;pointer-events:none;opacity:0;transform:scaleX(.78);transform-origin:left center;transition:opacity .45s ease,transform .8s cubic-bezier(.22,.8,.25,1)}
-.drop-spacer.show .drop-slot{opacity:1;transform:scaleX(1)}
+.drop-spacer.show .drop-slot{opacity:1;transform:scaleX(1)}.group-drop-space .drop-slot{height:1.35em;align-items:center;padding:7px 22px;box-sizing:border-box;overflow:hidden}
 .drop-slot .slot-text{opacity:.28}
 .term.like-match{background:rgba(40,102,84,.09);color:var(--good);box-shadow:0 0 0 3px rgba(40,102,84,.13)}
-.equation.insertion-open .term,.equation.insertion-open .zero-target,.equation.insertion-open .equals{transition:transform .9s cubic-bezier(.22,.8,.25,1),background .35s,color .35s,box-shadow .35s,opacity .35s}
+.equation.insertion-open .term,.equation.insertion-open .zero-target{transition:transform .9s cubic-bezier(.22,.8,.25,1),background .35s,color .35s,box-shadow .35s,opacity .35s}
 
 
 .division-zone{display:none;flex-direction:column;align-items:center;gap:10px;margin:-12px auto 18px;max-width:460px}.division-zone.show{display:flex}.division-prompt{font-weight:800;text-align:center}.division-entry{display:flex;align-items:center;justify-content:center;gap:10px}.division-entry.hidden{display:none}.division-choices{display:grid;grid-template-columns:repeat(2,minmax(108px,1fr));gap:12px;width:min(100%,360px)}.division-choices.two-options{grid-template-columns:minmax(108px,180px);justify-content:center}.division-choice{min-height:58px;padding:12px 18px;border:2px solid #bda78f;border-radius:14px;background:#fff;color:var(--ink);font-family:"Cambria Math",Cambria,Georgia,serif;font-size:24px;font-weight:800;box-shadow:0 3px 9px rgba(70,48,30,.09)}.division-choice:hover{border-color:#568675;transform:translateY(-1px)}.division-choice:active{transform:translateY(0)}.division-choice.wrong{border-color:#b94a48;background:#fff0ef;color:#8b2826;animation:choiceShake .28s ease}.division-choice.correct{border-color:var(--good);background:#edf8f3;color:var(--good)}.division-choice:disabled{cursor:default}.division-input{display:none}.division-submit{display:none}@keyframes choiceShake{0%,100%{transform:translateX(0)}30%{transform:translateX(-5px)}70%{transform:translateX(5px)}}.division-continue{display:none;min-width:170px;padding:14px 22px;background:var(--good);color:#fff;font-size:18px;box-shadow:0 5px 14px rgba(40,102,84,.18)}.division-continue.show{display:block}.division-continue:disabled{opacity:.55;cursor:default;box-shadow:none}.division-work{display:none}
@@ -169,6 +169,7 @@ function transferAcross(side,index,at){
   else if(el.dataset.side===other&&Number(el.dataset.index)>at)previous=before.get(other+'-'+(Number(el.dataset.index)-1));
   if(!previous)return;
   const now=el.getBoundingClientRect(),dx=previous.left+previous.width/2-now.left-now.width/2,dy=previous.top+previous.height/2-now.top-now.height/2;
+  if(el.classList.contains('equals'))return;
   if(Math.abs(dx)>1||Math.abs(dy)>1)animations.push(el.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0,0)'}],{duration:900,easing:'cubic-bezier(.22,.8,.25,1)'}).finished.catch(()=>{}));
  });
  locked=true;return Promise.all(animations).then(()=>{locked=false;});
@@ -234,8 +235,8 @@ function moveGroupDrag(e){
     if(lane)wrap.insertBefore(spacer,lane);else wrap.appendChild(spacer);
     const fontSize=parseFloat(getComputedStyle(eqEl).fontSize);
     const measure=document.createElement('span');measure.style.cssText='position:absolute;visibility:hidden;font-family:Cambria,serif;font-size:'+fontSize+'px;font-weight:600;white-space:nowrap';measure.textContent=slot.textContent;stage.appendChild(measure);
-    const width=Math.ceil(measure.getBoundingClientRect().width)+32;measure.remove();
-    slot.style.width=width+'px';spacer.style.width='0px';
+    const width=Math.ceil(measure.getBoundingClientRect().width)+Math.max(84,fontSize*1.35);measure.remove();
+    slot.style.width=width+'px';slot.style.minWidth=width+'px';spacer.style.width='0px';
     insertion={spacer,slot,groupAt:at,groupSide:other};
     eqEl.classList.add('insertion-open');
     requestAnimationFrame(()=>requestAnimationFrame(()=>{if(spacer.isConnected){spacer.style.width=(width+16)+'px';spacer.classList.add('show')}}));
