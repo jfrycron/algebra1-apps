@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Solving Equations: Distributing Negatives</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box}body{margin:0;background:#eaf0f4;color:#252b32;font-family:Geist,Arial,sans-serif;transition:background .4s}body.correct{background:#35c765}
+.shell{width:80%;margin:18px auto}header{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap}h1{font-size:clamp(26px,3vw,38px);margin:0}header p{color:#60748a;margin:5px 0 0}.top{display:flex;align-items:center;gap:12px}select,input{font:inherit;border:1px solid #cbd5df;border-radius:12px;padding:12px;background:#fff}.counter{border:1px solid #e5cdbf;border-radius:30px;background:white;padding:12px 18px;font-weight:700}
+.workspace{background:white;border:1px solid #d9e1e6;border-radius:16px;margin-top:18px;min-height:calc(100vh - 148px);padding:26px;display:flex;flex-direction:column;position:relative}
+#history{display:flex;flex-direction:column;align-items:center;gap:11px;margin:32px 0 12px}.eqrow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;width:100%;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(32px,4.7vw,62px);line-height:1.25;min-height:1.4em}.eqrow.old{color:#788391;font-size:clamp(25px,3vw,40px)}.eqside{display:flex;align-items:center;gap:.09em;min-height:1.4em}.eqside.left{justify-content:flex-end}.eqside.right{justify-content:flex-start}.equals{padding:0 .28em}.term{display:inline-flex;align-items:center;white-space:nowrap;border-radius:9px;padding:2px 4px;cursor:grab;touch-action:none;user-select:none;transition:background .2s}.term:hover{background:#edf2fa}.term.dragging{opacity:.35}.term.drop-target{background:#e5f4eb;outline:2px solid #68a988}.term.group{color:#252b32}.term .coef{color:#ae5625}.term .paren{color:inherit}.term .signed{white-space:pre}.eqrow.old .term{cursor:default;pointer-events:none}.eqrow.old .coef{color:inherit}
+#gate{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:22px auto}#gate input{width:125px;text-align:center}#status{min-height:24px;text-align:center;color:#a34226;font-weight:600;margin:10px 0}#instruction{text-align:center;color:#66778a;font-size:16px;max-width:780px;margin:12px auto}#actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:auto;padding-top:30px}button{font:inherit;border:0;border-radius:13px;padding:14px 22px;background:#237a4c;color:white;font-weight:750;cursor:pointer}button.alt{background:#f1e6dd;color:#422c22}button:disabled{opacity:.45;cursor:default}#divide{display:none;text-align:center;margin:16px auto;background:#eef3f7;border-radius:14px;padding:14px;max-width:480px}#divide input{width:90px;text-align:center;margin:0 10px}#divide button{padding:10px 15px}#ghost{position:fixed;z-index:1000;pointer-events:none;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(32px,4.7vw,62px);color:#b75e23;opacity:.8;display:none;transform:translate(-50%,-50%);white-space:nowrap}#overlay{position:fixed;inset:0;pointer-events:none;z-index:1100;overflow:visible}#overlay path{fill:none;stroke:#b75e23;stroke-width:3;stroke-dasharray:7 6}#overlay text{font:700 30px "Cambria Math",Cambria,serif;fill:#b75e23}#overlay circle{fill:#efb446}#final{font-size:23px;font-weight:800;color:#206a42;text-align:center;margin:10px} [hidden]{display:none!important}
+@media(max-width:900px){.shell{width:95%}.workspace{padding:15px}.eqrow{font-size:clamp(24px,5.5vw,45px)}}
+</style></head><body><div class="shell"><header><div><h1>Solving Equations</h1><p>Distributing Negatives</p></div><div class="top"><select id="mode"><option value="mixed">Mixed Negatives</option><option value="coefficient">Negative Coefficients</option><option value="invisible">Invisible −1</option></select><div class="counter" id="count">Equations Solved: 0</div></div></header>
+<main class="workspace"><div id="history"></div><div id="gate"><label for="answer">Your answer:</label><input id="answer" inputmode="numeric" autocomplete="off" placeholder="x = ?"><button id="check">Check Answer</button></div><div id="status" role="status" aria-live="polite"></div><div id="instruction">Solve on paper first. Enter the correct answer to unlock the equation.</div><div id="divide"><span id="dividePrompt"></span><input id="divisor" inputmode="numeric" placeholder="Number"><button id="divideGo">Divide</button><button id="divideCancel" class="alt">Cancel</button></div><div id="final"></div><div id="actions"><button class="alt" id="restart">Restart Equation</button><button class="alt" id="new">New Equation</button></div></main></div><div id="ghost"></div><svg id="overlay"></svg>
+<script>
+const $=id=>document.getElementById(id),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,nz=(a,b)=>{let n;do{n=rand(a,b)}while(!n);return n};
+let problem,state,unlocked=false,solved=0,last='',drag=null,busy=false;
+const number=n=>n<0?'−'+(-n):String(n),signed=(n,first)=>first?(n<0?'−':''):(n<0?' − ':' + ');
+const vstr=n=>Math.abs(n)===1?'x':Math.abs(n)+'x';
+const make=(kind,value,extra={})=>({kind,value,...extra});
+function generate(){
+ let type=$('mode').value;if(type==='mixed')type=Math.random()<.5?'coefficient':'invisible';
+ const x=rand(-12,12),k=type==='invisible'?-1:rand(-5,-2),u=nz(-5,5),v=nz(-7,7),c=nz(2,10),a=rand(-9,9),product=k*u;
+ // c + k(ux+v) = ax + b, choose b for prescribed solution.
+ const b=(product-a)*x+c+k*v;
+ const group=make('group',k,{u,v});
+ const left=[make('num',c),group],right=a===0?[make('num',b)]:[make('x',a),...(b!==0?[make('num',b)]:[])];
+ if(Math.random()<.35){return {type,x,left:right,right:left}}
+ return {type,x,left,right};
+}
+function clone(t){return JSON.parse(JSON.stringify(t))}
+function copyState(){return {left:state.left.map(clone),right:state.right.map(clone)}}
+function txt(t){if(t.kind==='num')return String(Math.abs(t.value));if(t.kind==='x')return vstr(t.value);let inside=(t.u<0?'−':'')+vstr(t.u)+(t.v<0?' − ':' + ')+Math.abs(t.v);return (Math.abs(t.value)===1?'':Math.abs(t.value))+'('+inside+')'}
+function full(t,first){return signed(t.value,first)+txt(t)}
+function showRow(s,old=false){
+ const row=document.createElement('div');row.className='eqrow'+(old?' old':'');
+ for(const side of ['left','right']){
+  const box=document.createElement('div');box.className='eqside '+side;box.dataset.side=side;
+  if(!s[side].length)box.textContent='0';
+  s[side].forEach((t,i)=>{const span=document.createElement('span');span.className='term '+t.kind;span.dataset.side=side;span.dataset.index=i;
+   if(t.kind==='group'){
+    const sign=signed(t.value,i===0),coefficient=(Math.abs(t.value)===1?'':Math.abs(t.value));
+    const inner=(t.u<0?'−':'')+vstr(t.u)+(t.v<0?' − ':' + ')+Math.abs(t.v);
+    span.innerHTML='<span class="coef">'+sign+coefficient+'</span><span class="paren">('+inner+')</span>';
+   }else span.textContent=full(t,i===0);
+   if(!old)span.addEventListener('pointerdown',startDrag);box.append(span)});
+  if(side==='right'){const eq=document.createElement('span');eq.className='equals';eq.textContent='=';row.append(eq)}
+  row.append(box);
+ }
+ // reorder left / equals / right
+ row.insertBefore(row.lastElementChild,row.firstElementChild.nextSibling);
+ return row;
+}
+function render(note=''){
+ const h=$('history');const old=h.querySelector('.eqrow:not(.old)');if(old){old.classList.add('old');old.querySelectorAll('.term').forEach(t=>t.replaceWith(t.cloneNode(true)))}
+ h.append(showRow(state));$('status').textContent=note;
+ $('divide').style.display='none';checkDone();
+}
+function checkDone(){
+ const sides=['left','right'];const one=sides.find(side=>state[side].length===1&&state[side][0].kind==='x'&&state[side][0].value===1);
+ const other=one&&(one==='left'?'right':'left');
+ if(one&&state[other].length===1&&state[other][0].kind==='num'&&state[other][0].value===problem.x){
+  $('final').textContent='✓ Equation solved!';$('instruction').textContent='You reached the answer you found on paper.';
+  if(!$('final').dataset.counted){solved++;$('count').textContent='Equations Solved: '+solved;$('final').dataset.counted='1'}
+  return;
+ }
+ $('final').textContent='';
+ if(!unlocked)return;
+ $('instruction').textContent='Drag a term across the equal sign, drag like terms together, or drag a coefficient onto its parentheses to distribute.';
+ // If ax = b, click the variable term to divide both sides.
+ if(sides.some(side=>state[side].length===1&&state[side][0].kind==='x'&&Math.abs(state[side][0].value)!==1)&&sides.some(side=>state[side].length===1&&state[side][0].kind==='num')){
+  $('instruction').textContent+=' Click the variable term to divide both sides.';
+ }
+}
+function reset(){
+ problem=generate();state={left:problem.left.map(clone),right:problem.right.map(clone)};last='';unlocked=false;busy=false;
+ $('history').replaceChildren(showRow(state));$('gate').hidden=false;$('answer').value='';$('status').textContent='';$('final').textContent='';delete $('final').dataset.counted;
+ $('instruction').textContent='Solve on paper first. Enter the correct answer to unlock the equation.';document.body.classList.remove('correct');$('answer').focus();
+}
+function checkAnswer(){const raw=$('answer').value.trim().replace(/^x\s*=\s*/i,'').replace(/−/g,'-');if(raw!==''&&/^[+-]?\d+$/.test(raw)&&Number(raw)===problem.x){unlocked=true;document.body.classList.add('correct');$('gate').hidden=true;$('status').textContent='Correct! Now show how the equation works.';checkDone()}else $('status').textContent='Not quite. Check your work and try again.'}
+function restart(){if(!unlocked){reset();return}state={left:problem.left.map(clone),right:problem.right.map(clone)};$('history').replaceChildren(showRow(state));$('status').textContent='Try another solution path.';$('final').textContent='';delete $('final').dataset.counted;checkDone()}
+function startDrag(e){
+ if(!unlocked||busy||e.button!==0)return;
+ const node=e.currentTarget,side=node.dataset.side,index=+node.dataset.index,t=state[side][index];
+ if(t.kind==='x'&&state[side].length===1&&state[side==='left'?'right':'left'].length===1&&state[side==='left'?'right':'left'][0].kind==='num'&&Math.abs(t.value)!==1){
+  // A tap opens division; a drag still moves the term.
+ }
+ e.preventDefault();node.setPointerCapture(e.pointerId);
+ drag={node,side,index,t,startX:e.clientX,startY:e.clientY,x:e.clientX,y:e.clientY,moved:false};
+ $('ghost').textContent=full(t,index===0);$('ghost').style.display='block';moveGhost(e);
+ node.classList.add('dragging');node.addEventListener('pointermove',onMove);node.addEventListener('pointerup',onUp,{once:true});node.addEventListener('pointercancel',cancelDrag,{once:true});
+}
+function moveGhost(e){$('ghost').style.left=e.clientX+'px';$('ghost').style.top=e.clientY+'px'}
+function onMove(e){if(!drag)return;drag.x=e.clientX;drag.y=e.clientY;if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>10)drag.moved=true;moveGhost(e);
+ document.querySelectorAll('.drop-target').forEach(n=>n.classList.remove('drop-target'));
+ const hit=document.elementFromPoint(e.clientX,e.clientY);if(hit){const term=hit.closest('.term');if(term&&term!==drag.node)term.classList.add('drop-target')}
+}
+function cancelDrag(){if(!drag)return;drag.node.classList.remove('dragging');drag.node.removeEventListener('pointermove',onMove);$('ghost').style.display='none';document.querySelectorAll('.drop-target').forEach(n=>n.classList.remove('drop-target'));drag=null}
+async function onUp(e){
+ if(!drag)return;const d=drag;const hit=document.elementFromPoint(e.clientX,e.clientY),target=hit&&hit.closest('.term'),box=hit&&hit.closest('.eqside');cancelDrag();
+ if(!d.moved){if(d.t.kind==='x')openDivide(d);return}
+ const from=d.side,to=from==='left'?'right':'left',t=d.t;
+ if(t.kind==='group'&&target&&target===d.node)return;
+ // Dropping coefficient into its own parentheses distributes; hit-test by right half of group.
+ if(t.kind==='group'&&target&&target.dataset.side===from&&+target.dataset.index===d.index){await distribute(d);return}
+ // When dragging the same group, pointer hit-test can resolve its own element even after crossing; use bounding rect.
+ if(t.kind==='group'&&d.node.getBoundingClientRect().contains(e.clientX,e.clientY)&&e.clientX>d.node.getBoundingClientRect().left+d.node.getBoundingClientRect().width*.42){await distribute(d);return}
+ if(box&&box.dataset.side===to){const next=copyState();next[from].splice(d.index,1);next[to].push({...clone(t),value:-t.value});state=next;render('Moved '+full(t,true)+' across the equal sign.');return}
+ if(target&&target.dataset.side===from&&+target.dataset.index!==d.index){
+  const j=+target.dataset.index,other=state[from][j];
+  if(t.kind===other.kind&&t.kind!=='group'){
+   const next=copyState();next[from][j].value+=t.value;next[from].splice(d.index,1);next[from]=next[from].filter(q=>q.value!==0);
+   state=next;render('Combined like terms.');return;
+  }
+ }
+ $('status').textContent='That move does not simplify the equation. Try another.';
+}
+function openDivide(d){
+ const other=d.side==='left'?'right':'left';
+ if(state[d.side].length!==1||state[other].length!==1||state[other][0].kind!=='num'||Math.abs(d.t.value)===1)return;
+ $('divide').style.display='block';$('dividePrompt').textContent='Divide both sides by what number?';$('divisor').value='';$('divisor').focus();$('divide').dataset.side=d.side;
+}
+function doDivide(){
+ const side=$('divide').dataset.side,other=side==='left'?'right':'left',k=state[side][0].value,n=Number($('divisor').value.trim().replace(/−/g,'-'));
+ if(n!==k){$('status').textContent='Divide by the coefficient of x, including its sign.';return}
+ const next=copyState();if(next[other][0].value%k!==0){$('status').textContent='This division would not produce an integer.';return}
+ next[side]=[make('x',1)];next[other]=[make('num',next[other][0].value/k)];state=next;render('Divided both sides by '+number(k)+'.');
+}
+function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+async function distribute(d){
+ if(busy)return;busy=true;
+ const t=d.t,rect=d.node.getBoundingClientRect(),coef=d.node.querySelector('.coef'),paren=d.node.querySelector('.paren');
+ if(!coef||!paren){busy=false;return}
+ const cr=coef.getBoundingClientRect(),pr=paren.getBoundingClientRect(),sx=cr.left+cr.width/2,sy=cr.top-6;
+ const targets=[{x:pr.left+pr.width*.33,y:pr.top+4},{x:pr.left+pr.width*.76,y:pr.top+4}];
+ const svg=$('overlay');svg.replaceChildren();svg.setAttribute('width',innerWidth);svg.setAttribute('height',innerHeight);
+ const ns='http://www.w3.org/2000/svg',paths=[],flyers=[];
+ targets.forEach((p,i)=>{
+  const path=document.createElementNS(ns,'path'),midX=(sx+p.x)/2,peak=Math.min(sy,p.y)-(i===0?65:110);
+  path.setAttribute('d','M'+sx+' '+sy+' Q'+midX+' '+peak+' '+p.x+' '+p.y);svg.append(path);paths.push(path);
+  const text=document.createElementNS(ns,'text');text.textContent=number(t.value);text.setAttribute('text-anchor','middle');svg.append(text);flyers.push(text);
+ });
+ d.node.style.opacity='.22';
+ await wait(330);const start=performance.now();
+ await new Promise(resolve=>{function frame(now){const q=Math.min(1,(now-start)/1000),ease=q*q*(3-2*q);paths.forEach((p,i)=>{const point=p.getPointAtLength(p.getTotalLength()*ease);flyers[i].setAttribute('x',point.x);flyers[i].setAttribute('y',point.y-5)});if(q<1)requestAnimationFrame(frame);else resolve()}requestAnimationFrame(frame)});
+ flyers.forEach(n=>n.remove());
+ targets.forEach(p=>{for(let i=0;i<12;i++){const a=i*Math.PI/6,c=document.createElementNS(ns,'circle');c.setAttribute('cx',p.x+Math.cos(a)*21);c.setAttribute('cy',p.y+Math.sin(a)*21);c.setAttribute('r',i%2?3:4);svg.append(c)}});
+ await wait(330);svg.replaceChildren();d.node.style.opacity='';
+ const next=copyState();next[d.side].splice(d.index,1,make('x',t.value*t.u),make('num',t.value*t.v));state=next;render('Distributed '+number(t.value)+' to both terms.');busy=false;
+}
+$('check').onclick=checkAnswer;$('new').onclick=reset;$('restart').onclick=restart;$('divideGo').onclick=doDivide;$('divideCancel').onclick=()=>{$('divide').style.display='none'};$('mode').onchange=reset;
+$('answer').addEventListener('keydown',e=>{if(e.key==='Enter')checkAnswer()});$('divisor').addEventListener('keydown',e=>{if(e.key==='Enter')doDivide()});
+reset();
+</script></body></html>
