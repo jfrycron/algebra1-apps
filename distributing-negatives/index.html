@@ -148,6 +148,31 @@ function cancelDrag(){
  $('ghost').style.display='none';document.querySelectorAll('.drop-target').forEach(n=>n.classList.remove('drop-target'));
  clearSlot();drag=null;
 }
+function captureEquationPositions(){
+ const row=document.querySelector('.eqrow'),positions=new Map();
+ if(!row)return positions;
+ row.querySelectorAll('.term,.equals').forEach(el=>{
+  const key=el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index;
+  positions.set(key,el.getBoundingClientRect());
+ });
+ return positions;
+}
+async function animateEquationReflow(before,keyMap,skipKey){
+ const row=document.querySelector('.eqrow');if(!row)return;
+ const animations=[];
+ row.querySelectorAll('.term,.equals').forEach(el=>{
+  const key=el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index;
+  const oldKey=keyMap(key);
+  if(oldKey===skipKey)return;
+  const previous=before.get(oldKey);if(!previous)return;
+  const now=el.getBoundingClientRect();
+  const dx=previous.left-now.left,dy=previous.top-now.top;
+  if(Math.abs(dx)>1||Math.abs(dy)>1){
+   animations.push(el.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0px,0px)'}],{duration:750,easing:'cubic-bezier(.22,.8,.25,1)'}).finished.catch(()=>{}));
+  }
+ });
+ await Promise.all(animations);
+}
 async function onUp(e){
  if(!drag)return;
  const d=drag,from=d.side,to=from==='left'?'right':'left',t=d.t;
@@ -162,11 +187,20 @@ async function onUp(e){
  cancelDrag();
  if(!d.moved){if(t.kind==='x')openDivide(d);else if(t.kind==='group'&&d.fromCoefficient)await distribute(d);return}
  if(side===to){
+   const before=captureEquationPositions();
    const next=copyState();next[from].splice(d.index,1);
    const moved={...clone(t),value:-t.value};
    const at=dest===null?next[to].length:Math.max(0,Math.min(dest,next[to].length));
    next[to].splice(at,0,moved);
-   state=next;render();await autoMerge(to,at);await mergeTwoTermSides();return;
+   state=next;render();
+   await animateEquationReflow(before,key=>{
+    if(key==='equals')return key;
+    const [s,iText]=key.split('-'),i=Number(iText);
+    if(s===from)return s+'-'+(i>=d.index?i+1:i);
+    if(s===to)return s+'-'+(i>at?i-1:i);
+    return key;
+   },to+'-'+at);
+   await autoMerge(to,at);await mergeTwoTermSides();return;
  }
  if(target&&target!==d.node&&target.dataset.side===from){
    const j=Number(target.dataset.index),other=state[from][j];
