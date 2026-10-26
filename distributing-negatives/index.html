@@ -254,13 +254,10 @@ function transferAcross(side,index,at,dropPoint=null,previewEqualsRect=null,prev
  // Preserve the equal sign's *preview* location, before removing the landing slot.
  previewEqualsRect=previewEqualsRect||document.getElementById('equals')?.getBoundingClientRect();
  const dest=state[other];
- // When a constant is moved across, keep it directly beside the
- // existing constant instead of allowing a detached-looking position.
- if(t.t==='c'){
-  const lastConstant=dest.findLastIndex(item=>item&&item.t==='c');
-  if(lastConstant>=0)at=lastConstant+1;
- }
- at=Math.max(0,Math.min(at,dest.length));
+ // The destination is determined by algebraic type, never pointer position:
+ // immediately after the last like term, or at the far right otherwise.
+ const lastLike=dest.findLastIndex(item=>item&&item.t===t.t);
+ at=lastLike>=0?lastLike+1:dest.length;
  state[side][index]=null;
  dest.splice(at,0,{...t,v:-t.v});
  arithmeticStarted=true;
@@ -377,7 +374,7 @@ function moveGroupDrag(e){
  }else{
   clearGroupLanding();
   const other=d.side==='left'?'right':'left';
-  const at=insertionIndexFor(other,e.clientX);
+  const at=state[other].length;
   if(!insertion||insertion.groupAt!==at||insertion.groupSide!==other){
    clearInsertion();
    const wrap=eqEl.querySelector('.side-expression[data-side="'+other+'"]');
@@ -415,7 +412,7 @@ function endGroupDrag(e){
  if(!d.moved){distributeGroup(d.side,d.index);return;}
  if(!d.crossed)return;
  const other=d.side==='left'?'right':'left';
- transferAcross(d.side,d.index,landingAt===null?insertionIndexFor(other,e.clientX):landingAt,dropPoint,previewEqualsRect,previewTerms,true);
+ transferAcross(d.side,d.index,state[other].length,dropPoint,previewEqualsRect,previewTerms,true);
 }
 let distributionReplay=null;
 function hideDistributionReplay(){document.getElementById("replayDistributionBtn").hidden=true;distributionReplay=null;}
@@ -741,9 +738,9 @@ function moveDrag(e){
     const other=drag.side==='left'?'right':'left';
     const matches=[...eqEl.querySelectorAll('.term[data-side="'+other+'"]')]
       .filter(el=>el.dataset.type===drag.type);
-    if(matches.length){
-      target=matches.find(el=>pointNearElement(e.clientX,e.clientY,el,46))||matches[0];
-    }
+    // Only a genuine like term can receive a crossed term.
+    // Otherwise its landing position is always the far right.
+    target=matches.length?matches[matches.length-1]:null;
   }
   drag.target=target;
   if(target){
@@ -756,7 +753,7 @@ function moveDrag(e){
     // no like term. Open a landing slot rather than rejecting the move.
     const other=drag.side==='left'?'right':'left';
     clearInsertion(true);
-    showGroupLanding(other,insertionIndexFor(other,e.clientX),{v:-drag.originalV,t:drag.type});
+    showGroupLanding(other,state[other].length,{v:-drag.originalV,t:drag.type});
   }else{
     // Same-side dragging is only for combining like terms, not reordering.
     clearInsertion(true);
@@ -780,7 +777,7 @@ function endDrag(){
     const previewEqualsRect=document.getElementById('equals')?.getBoundingClientRect();
     const previewTerms=new Map();
     eqEl.querySelectorAll('.term').forEach(el=>previewTerms.set(el.dataset.side+'-'+el.dataset.index,el.getBoundingClientRect()));
-    const at=landing?Number(landing.dataset.at):insertionIndexFor(other,x);
+    const at=state[other].length;
     const y=Number(ghost.style.top.replace('px',''));
     cleanup();clearGroupLanding();transferAcross(d.side,d.index,at,{x,y},previewEqualsRect,previewTerms);return;
   }
