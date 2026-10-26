@@ -6,7 +6,7 @@
 *{box-sizing:border-box}body{margin:0;background:#eaf0f4;color:#252b32;font-family:Geist,Arial,sans-serif;transition:background .4s}body.correct{background:#35c765}
 .shell{width:80%;margin:18px auto}header{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap}h1{font-size:clamp(26px,3vw,38px);margin:0}header p{color:#60748a;margin:5px 0 0}.top{display:flex;align-items:center;gap:12px}select,input{font:inherit;border:1px solid #cbd5df;border-radius:12px;padding:12px;background:#fff}.counter{border:1px solid #e5cdbf;border-radius:30px;background:white;padding:12px 18px;font-weight:700}
 .workspace{background:white;border:1px solid #d9e1e6;border-radius:16px;margin-top:18px;min-height:calc(100vh - 148px);padding:26px;display:flex;flex-direction:column;position:relative}
-#history{display:flex;justify-content:center;align-items:center;margin:85px 0 12px;min-height:160px}.eqrow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;width:100%;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(32px,4.7vw,62px);line-height:1.25;min-height:1.4em}.eqrow.old{color:#788391;font-size:clamp(25px,3vw,40px)}.eqside{display:flex;align-items:center;gap:.15em;min-height:1.4em;min-width:0;transition:gap .35s}.eqside .term{flex:0 0 auto}.eqside.left{justify-content:flex-end}.eqside.right{justify-content:flex-start}.equals{padding:0 .28em}.term{display:inline-flex;align-items:center;white-space:nowrap;border-radius:9px;padding:2px 4px;cursor:grab;touch-action:none;user-select:none;transition:background .2s}.term:hover{background:#edf2fa}.term.dragging{opacity:.35}.term.drop-target{background:#e5f4eb;outline:2px solid #68a988}.drop-space{height:1.18em;width:0;flex:0 0 0;opacity:0;border:2px dashed transparent;border-radius:9px;transition:width .45s cubic-bezier(.22,.8,.25,1),flex-basis .45s cubic-bezier(.22,.8,.25,1),opacity .35s ease;pointer-events:none}.drop-space.active{width:var(--slot-width);flex-basis:var(--slot-width);opacity:1;border-color:#93bba4;background:#eff8f2}.term.merge-blue{color:#1f75fe!important}.term.group{color:#252b32}.term .coef{color:#ae5625}.term .paren{color:inherit}.term .signed{white-space:pre}.eqrow.old .term{cursor:default;pointer-events:none}.eqrow.old .coef{color:inherit}
+#history{display:flex;justify-content:center;align-items:center;margin:85px 0 12px;min-height:160px}.eqrow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;width:100%;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(32px,4.7vw,62px);line-height:1.25;min-height:1.4em}.eqrow.old{color:#788391;font-size:clamp(25px,3vw,40px)}.eqside{display:flex;align-items:center;gap:.15em;min-height:1.4em;min-width:0;transition:gap .35s}.eqside .term{flex:0 0 auto}.eqside.left{justify-content:flex-end}.eqside.right{justify-content:flex-start}.equals{padding:0 .28em}.term{display:inline-flex;align-items:center;white-space:nowrap;border-radius:9px;padding:2px 4px;cursor:grab;touch-action:none;user-select:none;transition:background .2s}.term:hover{background:#edf2fa}.term.dragging{opacity:.35}.term.drop-target{background:#e5f4eb;outline:2px solid #68a988}.drop-space{height:1.18em;width:0;flex:0 0 0;opacity:0;border:2px dashed transparent;border-radius:12px;transition:width .45s cubic-bezier(.22,.8,.25,1),flex-basis .45s cubic-bezier(.22,.8,.25,1),opacity .35s ease;pointer-events:none}.drop-space.active{width:var(--slot-width);flex-basis:var(--slot-width);opacity:1;border:2px dashed #9c9389;background:rgba(92,84,77,.035);border-radius:12px}.term.merge-blue{color:#1f75fe!important}.term.group{color:#252b32}.term .coef{color:#ae5625}.term .paren{color:inherit}.term .signed{white-space:pre}.eqrow.old .term{cursor:default;pointer-events:none}.eqrow.old .coef{color:inherit}
 #gate{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:22px auto}#gate input{width:125px;text-align:center}#status{min-height:24px;text-align:center;color:#a34226;font-weight:600;margin:10px 0}#instruction{text-align:center;color:#66778a;font-size:16px;max-width:780px;margin:12px auto}#actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:auto;padding-top:30px}button{font:inherit;border:0;border-radius:13px;padding:14px 22px;background:#237a4c;color:white;font-weight:750;cursor:pointer}button.alt{background:#f1e6dd;color:#422c22}button:disabled{opacity:.45;cursor:default}#divide{display:none;text-align:center;margin:16px auto;background:#eef3f7;border-radius:14px;padding:14px;max-width:480px}#divide input{width:90px;text-align:center;margin:0 10px}#divide button{padding:10px 15px}#ghost{position:fixed;z-index:1000;pointer-events:none;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(32px,4.7vw,62px);color:#b75e23;opacity:.8;display:none;transform:translate(-50%,-50%);white-space:nowrap}#overlay{position:fixed;inset:0;pointer-events:none;z-index:1100;overflow:visible}#overlay path{fill:none;stroke:#b75e23;stroke-width:3;stroke-dasharray:7 6}#overlay text{font:700 30px "Cambria Math",Cambria,serif;fill:#b75e23}#overlay circle{fill:#efb446}#final{font-size:23px;font-weight:800;color:#206a42;text-align:center;margin:10px} [hidden]{display:none!important}
 @media(max-width:900px){.shell{width:95%}.workspace{padding:15px}.eqrow{font-size:clamp(24px,5.5vw,45px)}}
 </style></head><body><div class="shell"><header><div><h1>Solving Equations: Distributing Negatives</h1></div><div class="top"><select id="mode"><option value="mixed">Mixed Negatives</option><option value="coefficient">Negative Coefficients</option><option value="invisible">Invisible −1</option></select><div class="counter" id="count">Equations Solved: 0</div></div></header>
@@ -156,13 +156,13 @@ async function onUp(e){
    const moved={...clone(t),value:-t.value};
    const at=dest===null?next[to].length:Math.max(0,Math.min(dest,next[to].length));
    next[to].splice(at,0,moved);
-   state=next;render();await autoMerge(to,at);return;
+   state=next;render();await autoMerge(to,at);await mergeTwoTermSides();return;
  }
  if(target&&target!==d.node&&target.dataset.side===from){
    const j=Number(target.dataset.index),other=state[from][j];
    if(t.kind===other.kind&&t.kind!=='group'){
      const next=copyState();next[from][j].value+=t.value;next[from].splice(d.index,1);
-     next[from]=next[from].filter(q=>q.value!==0);state=next;render();return;
+     next[from]=next[from].filter(q=>q.value!==0);state=next;render();await mergeTwoTermSides();return;
    }
  }
 }
@@ -177,13 +177,21 @@ async function autoMerge(side,sourceIndex){
  const ar=a.getBoundingClientRect(),br=b.getBoundingClientRect();
  const dx=(br.left+br.width/2)-(ar.left+ar.width/2);
  // Preserve the current one-line equation while the two blue terms converge.
- const animA=a.animate([{transform:'translateX(0)',opacity:1},{transform:'translateX('+dx+'px)',opacity:1,offset:.75},{transform:'translateX('+dx+'px)',opacity:0}],{duration:1500,easing:'ease-in-out',fill:'forwards'});
- const animB=b.animate([{color:'#1f75fe',transform:'scale(1)'},{color:'#1f75fe',transform:'scale(1.12)',offset:.7},{color:'#1f75fe',transform:'scale(1)'}],{duration:1500,fill:'forwards'});
+ const animA=a.animate([{transform:'translateX(0)',opacity:1},{transform:'translateX('+dx+'px)',opacity:1,offset:.75},{transform:'translateX('+dx+'px)',opacity:0}],{duration:2900,easing:'ease-in-out',fill:'forwards'});
+ const animB=b.animate([{color:'#1f75fe',transform:'scale(1)'},{color:'#1f75fe',transform:'scale(1.12)',offset:.7},{color:'#1f75fe',transform:'scale(1)'}],{duration:2900,fill:'forwards'});
  await Promise.all([animA.finished,animB.finished]);
  terms[targetIndex].value+=moving.value;
  terms.splice(sourceIndex,1);
  state[side]=terms.filter(t=>t.value!==0);
  render();busy=false;
+}
+async function mergeTwoTermSides(){
+ for(const side of ['left','right']){
+  const arr=state[side];
+  if(arr.length===2&&arr[0].kind===arr[1].kind&&arr[0].kind!=='group'){
+   await autoMerge(side,1);
+  }
+ }
 }
 function openDivide(d){
  const other=d.side==='left'?'right':'left';
@@ -211,12 +219,12 @@ async function distribute(d){
   const text=document.createElementNS(ns,'text');text.textContent=number(t.value);text.setAttribute('text-anchor','middle');svg.append(text);flyers.push(text);
  });
  d.node.style.opacity='.22';
- await wait(330);const start=performance.now();
- await new Promise(resolve=>{function frame(now){const q=Math.min(1,(now-start)/1000),ease=q*q*(3-2*q);paths.forEach((p,i)=>{const point=p.getPointAtLength(p.getTotalLength()*ease);flyers[i].setAttribute('x',point.x);flyers[i].setAttribute('y',point.y-5)});if(q<1)requestAnimationFrame(frame);else resolve()}requestAnimationFrame(frame)});
+ await wait(700);const start=performance.now();
+ await new Promise(resolve=>{function frame(now){const q=Math.min(1,(now-start)/2600),ease=q*q*(3-2*q);paths.forEach((p,i)=>{const point=p.getPointAtLength(p.getTotalLength()*ease);flyers[i].setAttribute('x',point.x);flyers[i].setAttribute('y',point.y-5)});if(q<1)requestAnimationFrame(frame);else resolve()}requestAnimationFrame(frame)});
  flyers.forEach(n=>n.remove());
  targets.forEach(p=>{for(let i=0;i<12;i++){const a=i*Math.PI/6,c=document.createElementNS(ns,'circle');c.setAttribute('cx',p.x+Math.cos(a)*21);c.setAttribute('cy',p.y+Math.sin(a)*21);c.setAttribute('r',i%2?3:4);svg.append(c)}});
- await wait(330);svg.replaceChildren();d.node.style.opacity='';
- const next=copyState();next[d.side].splice(d.index,1,make('x',t.value*t.u),make('num',t.value*t.v));state=next;render();busy=false;
+ await wait(850);svg.replaceChildren();d.node.style.opacity='';
+ const next=copyState();next[d.side].splice(d.index,1,make('x',t.value*t.u),make('num',t.value*t.v));state=next;render();busy=false;await mergeTwoTermSides();
 }
 $('new').onclick=reset;$('restart').onclick=restart;$('divideGo').onclick=doDivide;$('divideCancel').onclick=()=>{$('divide').style.display='none'};$('mode').onchange=reset;
 $('divisor').addEventListener('keydown',e=>{if(e.key==='Enter')doDivide()});
