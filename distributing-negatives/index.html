@@ -53,12 +53,13 @@ function render(note=''){
  $('divide').style.display='none';checkDone();showDivisionIfReady();
 }
 function showDivisionIfReady(){
- const side=['left','right'].find(k=>state[k].length===1&&state[k][0].kind==='x'&&Math.abs(state[k][0].value)!==1);
+ const side=['left','right'].find(k=>state[k].length===1&&state[k][0].kind==='x'&&state[k][0].value!==1);
  if(!side)return;
  const other=side==='left'?'right':'left';
  if(state[other].length!==1||state[other][0].kind!=='num')return;
  $('divide').dataset.side=side;
  $('divisor').value='';
+ $('divide').querySelector('.division-question').textContent='What do you want to divide both sides by?';
  $('divide').style.display='block';
 }
 function checkDone(){
@@ -73,7 +74,7 @@ function checkDone(){
  if(!unlocked)return;
  $('instruction').textContent='Drag a term across the equal sign, drag like terms together, or drag a coefficient onto its parentheses to distribute.';
  // If ax = b, click the variable term to divide both sides.
- if(sides.some(side=>state[side].length===1&&state[side][0].kind==='x'&&Math.abs(state[side][0].value)!==1)&&sides.some(side=>state[side].length===1&&state[side][0].kind==='num')){
+ if(sides.some(side=>state[side].length===1&&state[side][0].kind==='x'&&state[side][0].value!==1)&&sides.some(side=>state[side].length===1&&state[side][0].kind==='num')){
   $('instruction').textContent+=' Click the variable term to divide both sides.';
  }
 }
@@ -87,7 +88,7 @@ function restart(){state={left:problem.left.map(clone),right:problem.right.map(c
 function startDrag(e){
  if(!unlocked||busy||e.button!==0)return;
  const node=e.currentTarget,side=node.dataset.side,index=+node.dataset.index,t=state[side][index];
- if(t.kind==='x'&&state[side].length===1&&state[side==='left'?'right':'left'].length===1&&state[side==='left'?'right':'left'][0].kind==='num'&&Math.abs(t.value)!==1){
+ if(t.kind==='x'&&state[side].length===1&&state[side==='left'?'right':'left'].length===1&&state[side==='left'?'right':'left'][0].kind==='num'&&t.value!==1){
   // A tap opens division; a drag still moves the term.
  }
  e.preventDefault();node.setPointerCapture(e.pointerId);
@@ -185,19 +186,19 @@ async function autoMerge(side,sourceIndex){
  const ar=a.getBoundingClientRect(),br=b.getBoundingClientRect();
  const midX=((ar.left+ar.width/2)+(br.left+br.width/2))/2;
  const centerA=ar.left+ar.width/2,centerB=br.left+br.width/2;
- const meetGap=(ar.width+br.width)/2+7;
+ const meetGap=(ar.width+br.width)/2+2;
  const direction=centerA<centerB?1:-1;
  const goalA=midX-direction*meetGap/2,goalB=midX+direction*meetGap/2;
  a.classList.add('merge-blue');b.classList.add('merge-blue');
  // The two terms approach each other together, stopping side by side at the midpoint.
- const duration=3600;
+ const duration=1150;
  const animations=[
   a.animate([{transform:'translateX(0)',opacity:1},{transform:'translateX('+(goalA-centerA)+'px)',opacity:1}],{duration,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'}),
   b.animate([{transform:'translateX(0)',opacity:1},{transform:'translateX('+(goalB-centerB)+'px)',opacity:1}],{duration,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'})
  ];
  await Promise.all(animations.map(anim=>anim.finished));
  // Keep the blue pair visible for a beat before replacing them with the sum.
- await wait(450);
+ await wait(90);
  const oldPositions=new Map();
  row.querySelectorAll('.term,.equals').forEach(el=>{
   if(el===a||el===b)return;
@@ -211,7 +212,7 @@ async function autoMerge(side,sourceIndex){
  // Keep a blue result at the meeting point while the equation closes its gap.
  const result=document.createElement('span');
  result.className='merge-floating-result';
- result.textContent=sum===0?'0':(moving.kind==='x'?(Math.abs(sum)===1?'x':Math.abs(sum)+'x'):String(Math.abs(sum)));
+ result.textContent=sum===0?'0':(moving.kind==='x'?(sum===-1?'−x':sum===1?'x':number(sum)+'x'):number(sum));
  result.style.cssText='position:fixed;z-index:1200;pointer-events:none;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:'+getComputedStyle(row).fontSize+';color:#1f75fe;left:'+midX+'px;top:'+((ar.top+ar.bottom)/2)+'px;transform:translate(-50%,-50%);white-space:nowrap;';
  document.body.append(result);
  // Hide the old pair as the replacement fades in.
@@ -232,14 +233,14 @@ async function autoMerge(side,sourceIndex){
   const now=el.getBoundingClientRect();
   const dx=old.left-now.left,dy=old.top-now.top;
   if(Math.abs(dx)>1||Math.abs(dy)>1){
-   movingPieces.push(el.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0,0)'}],{duration:1100,easing:'cubic-bezier(.22,.8,.25,1)'}));
+   movingPieces.push(el.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0,0)'}],{duration:650,easing:'cubic-bezier(.22,.8,.25,1)'}));
   }
  });
  const target=newRow.querySelector('.eqside.'+side+' .term[data-index="'+(targetIndex>sourceIndex?targetIndex-1:targetIndex)+'"]');
  if(target&&sum!==0){
   target.style.visibility='hidden';
   const tr=target.getBoundingClientRect();
-  const travel=result.animate([{left:midX+'px',top:((ar.top+ar.bottom)/2)+'px',opacity:1},{left:(tr.left+tr.width/2)+'px',top:(tr.top+tr.height/2)+'px',opacity:1}],{duration:1100,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
+  const travel=result.animate([{left:midX+'px',top:((ar.top+ar.bottom)/2)+'px',opacity:1},{left:(tr.left+tr.width/2)+'px',top:(tr.top+tr.height/2)+'px',opacity:1}],{duration:650,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
   movingPieces.push(travel);
  }
  await Promise.all(movingPieces.map(anim=>anim.finished.catch(()=>{})));
