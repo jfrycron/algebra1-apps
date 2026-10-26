@@ -178,6 +178,25 @@ function insertionIndexFor(side,x){
  for(const el of terms){const r=el.getBoundingClientRect();if(x<r.left+r.width/2)return Number(el.dataset.index);}
  return state[side].length;
 }
+function showGroupLanding(side,at,term){
+ const existing=document.getElementById('groupLanding');
+ if(existing&&existing.dataset.side===side&&Number(existing.dataset.at)===at)return;
+ existing?.remove();
+ const wrap=eqEl.querySelector('.side-expression[data-side="'+side+'"]');
+ if(!wrap)return;
+ const spacer=document.createElement('div');spacer.id='groupLanding';spacer.className='drop-spacer';spacer.dataset.side=side;spacer.dataset.at=at;
+ const slot=document.createElement('div');slot.className='drop-slot';
+ slot.innerHTML='<span class="slot-text">'+(term.v<0?'−':'+')+groupCore(term)+'</span>';
+ spacer.append(slot);
+ const lane=wrap.querySelector('.lane[data-index="'+at+'"]');
+ if(lane)lane.before(spacer);else wrap.append(spacer);
+ const font=parseFloat(getComputedStyle(eqEl).fontSize);
+ const measure=document.createElement('span');measure.style.cssText='position:absolute;visibility:hidden;white-space:nowrap;font:600 '+font+'px Cambria,serif';measure.textContent=(term.v<0?'−':'+')+groupCore(term);stage.append(measure);
+ const width=measure.getBoundingClientRect().width+28;measure.remove();
+ slot.style.width=width+'px';spacer.style.width='0px';
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{if(spacer.isConnected){spacer.style.width=(width+18)+'px';spacer.classList.add('show');}}));
+}
+function clearGroupLanding(){document.getElementById('groupLanding')?.remove();}
 function startGroupDrag(e){
  if(locked||drag)return;
  e.preventDefault();
@@ -200,16 +219,24 @@ function moveGroupDrag(e){
  ghost.textContent=(d.crossed?(d.t.v>0?'−':'+'):(d.t.v<0?'−':''))+groupCore(d.t);
  crossNote.classList.toggle('show',d.crossed);
  crossNote.style.left=e.clientX+'px';crossNote.style.top=(e.clientY-12)+'px';
+ if(d.crossed){
+  const other=d.side==='left'?'right':'left';
+  const at=insertionIndexFor(other,e.clientX);
+  showGroupLanding(other,at,{...d.t,v:-d.t.v});
+ }else clearGroupLanding();
 }
 function endGroupDrag(e){
  const d=groupDrag;if(!d)return;
  document.removeEventListener('pointermove',moveGroupDrag);
  ghost.hidden=true;ghost.classList.remove('crossed');crossNote.classList.remove('show');
  d.el.classList.remove('source');groupDrag=null;
+ const landing=document.getElementById('groupLanding');
+ const landingAt=landing?Number(landing.dataset.at):null;
+ clearGroupLanding();
  if(!d.moved){distributeGroup(d.side,d.index);return;}
  if(!d.crossed)return;
  const other=d.side==='left'?'right':'left';
- transferAcross(d.side,d.index,insertionIndexFor(other,e.clientX));
+ transferAcross(d.side,d.index,landingAt===null?insertionIndexFor(other,e.clientX):landingAt);
 }
 function distributeGroup(side,index){
  if(locked||drag||groupDrag)return;
@@ -223,12 +250,36 @@ function distributeGroup(side,index){
  const sx=cr.left+cr.width/2,sy=cr.top;
  const goals=[{x:ir.left+ir.width*.30,y:ir.top},{x:ir.left+ir.width*.77,y:ir.top}];
  const layer=document.createElement('div');layer.className='distribution-layer';document.body.appendChild(layer);
- const flying=goals.map((g,i)=>{
-  const el=document.createElement('span');el.className='distribution-flyer';el.textContent=String(t.v).replace('-','−');layer.appendChild(el);
-  el.style.left=sx+'px';el.style.top=sy+'px';
-  return el.animate([{transform:'translate(0,0)',opacity:1},{transform:'translate('+((g.x-sx)*.5)+'px,-65px)',opacity:1,offset:.5},{transform:'translate('+(g.x-sx)+'px,'+(g.y-sy)+'px)',opacity:0}],{duration:3100,easing:'ease-in-out',fill:'forwards'});
+ const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+ svg.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;overflow:visible;pointer-events:none';
+ svg.setAttribute('viewBox','0 0 '+innerWidth+' '+innerHeight);
+ const ns='http://www.w3.org/2000/svg';
+ const defs=document.createElementNS(ns,'defs');
+ const marker=document.createElementNS(ns,'marker');marker.setAttribute('id','distributionArrow');marker.setAttribute('viewBox','0 0 10 10');marker.setAttribute('refX','9');marker.setAttribute('refY','5');marker.setAttribute('markerWidth','7');marker.setAttribute('markerHeight','7');marker.setAttribute('orient','auto-start-reverse');
+ const arrow=document.createElementNS(ns,'path');arrow.setAttribute('d','M 0 0 L 10 5 L 0 10 z');arrow.setAttribute('fill','#a76537');marker.append(arrow);defs.append(marker);svg.append(defs);layer.append(svg);
+ const paths=goals.map((g,i)=>{
+  const path=document.createElementNS(ns,'path');
+  const cx=(sx+g.x)/2,cy=Math.min(sy,g.y)-(i===0?85:135);
+  path.setAttribute('d','M '+sx+' '+sy+' Q '+cx+' '+cy+' '+g.x+' '+g.y);
+  path.setAttribute('stroke','#a76537');path.setAttribute('stroke-width','3');path.setAttribute('stroke-dasharray','3 9');path.setAttribute('stroke-linecap','round');path.setAttribute('fill','none');path.setAttribute('marker-end','url(#distributionArrow)');
+  svg.append(path);return path;
  });
- Promise.all(flying.map(x=>x.finished)).then(async()=>{
+ const flying=paths.map(path=>{
+  const el=document.createElement('span');el.className='distribution-flyer';el.textContent=String(t.v).replace('-','−');layer.append(el);
+  const length=path.getTotalLength();
+  return new Promise(resolve=>{
+   const start=performance.now();
+   function frame(now){
+    const progress=Math.min(1,(now-start)/3100);
+    const point=path.getPointAtLength(length*progress);
+    el.style.left=point.x+'px';el.style.top=point.y+'px';
+    el.style.opacity=String(Math.min(1,(1-progress)*5));
+    if(progress<1)requestAnimationFrame(frame);else resolve();
+   }
+   requestAnimationFrame(frame);
+  });
+ });
+ Promise.all(flying).then(async()=>{
   // Two separate multiplication impacts: brief radial fireworks at each landing.
   const bursts=[];
   goals.forEach(g=>{
