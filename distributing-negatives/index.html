@@ -180,19 +180,72 @@ async function autoMerge(side,sourceIndex){
  const targetIndex=terms.findIndex((t,i)=>i!==sourceIndex&&t.kind===moving.kind);
  if(targetIndex<0)return;
  busy=true;
- const nodes=[...document.querySelectorAll('.eqrow .eqside.'+side+' .term')],a=nodes[sourceIndex],b=nodes[targetIndex];
+ const row=document.querySelector('.eqrow'),nodes=[...row.querySelectorAll('.eqside.'+side+' .term')],a=nodes[sourceIndex],b=nodes[targetIndex];
  if(!a||!b){busy=false;return}
- a.classList.add('merge-blue');b.classList.add('merge-blue');
  const ar=a.getBoundingClientRect(),br=b.getBoundingClientRect();
- const dx=(br.left+br.width/2)-(ar.left+ar.width/2);
- // Preserve the current one-line equation while the two blue terms converge.
- const animA=a.animate([{transform:'translateX(0)',opacity:1},{transform:'translateX('+dx+'px)',opacity:1,offset:.75},{transform:'translateX('+dx+'px)',opacity:0}],{duration:2900,easing:'ease-in-out',fill:'forwards'});
- const animB=b.animate([{color:'#1f75fe',transform:'scale(1)'},{color:'#1f75fe',transform:'scale(1.12)',offset:.7},{color:'#1f75fe',transform:'scale(1)'}],{duration:2900,fill:'forwards'});
- await Promise.all([animA.finished,animB.finished]);
- terms[targetIndex].value+=moving.value;
+ const midX=((ar.left+ar.width/2)+(br.left+br.width/2))/2;
+ const centerA=ar.left+ar.width/2,centerB=br.left+br.width/2;
+ const meetGap=(ar.width+br.width)/2+7;
+ const direction=centerA<centerB?1:-1;
+ const goalA=midX-direction*meetGap/2,goalB=midX+direction*meetGap/2;
+ a.classList.add('merge-blue');b.classList.add('merge-blue');
+ // The two terms approach each other together, stopping side by side at the midpoint.
+ const duration=3600;
+ const animations=[
+  a.animate([{transform:'translateX(0)',opacity:1},{transform:'translateX('+(goalA-centerA)+'px)',opacity:1}],{duration,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'}),
+  b.animate([{transform:'translateX(0)',opacity:1},{transform:'translateX('+(goalB-centerB)+'px)',opacity:1}],{duration,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'})
+ ];
+ await Promise.all(animations.map(anim=>anim.finished));
+ // Keep the blue pair visible for a beat before replacing them with the sum.
+ await wait(450);
+ const oldPositions=new Map();
+ row.querySelectorAll('.term,.equals').forEach(el=>{
+  if(el===a||el===b)return;
+  const key=el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index;
+  oldPositions.set(key,el.getBoundingClientRect());
+ });
+ const sum=terms[targetIndex].value+moving.value;
+ terms[targetIndex].value=sum;
  terms.splice(sourceIndex,1);
  state[side]=terms.filter(t=>t.value!==0);
- render();busy=false;
+ // Keep a blue result at the meeting point while the equation closes its gap.
+ const result=document.createElement('span');
+ result.className='merge-floating-result';
+ result.textContent=sum===0?'0':(moving.kind==='x'?(Math.abs(sum)===1?'x':Math.abs(sum)+'x'):String(Math.abs(sum)));
+ result.style.cssText='position:fixed;z-index:1200;pointer-events:none;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:'+getComputedStyle(row).fontSize+';color:#1f75fe;left:'+midX+'px;top:'+((ar.top+ar.bottom)/2)+'px;transform:translate(-50%,-50%);white-space:nowrap;';
+ document.body.append(result);
+ // Hide the old pair as the replacement fades in.
+ a.style.visibility='hidden';b.style.visibility='hidden';
+ render();
+ const newRow=document.querySelector('.eqrow');
+ const movingPieces=[];
+ newRow.querySelectorAll('.term,.equals').forEach(el=>{
+  const key=el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index;
+  // The source index was removed, so subsequent terms have new indices.
+  let oldKey=key;
+  if(!el.classList.contains('equals')){
+   let idx=Number(el.dataset.index);
+   if(el.dataset.side===side&&idx>=sourceIndex)oldKey=side+'-'+(idx+1);
+  }
+  const old=oldPositions.get(oldKey);
+  if(!old)return;
+  const now=el.getBoundingClientRect();
+  const dx=old.left-now.left,dy=old.top-now.top;
+  if(Math.abs(dx)>1||Math.abs(dy)>1){
+   movingPieces.push(el.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0,0)'}],{duration:1100,easing:'cubic-bezier(.22,.8,.25,1)'}));
+  }
+ });
+ const target=newRow.querySelector('.eqside.'+side+' .term[data-index="'+(targetIndex>sourceIndex?targetIndex-1:targetIndex)+'"]');
+ if(target&&sum!==0){
+  target.style.visibility='hidden';
+  const tr=target.getBoundingClientRect();
+  const travel=result.animate([{left:midX+'px',top:((ar.top+ar.bottom)/2)+'px',opacity:1},{left:(tr.left+tr.width/2)+'px',top:(tr.top+tr.height/2)+'px',opacity:1}],{duration:1100,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
+  movingPieces.push(travel);
+ }
+ await Promise.all(movingPieces.map(anim=>anim.finished.catch(()=>{})));
+ result.remove();
+ if(target)target.style.visibility='';
+ busy=false;
 }
 async function mergeTwoTermSides(){
  for(const side of ['left','right']){
