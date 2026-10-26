@@ -17,6 +17,9 @@ h1{margin:0;font-size:clamp(30px,5vw,48px);letter-spacing:-1px}.subtitle{margin:
 button{border:0;border-radius:12px;padding:12px 16px;font-size:15px;font-weight:800;cursor:pointer}.primary{background:var(--accent);color:white}.secondary{background:#eee5db;color:#3f3128;border:1px solid #d8c8b9}
 .board{position:relative;margin-top:10px;background:var(--paper);border:2px solid #D8E0E8;border-radius:10px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,.08);transition:background 1.2s ease,border-color 1.2s ease,box-shadow 1.2s ease}.board.completed{background:#CFEFD8;border-color:#8CC9A0;box-shadow:0 10px 28px rgba(40,102,84,.20)}
 .instruction{text-align:center;font-weight:800;background:#fff7e9;border:1px solid #eed1a4;border-radius:14px;padding:12px;margin-bottom:24px}
+.solution-classification{position:absolute;top:calc(50% + 66px);left:50%;transform:translateX(-50%);white-space:nowrap;font-size:clamp(19px,2.8vw,27px);font-weight:800;color:#286653;text-align:center}
+.solution-classification.no-solution{color:#963f3f}
+.solution-classification[hidden]{display:none!important}
 .equation-stage{min-height:250px;display:flex;align-items:center;justify-content:center;position:relative;overflow:visible}
 .equation{display:flex;align-items:center;justify-content:center;gap:.34em;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(34px,7vw,64px);font-weight:600;line-height:1.2;white-space:nowrap;padding:45px 15px}
 .side-expression{display:flex;align-items:center;justify-content:center;gap:.34em;min-height:1.35em;position:relative}
@@ -100,7 +103,7 @@ button[hidden]{display:none!important}
   </div>
   <section class="board">
     <div class="session-stats" aria-label="Session progress"><span>Equations Solved <strong id="solvedCount">0</strong></span></div>
-    <div class="equation-stage" id="stage"><div class="equation" id="equation"></div><div class="verification-panel" id="verificationPanel" hidden aria-live="polite"></div></div>
+    <div class="equation-stage" id="stage"><div class="equation" id="equation"></div><div class="solution-classification" id="solutionClassification" hidden aria-live="polite"></div><div class="verification-panel" id="verificationPanel" hidden aria-live="polite"></div></div>
     <div class="division-zone" id="divisionZone"><div class="division-prompt" id="divisionPrompt">What should we divide both sides by?</div><div class="division-entry" id="divisionEntry"><div class="division-choices" id="divisionChoices" role="group" aria-label="Choose a divisor"></div><input class="division-input" id="divisionInput" inputmode="decimal" aria-label="Divisor" placeholder=""><button class="division-submit" id="divisionSubmit">Divide</button></div><button class="division-continue" id="divisionContinue" type="button">Continue →</button><div class="division-work" id="divisionWork"></div></div>
     <div class="message" id="message" hidden></div>
     <div class="actions"><button class="secondary" id="replayDistributionBtn" hidden type="button">↻ Watch Distribution Again</button><button class="primary" id="nextBtn" hidden>Next Problem</button><button class="secondary check-work-btn" id="checkWorkBtn" hidden>Check My Work</button><button class="secondary" id="restartBtn">Restart Equation</button></div>
@@ -1460,6 +1463,24 @@ function chooseDivision(chosen,button){
 function checkFinal(){
   divisionChoicePending=false;
   divisionZone.classList.remove('show');divisionPrompt.style.display='';divisionEntry.classList.remove('hidden');divisionContinue.classList.remove('show');divisionContinue.disabled=false;divisionWork.classList.remove('show');divisionWork.innerHTML='';divisionInput.value='';divisionChoices.innerHTML='';
+  // A fully numeric equation is a special conclusion, not a division step.
+  // 0 = 0 (or any equal constants) means infinitely many solutions;
+  // unequal constants mean no solution.
+  const numericSide=arr=>arr.filter(Boolean).every(t=>t.t==='c');
+  if(numericSide(state.left)&&numericSide(state.right)){
+    const left=state.left.filter(Boolean).reduce((sum,t)=>sum+t.v,0);
+    const right=state.right.filter(Boolean).reduce((sum,t)=>sum+t.v,0);
+    const identical=left===right;
+    const badge=document.getElementById('solutionClassification');
+    badge.textContent=identical?'Infinitely Many Solutions':'No Solution';
+    badge.classList.toggle('no-solution',!identical);
+    badge.hidden=false;
+    board.classList.add('completed');
+    nextBtn.hidden=false;
+    checkWorkBtn.hidden=true;
+    if(!currentSolvedRecorded){solvedCount++;currentSolvedRecorded=true;updateSessionStats();}
+    return;
+  }
   const data=getDivisionData();if(!data)return;
   if(data.x.v===1){
     setMessage(`The coefficient is 1, so the equation is solved.`,'good');
@@ -1682,7 +1703,7 @@ document.addEventListener('keydown',e=>{
     advanceDivisionStep();
   }
 });
-function start(eq){hideDistributionReplay();clearTimeout(checkRevealTimer);hideVerification();currentSolution=null;currentSolvedRecorded=false;currentChecked=false;nextBtn.hidden=true;checkWorkBtn.hidden=true;checkWorkBtn.classList.remove('reveal');arithmeticStarted=false;divisionSteps=[];divisionStepBusy=false;divisionAdvancePending=false;divisionChoicePending=false;divisionPrompt.style.display='';divisionEntry.classList.remove('hidden');divisionChoices.innerHTML='';divisionContinue.classList.remove('show');divisionContinue.disabled=false;board.classList.remove('completed');eqEl.classList.remove('static-celebrate');stage.querySelectorAll('.final-travel-layer,.final-measure,.completion-check-inline').forEach(el=>el.remove());const normalized={left:eq.left.map(t=>t||null),right:eq.right.map(t=>t||null)};original=clone(normalized);state=clone(normalized);addHistory(equationText(state));render();}
+function start(eq){document.getElementById('solutionClassification').hidden=true;hideDistributionReplay();clearTimeout(checkRevealTimer);hideVerification();currentSolution=null;currentSolvedRecorded=false;currentChecked=false;nextBtn.hidden=true;checkWorkBtn.hidden=true;checkWorkBtn.classList.remove('reveal');arithmeticStarted=false;divisionSteps=[];divisionStepBusy=false;divisionAdvancePending=false;divisionChoicePending=false;divisionPrompt.style.display='';divisionEntry.classList.remove('hidden');divisionChoices.innerHTML='';divisionContinue.classList.remove('show');divisionContinue.disabled=false;board.classList.remove('completed');eqEl.classList.remove('static-celebrate');stage.querySelectorAll('.final-travel-layer,.final-measure,.completion-check-inline').forEach(el=>el.remove());const normalized={left:eq.left.map(t=>t||null),right:eq.right.map(t=>t||null)};original=clone(normalized);state=clone(normalized);addHistory(equationText(state));render();}
 document.getElementById('replayDistributionBtn').addEventListener('click',()=>{
  if(locked||!distributionReplay)return;
  const {snapshot,side,index}=distributionReplay;
