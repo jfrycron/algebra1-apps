@@ -148,7 +148,7 @@ function generateDistributionEquation(){
 }
 function groupCore(t){return (Math.abs(t.v)===1?'':Math.abs(t.v))+'('+(t.u<0?'−':'')+Math.abs(t.u)+'x'+(t.vInside<0?' − ':' + ')+Math.abs(t.vInside)+')';}
 let groupDrag=null;
-function transferAcross(side,index,at){
+function transferAcross(side,index,at,dropPoint=null){
  const other=side==='left'?'right':'left',t=state[side][index];
  if(!t)return Promise.resolve();
  const before=new Map();
@@ -178,7 +178,12 @@ function transferAcross(side,index,at){
  eqEl.querySelectorAll('.term,.equals').forEach(el=>{
   const key=el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index;
   let previous=before.get(key);
-  if(key===other+'-'+at)previous=sourceRect;
+  if(key===other+'-'+at){
+   // The student's actual release point is the origin of the new term.
+   // Never send it back to its original location before placing it.
+   if(dropPoint){const now=el.getBoundingClientRect();previous={left:dropPoint.x-now.width/2,top:dropPoint.y-now.height/2,width:now.width,height:now.height};}
+   else previous=sourceRect;
+  }
   else if(el.dataset.side===other&&Number(el.dataset.index)>at)previous=before.get(other+'-'+(Number(el.dataset.index)-1));
   if(!previous)return;
   const now=el.getBoundingClientRect(),dx=previous.left+previous.width/2-now.left-now.width/2,dy=previous.top+previous.height/2-now.top-now.height/2;
@@ -260,6 +265,7 @@ function moveGroupDrag(e){
 function endGroupDrag(e){
  const d=groupDrag;if(!d)return;
  document.removeEventListener('pointermove',moveGroupDrag);
+ const dropPoint={x:e.clientX,y:e.clientY};
  ghost.hidden=true;ghost.classList.remove('crossed');crossNote.classList.remove('show');
  d.el.classList.remove('source');groupDrag=null;
  const landing=document.getElementById('groupLanding');
@@ -268,7 +274,7 @@ function endGroupDrag(e){
  if(!d.moved){distributeGroup(d.side,d.index);return;}
  if(!d.crossed)return;
  const other=d.side==='left'?'right':'left';
- transferAcross(d.side,d.index,landingAt===null?insertionIndexFor(other,e.clientX):landingAt);
+ transferAcross(d.side,d.index,landingAt===null?insertionIndexFor(other,e.clientX):landingAt,dropPoint);
 }
 function distributeGroup(side,index){
  if(locked||drag||groupDrag)return;
