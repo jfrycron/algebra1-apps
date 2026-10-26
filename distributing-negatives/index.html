@@ -95,7 +95,7 @@ button[hidden]{display:none!important}
 <body>
 <div class="app">
   <div class="topbar">
-    <div><h1>Solving Equations: Distributing Negatives</h1><p class="subtitle">Distribute the negative coefficient, then move and combine like terms to solve.</p></div>
+    <div><h1>Solving Equations: Distributing Negatives</h1><p class="subtitle">Drag the quantity across the equal sign, or click it to distribute. Then solve.</p></div>
     <button class="primary" id="newBtn">New Equation</button>
   </div>
   <div class="session-stats" aria-label="Session progress"><span>Equations Solved <strong id="solvedCount">0</strong></span></div>
@@ -147,8 +147,61 @@ function generateDistributionEquation(){
  return {left:[{v:-2,t:'group',u:3,vInside:4},null],right:[{v:4,t:'x'},{v:-20,t:'c'}]};
 }
 function groupCore(t){return (Math.abs(t.v)===1?'':Math.abs(t.v))+'('+(t.u<0?'−':'')+Math.abs(t.u)+'x'+(t.vInside<0?' − ':' + ')+Math.abs(t.vInside)+')';}
-function distributeGroup(side,index){
+let groupDrag=null;
+function startGroupDrag(e){
  if(locked||drag)return;
+ e.preventDefault();
+ const el=e.currentTarget,side=el.dataset.side,index=Number(el.dataset.index),t=state[side][index];
+ groupDrag={el,side,index,t,startX:e.clientX,startY:e.clientY,moved:false,crossed:false};
+ el.setPointerCapture(e.pointerId);
+ ghost.hidden=false;ghost.textContent=(t.v<0?'−':'')+groupCore(t);
+ ghost.style.left=e.clientX+'px';ghost.style.top=e.clientY+'px';
+ el.classList.add('source');
+ document.addEventListener('pointermove',moveGroupDrag);
+ document.addEventListener('pointerup',endGroupDrag,{once:true});
+}
+function moveGroupDrag(e){
+ const d=groupDrag;if(!d)return;
+ d.moved=d.moved||Math.hypot(e.clientX-d.startX,e.clientY-d.startY)>12;
+ ghost.style.left=e.clientX+'px';ghost.style.top=e.clientY+'px';
+ const equalsRect=document.getElementById('equals').getBoundingClientRect();
+ d.crossed=d.side==='left'?e.clientX>equalsRect.right:e.clientX<equalsRect.left;
+ ghost.classList.toggle('crossed',d.crossed);
+ ghost.textContent=(d.crossed?(d.t.v>0?'−':'+'):(d.t.v<0?'−':''))+groupCore(d.t);
+ crossNote.classList.toggle('show',d.crossed);
+ crossNote.style.left=e.clientX+'px';crossNote.style.top=(e.clientY-12)+'px';
+}
+function endGroupDrag(e){
+ const d=groupDrag;if(!d)return;
+ document.removeEventListener('pointermove',moveGroupDrag);
+ ghost.hidden=true;ghost.classList.remove('crossed');crossNote.classList.remove('show');
+ d.el.classList.remove('source');groupDrag=null;
+ if(!d.moved){distributeGroup(d.side,d.index);return;}
+ if(!d.crossed)return;
+ const other=d.side==='left'?'right':'left';
+ const before=new Map();
+ eqEl.querySelectorAll('.term,.equals').forEach(el=>before.set(el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index,el.getBoundingClientRect()));
+ const oldRect=d.el.getBoundingClientRect();
+ const moved={...d.t,v:-d.t.v};
+ state[d.side][d.index]=null;
+ let at=state[other].findIndex(x=>!x);
+ if(at<0){at=state[other].length;state[other].push(null);}
+ state[other][at]=moved;
+ arithmeticStarted=true;
+ render();
+ const animations=[];
+ eqEl.querySelectorAll('.term,.equals').forEach(el=>{
+  const key=el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index;
+  const old=key===other+'-'+at?oldRect:before.get(key);
+  if(!old)return;
+  const now=el.getBoundingClientRect();
+  const dx=old.left+old.width/2-now.left-now.width/2,dy=old.top+old.height/2-now.top-now.height/2;
+  animations.push(el.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0,0)'}],{duration:900,easing:'cubic-bezier(.22,.8,.25,1)'}).finished.catch(()=>{}));
+ });
+ locked=true;Promise.all(animations).then(()=>{locked=false;});
+}
+function distributeGroup(side,index){
+ if(locked||drag||groupDrag)return;
  const t=state[side][index];if(!t||t.t!=='group')return;
  locked=true;
  const node=eqEl.querySelector('.term[data-side="'+side+'"][data-index="'+index+'"]');
@@ -291,7 +344,7 @@ function makeSide(arr,side){
   const wrap=document.createElement('div');wrap.className='side-expression';wrap.dataset.side=side;
   const hasAny=arr.some(Boolean);
   const firstVisible=arr.findIndex(Boolean);
-  for(let i=0;i<2;i++){
+  for(let i=0;i<Math.max(2,arr.length);i++){
     const lane=document.createElement('div');lane.className='lane';lane.dataset.side=side;lane.dataset.index=i;
     const t=arr[i];
     if(t){
@@ -309,7 +362,7 @@ function makeSide(arr,side){
         else if(core==='x')coreHTML='<span class="variable-symbol">x</span>';
       }
       term.innerHTML=`${sign?`<span class="term-sign">${sign}</span>`:''}<span class="term-core">${coreHTML}</span>`;
-      term.dataset.side=side;term.dataset.index=i;term.dataset.type=t.t;if(t.t==='group'){term.classList.add('group-term');term.addEventListener('pointerdown',e=>{e.preventDefault();distributeGroup(side,i);});}else term.addEventListener('pointerdown',startDrag);lane.appendChild(term);
+      term.dataset.side=side;term.dataset.index=i;term.dataset.type=t.t;if(t.t==='group'){term.classList.add('group-term');term.addEventListener('pointerdown',startGroupDrag);}else term.addEventListener('pointerdown',startDrag);lane.appendChild(term);
     }else if(!hasAny&&i===0){
       const z=document.createElement('span');z.className='zero-target';z.textContent='0';z.dataset.side=side;z.dataset.index=i;z.dataset.type='zero';lane.appendChild(z);
     }
@@ -1294,7 +1347,7 @@ document.addEventListener('keydown',e=>{
     advanceDivisionStep();
   }
 });
-function start(eq){clearTimeout(checkRevealTimer);hideVerification();currentSolution=null;currentSolvedRecorded=false;currentChecked=false;nextBtn.hidden=true;checkWorkBtn.hidden=true;checkWorkBtn.classList.remove('reveal');arithmeticStarted=false;divisionSteps=[];divisionStepBusy=false;divisionAdvancePending=false;divisionChoicePending=false;divisionPrompt.style.display='';divisionEntry.classList.remove('hidden');divisionChoices.innerHTML='';divisionContinue.classList.remove('show');divisionContinue.disabled=false;board.classList.remove('completed');eqEl.classList.remove('static-celebrate');stage.querySelectorAll('.final-travel-layer,.final-measure,.completion-check-inline').forEach(el=>el.remove());const normalized={left:[eq.left[0]||null,eq.left[1]||null],right:[eq.right[0]||null,eq.right[1]||null]};original=clone(normalized);state=clone(normalized);addHistory(equationText(state));render();}
+function start(eq){clearTimeout(checkRevealTimer);hideVerification();currentSolution=null;currentSolvedRecorded=false;currentChecked=false;nextBtn.hidden=true;checkWorkBtn.hidden=true;checkWorkBtn.classList.remove('reveal');arithmeticStarted=false;divisionSteps=[];divisionStepBusy=false;divisionAdvancePending=false;divisionChoicePending=false;divisionPrompt.style.display='';divisionEntry.classList.remove('hidden');divisionChoices.innerHTML='';divisionContinue.classList.remove('show');divisionContinue.disabled=false;board.classList.remove('completed');eqEl.classList.remove('static-celebrate');stage.querySelectorAll('.final-travel-layer,.final-measure,.completion-check-inline').forEach(el=>el.remove());const normalized={left:eq.left.map(t=>t||null),right:eq.right.map(t=>t||null)};original=clone(normalized);state=clone(normalized);addHistory(equationText(state));render();}
 document.getElementById('newBtn').onclick=()=>start(generateDistributionEquation());document.getElementById('restartBtn').onclick=()=>start(original);nextBtn.addEventListener('click',()=>start(generateDistributionEquation()));checkWorkBtn.addEventListener('click',runVerification);updateSessionStats();start(generateDistributionEquation());
 })();
 </script>
