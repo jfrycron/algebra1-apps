@@ -46,8 +46,6 @@ function showRow(s,old=false){
   if(side==='right'){const eq=document.createElement('span');eq.className='equals';eq.textContent='=';row.append(eq)}
   row.append(box);
  }
- // reorder left / equals / right
- row.insertBefore(row.lastElementChild,row.firstElementChild.nextSibling);
  return row;
 }
 function render(note=''){
