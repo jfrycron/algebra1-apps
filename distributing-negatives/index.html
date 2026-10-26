@@ -222,8 +222,26 @@ function moveGroupDrag(e){
  if(d.crossed){
   const other=d.side==='left'?'right':'left';
   const at=insertionIndexFor(other,e.clientX);
-  showGroupLanding(other,at,{...d.t,v:-d.t.v});
- }else clearGroupLanding();
+  if(!insertion||insertion.groupAt!==at||insertion.groupSide!==other){
+   clearInsertion();
+   const wrap=eqEl.querySelector('.side-expression[data-side="'+other+'"]');
+   if(wrap){
+    const spacer=document.createElement('div');spacer.className='drop-spacer group-drop-space';
+    const slot=document.createElement('div');slot.className='drop-slot';
+    slot.innerHTML='<span class="slot-text">'+(d.t.v>0?'−':'+')+groupCore(d.t)+'</span>';
+    spacer.appendChild(slot);
+    const lane=wrap.querySelector('.lane[data-index="'+at+'"]');
+    if(lane)wrap.insertBefore(spacer,lane);else wrap.appendChild(spacer);
+    const fontSize=parseFloat(getComputedStyle(eqEl).fontSize);
+    const measure=document.createElement('span');measure.style.cssText='position:absolute;visibility:hidden;font-family:Cambria,serif;font-size:'+fontSize+'px;font-weight:600;white-space:nowrap';measure.textContent=slot.textContent;stage.appendChild(measure);
+    const width=Math.ceil(measure.getBoundingClientRect().width)+32;measure.remove();
+    slot.style.width=width+'px';spacer.style.width='0px';
+    insertion={spacer,slot,groupAt:at,groupSide:other};
+    eqEl.classList.add('insertion-open');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{if(spacer.isConnected){spacer.style.width=(width+16)+'px';spacer.classList.add('show')}}));
+   }
+  }
+ }else if(insertion?.groupSide)clearInsertion();
 }
 function endGroupDrag(e){
  const d=groupDrag;if(!d)return;
@@ -292,7 +310,7 @@ function distributeGroup(side,index){
    }
   });
   await Promise.all(bursts);
-  layer.remove();
+  layer.remove();svg.remove();
   const old=new Map();
   eqEl.querySelectorAll('.term,.equals').forEach(el=>{
    old.set(el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index,el.getBoundingClientRect());
@@ -1431,4 +1449,35 @@ document.getElementById('newBtn').onclick=()=>start(generateDistributionEquation
 })();
 </script>
 </body>
-</html>
+</html> const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+ svg.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;overflow:visible;z-index:10029';
+ document.body.appendChild(svg);
+ const paths=goals.map((g,i)=>{
+  const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+  const mid=(sx+g.x)/2,peak=Math.min(sy,g.y)-(i===0?85:130);
+  path.setAttribute('d','M '+sx+' '+sy+' Q '+mid+' '+peak+' '+g.x+' '+g.y);
+  path.setAttribute('fill','none');path.setAttribute('stroke','#c16d34');path.setAttribute('stroke-width','3');
+  path.setAttribute('stroke-linecap','round');path.setAttribute('stroke-dasharray','3 9');
+  svg.appendChild(path);
+  const arrow=document.createElementNS('http://www.w3.org/2000/svg','path');
+  const length=path.getTotalLength(),p=path.getPointAtLength(length),q=path.getPointAtLength(Math.max(0,length-12));
+  const angle=Math.atan2(p.y-q.y,p.x-q.x),size=13;
+  arrow.setAttribute('d','M '+p.x+' '+p.y+' L '+(p.x-size*Math.cos(angle-.55))+' '+(p.y-size*Math.sin(angle-.55))+' M '+p.x+' '+p.y+' L '+(p.x-size*Math.cos(angle+.55))+' '+(p.y-size*Math.sin(angle+.55)));
+  arrow.setAttribute('fill','none');arrow.setAttribute('stroke','#c16d34');arrow.setAttribute('stroke-width','3');arrow.setAttribute('stroke-linecap','round');
+  svg.appendChild(arrow);return path;
+ });
+ const flyers=goals.map((g,i)=>{const el=document.createElement('span');el.className='distribution-flyer';el.textContent=String(t.v).replace('-','−');layer.appendChild(el);return el;});
+ const flying=[new Promise(resolve=>{
+  const duration=3100,start=performance.now();
+  function frame(now){
+   const p=Math.min(1,(now-start)/duration),ease=p*p*(3-2*p);
+   paths.forEach((path,i)=>{
+    const point=path.getPointAtLength(path.getTotalLength()*ease);
+    flyers[i].style.left=point.x+'px';flyers[i].style.top=point.y+'px';
+    flyers[i].style.opacity=String(Math.min(1,(1-p)*5));
+   });
+   if(p<1)requestAnimationFrame(frame);else resolve();
+  }
+  requestAnimationFrame(frame);
+ })];
+
