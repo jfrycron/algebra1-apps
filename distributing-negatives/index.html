@@ -153,6 +153,9 @@ function transferAcross(side,index,at){
  if(!t)return Promise.resolve();
  const before=new Map();
  eqEl.querySelectorAll('.term,.equals').forEach(el=>before.set(el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index,el.getBoundingClientRect()));
+ const previewEquals=document.getElementById('equals');
+ const previewEqualsRect=previewEquals?.getBoundingClientRect();
+ const previewEqualsStyle=previewEquals?getComputedStyle(previewEquals):null;
  const source=eqEl.querySelector('.term[data-side="'+side+'"][data-index="'+index+'"]');
  const sourceRect=source?.getBoundingClientRect();
  const dest=state[other];
@@ -161,6 +164,16 @@ function transferAcross(side,index,at){
  dest.splice(at,0,{...t,v:-t.v});
  arithmeticStarted=true;
  render();
+ // The landing space already moved the equals sign into its preview position.
+ // Keep it there across the DOM rebuild; do not flash it back to the old layout.
+ const newEquals=document.getElementById('equals');
+ if(previewEqualsRect&&newEquals){
+  const finalRect=newEquals.getBoundingClientRect();
+  const dx=previewEqualsRect.left-finalRect.left,dy=previewEqualsRect.top-finalRect.top;
+  if(Math.abs(dx)>0.5||Math.abs(dy)>0.5){
+   newEquals.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0px,0px)'}],{duration:360,easing:'ease-out'});
+  }
+ }
  const animations=[];
  eqEl.querySelectorAll('.term,.equals').forEach(el=>{
   const key=el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index;
