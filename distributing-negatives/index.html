@@ -146,7 +146,7 @@ function generateDistributionEquation(){
  }
  return {left:[{v:-2,t:'group',u:3,vInside:4},null],right:[{v:4,t:'x'},{v:-20,t:'c'}]};
 }
-function groupCore(t){return (Math.abs(t.v)===1?'':Math.abs(t.v))+'('+(t.u<0?'−':'')+Math.abs(t.u)+'x'+(t.vInside<0?' − ':' + ')+Math.abs(t.vInside)+')';}
+function groupCore(t){return (Math.abs(t.v)===1?'':Math.abs(t.v))+'('+(t.u<0?'−':'')+(Math.abs(t.u)===1?'':Math.abs(t.u))+'x'+(t.vInside<0?' − ':' + ')+Math.abs(t.vInside)+')';}
 let groupDrag=null;
 async function autoCombineLikeTerms(){
  if(locked)return;
