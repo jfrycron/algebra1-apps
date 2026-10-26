@@ -11,7 +11,7 @@
 }
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;background:#EEF3F8;font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
-.app{max-width:980px;margin:auto;padding:20px}
+.app{width:96%;max-width:1600px;margin:auto;padding:20px}
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
 h1{margin:0;font-size:clamp(30px,5vw,48px);letter-spacing:-1px}.subtitle{margin:6px 0 0;color:var(--muted)}
 button{border:0;border-radius:12px;padding:12px 16px;font-size:15px;font-weight:800;cursor:pointer}.primary{background:var(--accent);color:white}.secondary{background:#eee5db;color:#3f3128;border:1px solid #d8c8b9}
@@ -89,7 +89,7 @@ button[hidden]{display:none!important}
 .session-stats{display:flex;justify-content:center;gap:22px;margin:16px auto 0;padding:9px 16px;width:max-content;max-width:100%;border:1px solid #ded2c5;border-radius:999px;background:rgba(255,255,255,.72);color:var(--muted);font-size:14px;font-weight:800}.session-stats strong{color:var(--ink);font-size:16px;margin-left:5px}.check-work-btn{opacity:0;transform:translateY(5px);transition:opacity .45s ease,transform .45s ease}.check-work-btn.reveal{opacity:1;transform:translateY(0)}
 .verification-panel{position:absolute;inset:8px 0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;opacity:0;transform:translateY(8px);transition:opacity .38s ease,transform .38s ease;pointer-events:none}.verification-panel.show{opacity:1;transform:translateY(0);pointer-events:auto}.equation-stage.verifying{display:block;min-height:250px}.equation-stage.verifying .equation{display:none}.equation-stage.verifying .verification-panel{position:relative;inset:auto;width:100%;padding:0;justify-content:flex-start}.verification-card{position:relative;box-sizing:border-box;width:min(680px,96%);margin:0 auto;background:#fff;border:1px solid #dfd4c7;border-radius:20px;padding:18px 20px;box-shadow:0 10px 25px rgba(62,42,24,.12);overflow:hidden}.verification-close{position:absolute;top:9px;right:11px;width:36px;height:36px;border:0;border-radius:50%;background:transparent;color:#6f665f;font:700 28px/1 Arial,sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .18s ease,color .18s ease,transform .12s ease}.verification-close:hover{background:#f1ebe5;color:#2f2925}.verification-close:active{transform:scale(.94)}.verification-close:focus-visible{outline:3px solid rgba(31,117,254,.28);outline-offset:2px}.verification-title{text-align:center;font-size:18px;font-weight:900;color:var(--good);margin-bottom:12px}.verification-steps{display:flex;flex-direction:column;gap:7px}.verification-row{display:grid;grid-template-columns:92px 1fr;align-items:center;gap:12px;min-height:42px;opacity:0;transform:translateY(8px);transition:opacity .42s ease,transform .42s ease,background .35s ease}.verification-row.show{opacity:1;transform:translateY(0)}.verification-label{text-align:right;color:var(--muted);font-size:13px;font-weight:800}.verification-math{font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(25px,4.5vw,38px);font-weight:600;text-align:center;white-space:nowrap}.verification-row.substitute .verification-math{color:#1f75fe}.verification-row.final{border-radius:12px;padding:5px 8px}.verification-row.final.equal{background:#eaf4f0;color:var(--good)}.verification-result{text-align:center;margin-top:9px;font-weight:900;color:var(--good);opacity:0;visibility:hidden;transition:opacity .45s ease}.verification-result.show{visibility:visible;opacity:1}.verification-controls{display:flex;justify-content:center;align-items:center;min-height:48px;margin-top:12px}.verification-continue{min-width:150px;padding:11px 22px;border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-weight:900;cursor:pointer;box-shadow:0 4px 0 rgba(83,47,24,.18);transition:transform .12s ease,opacity .2s ease}.verification-continue:hover{transform:translateY(-1px)}.verification-continue:active{transform:translateY(1px)}.verification-continue.finished{visibility:hidden!important;opacity:0!important;pointer-events:none!important;transform:none!important}
 @media(max-width:650px){.app{padding:12px}.board{padding:14px}.equation-stage{min-height:220px}.equation{gap:.3em;padding:86px 2px 48px}.side-expression{gap:.24em}.term{padding:4px 2px}.term-sign{min-width:.44em;margin-right:.06em}.division-entry{flex-wrap:wrap}}
-.group-term{cursor:pointer}.group-term:hover{background:#fff3e4;box-shadow:0 0 0 3px rgba(185,85,37,.14)}.group-coefficient{display:inline-block}.group-inside{display:inline-block}.distribution-layer{position:fixed;inset:0;pointer-events:none;z-index:10030}.distribution-flyer{position:absolute;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(34px,7vw,64px);font-weight:700;color:#1f75fe;transform:translate(-50%,-50%);white-space:nowrap}.session-stats{position:absolute;right:18px;top:145px;z-index:4;margin:0}h1{font-size:clamp(22px,3vw,32px)}.board{min-height:70vh}@media(max-width:650px){.session-stats{position:static;margin:12px auto 0}}
+.group-term{cursor:pointer}.group-term:hover{background:#fff3e4;box-shadow:0 0 0 3px rgba(185,85,37,.14)}.group-coefficient{display:inline-block}.group-inside{display:inline-block}.distribution-layer{position:fixed;inset:0;pointer-events:none;z-index:10030}.distribution-spark{position:absolute;width:8px;height:8px;border-radius:50%;background:#f2a13b;box-shadow:0 0 8px #e3a039;pointer-events:none}.distribution-flyer{position:absolute;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(34px,7vw,64px);font-weight:700;color:#1f75fe;transform:translate(-50%,-50%);white-space:nowrap}.session-stats{position:absolute;right:20px;top:18px;z-index:4;margin:0}h1{font-size:clamp(22px,3vw,32px)}.board{min-height:70vh}@media(max-width:650px){.session-stats{position:static;margin:12px auto 0}}
 </style>
 </head>
 <body>
@@ -98,8 +98,8 @@ button[hidden]{display:none!important}
     <div><h1>Solving Equations: Distributing Negatives</h1><p class="subtitle">Drag the quantity across the equal sign, or click it to distribute. Then solve.</p></div>
     <button class="primary" id="newBtn">New Equation</button>
   </div>
-  <div class="session-stats" aria-label="Session progress"><span>Equations Solved <strong id="solvedCount">0</strong></span></div>
   <section class="board">
+    <div class="session-stats" aria-label="Session progress"><span>Equations Solved <strong id="solvedCount">0</strong></span></div>
     <div class="equation-stage" id="stage"><div class="equation" id="equation"></div><div class="verification-panel" id="verificationPanel" hidden aria-live="polite"></div></div>
     <div class="division-zone" id="divisionZone"><div class="division-prompt" id="divisionPrompt">What should we divide both sides by?</div><div class="division-entry" id="divisionEntry"><div class="division-choices" id="divisionChoices" role="group" aria-label="Choose a divisor"></div><input class="division-input" id="divisionInput" inputmode="decimal" aria-label="Divisor" placeholder=""><button class="division-submit" id="divisionSubmit">Divide</button></div><button class="division-continue" id="divisionContinue" type="button">Continue →</button><div class="division-work" id="divisionWork"></div></div>
     <div class="message" id="message" hidden></div>
@@ -215,9 +215,21 @@ function distributeGroup(side,index){
  const flying=goals.map((g,i)=>{
   const el=document.createElement('span');el.className='distribution-flyer';el.textContent=String(t.v).replace('-','−');layer.appendChild(el);
   el.style.left=sx+'px';el.style.top=sy+'px';
-  return el.animate([{transform:'translate(0,0)',opacity:1},{transform:'translate('+((g.x-sx)*.5)+'px,-65px)',opacity:1,offset:.5},{transform:'translate('+(g.x-sx)+'px,'+(g.y-sy)+'px)',opacity:0}],{duration:1350,easing:'ease-in-out',fill:'forwards'});
+  return el.animate([{transform:'translate(0,0)',opacity:1},{transform:'translate('+((g.x-sx)*.5)+'px,-65px)',opacity:1,offset:.5},{transform:'translate('+(g.x-sx)+'px,'+(g.y-sy)+'px)',opacity:0}],{duration:3100,easing:'ease-in-out',fill:'forwards'});
  });
- Promise.all(flying.map(x=>x.finished)).then(()=>{
+ Promise.all(flying.map(x=>x.finished)).then(async()=>{
+  // Two separate multiplication impacts: brief radial fireworks at each landing.
+  const bursts=[];
+  goals.forEach(g=>{
+   for(let i=0;i<14;i++){
+    const spark=document.createElement('span');spark.className='distribution-spark';
+    spark.style.left=g.x+'px';spark.style.top=g.y+'px';
+    layer.appendChild(spark);
+    const angle=2*Math.PI*i/14,dist=25+(i%3)*10;
+    bursts.push(spark.animate([{transform:'translate(-50%,-50%) scale(.35)',opacity:1},{transform:'translate(calc(-50% + '+(Math.cos(angle)*dist)+'px),calc(-50% + '+(Math.sin(angle)*dist)+'px)) scale(1)',opacity:0}],{duration:780,easing:'ease-out',fill:'forwards'}).finished.catch(()=>{}));
+   }
+  });
+  await Promise.all(bursts);
   layer.remove();
   const old=new Map();
   eqEl.querySelectorAll('.term,.equals').forEach(el=>{
@@ -236,10 +248,10 @@ function distributeGroup(side,index){
     const from=key===side+'-0'?oldGroup:oldGroup;
     const dx=from.left+from.width/2-now.left-now.width/2;
     const dy=from.top+from.height/2-now.top-now.height/2;
-    animations.push(el.animate([{transform:'translate('+dx+'px,'+dy+'px)',opacity:.2},{transform:'translate(0,0)',opacity:1}],{duration:750,easing:'cubic-bezier(.22,.8,.25,1)'}).finished);
+    animations.push(el.animate([{transform:'translate('+dx+'px,'+dy+'px)',opacity:0,filter:'blur(9px)'},{transform:'translate(0,0)',opacity:1,filter:'blur(0px)'}],{duration:1850,easing:'cubic-bezier(.22,.8,.25,1)'}).finished);
    }else if(previous){
     const dx=previous.left-now.left,dy=previous.top-now.top;
-    animations.push(el.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0,0)'}],{duration:750,easing:'cubic-bezier(.22,.8,.25,1)'}).finished);
+    animations.push(el.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0,0)'}],{duration:1850,easing:'cubic-bezier(.22,.8,.25,1)'}).finished);
    }
   });
   Promise.all(animations).then(()=>{locked=false;});
