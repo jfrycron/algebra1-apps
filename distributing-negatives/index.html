@@ -148,6 +148,41 @@ function generateDistributionEquation(){
 }
 function groupCore(t){return (Math.abs(t.v)===1?'':Math.abs(t.v))+'('+(t.u<0?'−':'')+Math.abs(t.u)+'x'+(t.vInside<0?' − ':' + ')+Math.abs(t.vInside)+')';}
 let groupDrag=null;
+async function autoCombineLikeTerms(){
+ if(locked)return;
+ for(const side of ['left','right']){
+  const arr=state[side],indices=arr.map((t,i)=>t&&t.t!=='group'?i:-1).filter(i=>i>=0);
+  let pair=null;
+  for(let i=0;i<indices.length&&!pair;i++)for(let j=i+1;j<indices.length;j++){
+   if(arr[indices[i]].t===arr[indices[j]].t){pair=[indices[i],indices[j]];break;}
+  }
+  if(!pair)continue;
+  locked=true;
+  const [i,j]=pair,a=arr[i],b=arr[j],sum=a.v+b.v;
+  const first=eqEl.querySelector('.term[data-side="'+side+'"][data-index="'+i+'"]');
+  const second=eqEl.querySelector('.term[data-side="'+side+'"][data-index="'+j+'"]');
+  if(!first||!second){locked=false;continue;}
+  const rectA=first.getBoundingClientRect(),rectB=second.getBoundingClientRect();
+  const centerX=(rectA.left+rectA.width/2+rectB.left+rectB.width/2)/2;
+  const animations=[];
+  [first,second].forEach((el,k)=>{
+   const r=k?rectB:rectA,dx=centerX-(r.left+r.width/2);
+   el.style.color='#2475cf';
+   animations.push(el.animate([{transform:'translateX(0)'},{transform:'translateX('+dx+'px)'}],{duration:1100,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'}).finished.catch(()=>{}));
+  });
+  await Promise.all(animations);
+  await new Promise(resolve=>setTimeout(resolve,150));
+  arr[i]=sum===0?null:{v:sum,t:a.t};
+  arr.splice(j,1);
+  // Remove empty positions so the entire equation naturally closes its gaps.
+  state[side]=arr.filter(Boolean);
+  render();
+  const result=eqEl.querySelector('.term[data-side="'+side+'"]');
+  if(result)await result.animate([{opacity:0,filter:'blur(5px)'},{opacity:1,filter:'blur(0)'}],{duration:550,easing:'ease-out'}).finished.catch(()=>{});
+  locked=false;
+  return autoCombineLikeTerms();
+ }
+}
 function transferAcross(side,index,at,dropPoint=null){
  const other=side==='left'?'right':'left',t=state[side][index];
  if(!t)return Promise.resolve();
@@ -190,7 +225,7 @@ function transferAcross(side,index,at,dropPoint=null){
   if(el.classList.contains('equals'))return;
   if(Math.abs(dx)>1||Math.abs(dy)>1)animations.push(el.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0,0)'}],{duration:900,easing:'cubic-bezier(.22,.8,.25,1)'}).finished.catch(()=>{}));
  });
- locked=true;return Promise.all(animations).then(()=>{locked=false;});
+ locked=true;return Promise.all(animations).then(()=>{locked=false;return autoCombineLikeTerms();});
 }
 function insertionIndexFor(side,x){
  const terms=[...eqEl.querySelectorAll('.term[data-side="'+side+'"]')];
@@ -357,7 +392,7 @@ function distributeGroup(side,index){
     animations.push(el.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0,0)'}],{duration:1850,easing:'cubic-bezier(.22,.8,.25,1)'}).finished);
    }
   });
-  Promise.all(animations).then(()=>{locked=false;document.getElementById('replayDistributionBtn').hidden=false;});
+  Promise.all(animations).then(()=>{locked=false;document.getElementById('replayDistributionBtn').hidden=false;return autoCombineLikeTerms();});
  });
 }
 
