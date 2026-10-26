@@ -1013,12 +1013,14 @@ function endDrag(){
                   eqEl.querySelectorAll('.coeff-one').forEach(one=>{one.style.opacity='';one.style.filter='';});
                   eqEl.classList.remove('measure-no-transition');
                   locked=false;
+                  autoCombineLikeTerms();
                 });
               });
             }else{
               p.remove();
               eqEl.classList.remove('measure-no-transition');
               locked=false;
+              autoCombineLikeTerms();
             }
           });
       });
