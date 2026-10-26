@@ -854,7 +854,7 @@ function getDivisionData(){
 }
 function updateSessionStats(){
   solvedCountEl.textContent=String(solvedCount);
-  checkedCountEl.textContent=String(checkedCount);
+  if(checkedCountEl)checkedCountEl.textContent=String(checkedCount);
 }
 function revealCompletionActions(solution){
   currentSolution=solution;
