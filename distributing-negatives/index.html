@@ -196,13 +196,13 @@ async function autoCombineLikeTerms(){
   return autoCombineLikeTerms();
  }
 }
-function transferAcross(side,index,at,dropPoint=null){
+function transferAcross(side,index,at,dropPoint=null,previewEqualsRect=null){
  const other=side==='left'?'right':'left',t=state[side][index];
  if(!t)return Promise.resolve();
  const before=new Map();
  eqEl.querySelectorAll('.term,.equals').forEach(el=>before.set(el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index,el.getBoundingClientRect()));
- const previewEquals=document.getElementById('equals');
- const previewEqualsRect=previewEquals?.getBoundingClientRect();
+ // Preserve the equal sign's *preview* location, before removing the landing slot.
+ previewEqualsRect=previewEqualsRect||document.getElementById('equals')?.getBoundingClientRect();
  const dest=state[other];
  at=Math.max(0,Math.min(at,dest.length));
  state[side][index]=null;
@@ -316,11 +316,12 @@ function endGroupDrag(e){
  d.el.classList.remove('source');groupDrag=null;
  const landing=document.getElementById('groupLanding');
  const landingAt=landing?Number(landing.dataset.at):null;
+ const previewEqualsRect=document.getElementById('equals')?.getBoundingClientRect();
  clearGroupLanding();
  if(!d.moved){distributeGroup(d.side,d.index);return;}
  if(!d.crossed)return;
  const other=d.side==='left'?'right':'left';
- transferAcross(d.side,d.index,landingAt===null?insertionIndexFor(other,e.clientX):landingAt,dropPoint);
+ transferAcross(d.side,d.index,landingAt===null?insertionIndexFor(other,e.clientX):landingAt,dropPoint,previewEqualsRect);
 }
 let distributionReplay=null;
 function hideDistributionReplay(){document.getElementById("replayDistributionBtn").hidden=true;distributionReplay=null;}
@@ -662,9 +663,10 @@ function endDrag(){
     const other=d.side==='left'?'right':'left';
     const x=Number(ghost.style.left.replace('px',''));
     const landing=document.getElementById('groupLanding');
+    const previewEqualsRect=document.getElementById('equals')?.getBoundingClientRect();
     const at=landing?Number(landing.dataset.at):insertionIndexFor(other,x);
     const y=Number(ghost.style.top.replace('px',''));
-    cleanup();clearGroupLanding();transferAcross(d.side,d.index,at,{x,y});return;
+    cleanup();clearGroupLanding();transferAcross(d.side,d.index,at,{x,y},previewEqualsRect);return;
   }
   if(!d.target){
     clearGroupLanding();
