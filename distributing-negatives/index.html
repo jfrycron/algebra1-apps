@@ -415,7 +415,7 @@ function moveGroupDrag(e){
     requestAnimationFrame(()=>requestAnimationFrame(()=>{if(spacer.isConnected){spacer.style.width=(width+16)+'px';spacer.classList.add('show')}}));
    }
   }
- }else if(insertion?.groupSide)clearInsertion();
+ }
 }
 function endGroupDrag(e){
  const d=groupDrag;if(!d)return;
