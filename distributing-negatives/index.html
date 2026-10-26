@@ -750,6 +750,17 @@ function moveDrag(e){
     });
     target=candidates.find(el=>pointNearElement(e.clientX,e.clientY,el,46))||null;
   }
+  // Across the equals sign, a matching term determines the ONLY
+  // destination: immediately to its right, using the normal combine slot.
+  // Do not offer a free-placement rectangle elsewhere on that side.
+  if(drag.crossed){
+    const other=drag.side==='left'?'right':'left';
+    const matches=[...eqEl.querySelectorAll('.term[data-side="'+other+'"]')]
+      .filter(el=>el.dataset.type===drag.type);
+    if(matches.length){
+      target=matches.find(el=>pointNearElement(e.clientX,e.clientY,el,46))||matches[0];
+    }
+  }
   drag.target=target;
   if(target){
     clearGroupLanding();
