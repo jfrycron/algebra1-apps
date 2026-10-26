@@ -240,7 +240,8 @@ function showGroupLanding(side,at,term){
  if(!wrap)return;
  const spacer=document.createElement('div');spacer.id='groupLanding';spacer.className='drop-spacer';spacer.dataset.side=side;spacer.dataset.at=at;
  const slot=document.createElement('div');slot.className='drop-slot';
- slot.innerHTML='<span class="slot-text">'+(term.v<0?'−':'+')+(term.t==='group'?groupCore(term):absText(term))+'</span>';
+ // Only the dragged ghost shows the term; the landing rectangle stays empty.
+ slot.innerHTML='';
  spacer.append(slot);
  const lane=wrap.querySelector('.lane[data-index="'+at+'"]');
  if(lane)lane.before(spacer);else wrap.append(spacer);
