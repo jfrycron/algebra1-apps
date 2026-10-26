@@ -196,7 +196,7 @@ async function autoCombineLikeTerms(){
   return autoCombineLikeTerms();
  }
 }
-function transferAcross(side,index,at,dropPoint=null,previewEqualsRect=null,previewTerms=null){
+function transferAcross(side,index,at,dropPoint=null,previewEqualsRect=null,previewTerms=null,groupTwoStage=false){
  const other=side==='left'?'right':'left',t=state[side][index];
  if(!t)return Promise.resolve();
  const before=previewTerms||new Map();
@@ -211,6 +211,35 @@ function transferAcross(side,index,at,dropPoint=null,previewEqualsRect=null,prev
  render();
  // The landing space already moved the equals sign into its preview position.
  // Keep it there across the DOM rebuild; do not flash it back to the old layout.
+ if(groupTwoStage){
+  // Stage 1: place the grouped quantity directly into its preview landing
+  // position. Freeze the entire equation at the preview's equals position.
+  // Stage 2: translate the WHOLE equation as a single unit to its centered
+  // resting position, so no individual term snaps back or races ahead.
+  const finalEquals=document.getElementById('equals')?.getBoundingClientRect();
+  const offsetX=previewEqualsRect&&finalEquals?previewEqualsRect.left-finalEquals.left:0;
+  const offsetY=previewEqualsRect&&finalEquals?previewEqualsRect.top-finalEquals.top:0;
+  eqEl.style.transition='none';
+  eqEl.style.transform='translate('+offsetX+'px,'+offsetY+'px)';
+  const moved=eqEl.querySelector('.term[data-side="'+other+'"][data-index="'+at+'"]');
+  if(moved){
+   moved.style.opacity='0';
+   moved.animate([{opacity:0},{opacity:1}],{duration:260,easing:'ease-out',fill:'forwards'}).finished.then(()=>{moved.style.opacity='';}).catch(()=>{moved.style.opacity='';});
+  }
+  locked=true;
+  return new Promise(resolve=>setTimeout(resolve,280)).then(async()=>{
+   const anim=eqEl.animate([
+    {transform:'translate('+offsetX+'px,'+offsetY+'px)'},
+    {transform:'translate(0px,0px)'}
+   ],{duration:950,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
+   await anim.finished.catch(()=>{});
+   anim.cancel();
+   eqEl.style.transform='';
+   eqEl.style.transition='';
+   locked=false;
+   return autoCombineLikeTerms();
+  });
+ }
  const newEquals=document.getElementById('equals');
  if(previewEqualsRect&&newEquals){
   const finalRect=newEquals.getBoundingClientRect();
@@ -323,7 +352,7 @@ function endGroupDrag(e){
  if(!d.moved){distributeGroup(d.side,d.index);return;}
  if(!d.crossed)return;
  const other=d.side==='left'?'right':'left';
- transferAcross(d.side,d.index,landingAt===null?insertionIndexFor(other,e.clientX):landingAt,dropPoint,previewEqualsRect,previewTerms);
+ transferAcross(d.side,d.index,landingAt===null?insertionIndexFor(other,e.clientX):landingAt,dropPoint,previewEqualsRect,previewTerms,true);
 }
 let distributionReplay=null;
 function hideDistributionReplay(){document.getElementById("replayDistributionBtn").hidden=true;distributionReplay=null;}
