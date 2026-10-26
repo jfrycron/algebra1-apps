@@ -633,6 +633,11 @@ function makeSide(arr,side){
     }
     wrap.appendChild(lane);
   }
+  // A transferred term can leave a null placeholder in the source array.
+  // Empty lanes must not reserve horizontal space beside the equals sign.
+  wrap.querySelectorAll('.lane').forEach(lane=>{
+    if(!lane.children.length)lane.remove();
+  });
   return wrap;
 }
 function render(options={}){eqEl.innerHTML='';eqEl.classList.remove('squeezing','compact-final');eqEl.appendChild(makeSide(state.left,'left'));const equals=document.createElement('span');equals.className='equals';equals.id='equals';equals.textContent='=';eqEl.appendChild(equals);eqEl.appendChild(makeSide(state.right,'right'));if(getDivisionData())eqEl.classList.add('compact-final');if(options.hideTarget){const sel=options.hideTarget.zero?`.zero-target[data-side="${options.hideTarget.side}"]`:`.term[data-side="${options.hideTarget.side}"][data-index="${options.hideTarget.index}"]`;const hidden=eqEl.querySelector(sel);if(hidden)hidden.style.opacity='0';}checkFinal();}
