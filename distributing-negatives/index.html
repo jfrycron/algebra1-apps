@@ -176,22 +176,66 @@ async function autoCombineLikeTerms(){
   const second=eqEl.querySelector('.term[data-side="'+side+'"][data-index="'+j+'"]');
   if(!first||!second){locked=false;continue;}
   const rectA=first.getBoundingClientRect(),rectB=second.getBoundingClientRect();
-  const centerX=(rectA.left+rectA.width/2+rectB.left+rectB.width/2)/2;
-  const animations=[];
-  [first,second].forEach((el,k)=>{
-   const r=k?rectB:rectA,dx=centerX-(r.left+r.width/2);
-   el.style.color='#2475cf';
-   animations.push(el.animate([{transform:'translateX(0)'},{transform:'translateX('+dx+'px)'}],{duration:1100,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'}).finished.catch(()=>{}));
+  const midX=(rectA.left+rectA.width/2+rectB.left+rectB.width/2)/2;
+  const midY=(rectA.top+rectA.height/2+rectB.top+rectB.height/2)/2;
+  // Match the manually initiated combine: blue terms, underline, a
+  // synchronized convergence, and a blue result that dissolves in.
+  const underline=document.createElement('div');
+  underline.className='merge-underline';
+  underline.style.cssText='position:fixed;z-index:10018;pointer-events:none;left:'+Math.min(rectA.left,rectB.left)+'px;top:'+(Math.max(rectA.bottom,rectB.bottom)+3)+'px;width:'+(Math.max(rectA.right,rectB.right)-Math.min(rectA.left,rectB.left))+'px;height:3px;background:#1f75fe;transform-origin:center;';
+  document.body.appendChild(underline);
+  const duration=2400;
+  const animations=[first,second].map((el,k)=>{
+   const r=k?rectB:rectA,dx=midX-(r.left+r.width/2);
+   return el.animate([
+    {transform:'translateX(0)',color:'#1f75fe',opacity:1},
+    {transform:'translateX('+(dx*.55)+'px)',color:'#1f75fe',opacity:1,offset:.55},
+    {transform:'translateX('+dx+'px)',color:'#1f75fe',opacity:0}
+   ],{duration,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
   });
-  await Promise.all(animations);
-  await new Promise(resolve=>setTimeout(resolve,150));
+  const underlineAnimation=underline.animate([
+   {transform:'scaleX(0)',opacity:0},
+   {transform:'scaleX(1)',opacity:1,offset:.20},
+   {transform:'scaleX(.45)',opacity:1,offset:.72},
+   {transform:'scaleX(.1)',opacity:0}
+  ],{duration,easing:'cubic-bezier(.22,.8,.25,1)',fill:'forwards'});
+  await Promise.all([...animations,underlineAnimation].map(x=>x.finished.catch(()=>{})));
+  underline.remove();
+  // Record the current geometry before rebuilding so the remaining equation
+  // translates smoothly instead of snapping into the new centered layout.
+  const previous=new Map();
+  eqEl.querySelectorAll('.term,.equals').forEach(el=>{
+   const key=el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index;
+   previous.set(key,el.getBoundingClientRect());
+  });
   arr[i]=sum===0?null:{v:sum,t:a.t};
   arr.splice(j,1);
-  // Remove empty positions so the entire equation naturally closes its gaps.
   state[side]=arr.filter(Boolean);
   render();
   const result=eqEl.querySelector('.term[data-side="'+side+'"]');
-  if(result)await result.animate([{opacity:0,filter:'blur(5px)'},{opacity:1,filter:'blur(0)'}],{duration:550,easing:'ease-out'}).finished.catch(()=>{});
+  const reflows=[];
+  eqEl.querySelectorAll('.term,.equals').forEach(el=>{
+   const key=el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index;
+   if(el===result)return;
+   const old=previous.get(key);if(!old)return;
+   const now=el.getBoundingClientRect();
+   const dx=old.left+old.width/2-now.left-now.width/2;
+   const dy=old.top+old.height/2-now.top-now.height/2;
+   if(Math.abs(dx)>1||Math.abs(dy)>1)reflows.push(el.animate([
+    {transform:'translate('+dx+'px,'+dy+'px)'},
+    {transform:'translate(0,0)'}
+   ],{duration:850,easing:'cubic-bezier(.22,.8,.25,1)'}).finished.catch(()=>{}));
+  });
+  if(result){
+   const rect=result.getBoundingClientRect();
+   const dx=midX-(rect.left+rect.width/2),dy=midY-(rect.top+rect.height/2);
+   reflows.push(result.animate([
+    {transform:'translate('+dx+'px,'+dy+'px)',opacity:0,color:'#1f75fe',filter:'blur(5px)'},
+    {transform:'translate(0,0)',opacity:1,color:'#1f75fe',filter:'blur(0)',offset:.65},
+    {transform:'translate(0,0)',opacity:1,color:'inherit',filter:'blur(0)'}
+   ],{duration:850,easing:'cubic-bezier(.22,.8,.25,1)'}).finished.catch(()=>{}));
+  }
+  await Promise.all(reflows);
   locked=false;
   return autoCombineLikeTerms();
  }
