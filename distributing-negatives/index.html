@@ -1201,18 +1201,27 @@ function formatValueExpression(values){
   }).join('');
 }
 function substitutedSide(arr,solution){
-  const visible=arr.filter(Boolean);
-  return visible.map((t,i)=>{
-    let core;
-    if(t.t==='x'){
-      const mag=Math.abs(t.v);
-      core=(mag===1?'':String(mag))+'('+formatNumber(solution)+')';
-    }else core=String(Math.abs(t.v));
-    if(i===0)return t.v<0?'−'+core:core;
-    return t.v<0?' − '+core:' + '+core;
-  }).join('');
+ return arr.filter(Boolean).map((t,i)=>{
+  let core;
+  if(t.t==='x'){
+   const mag=Math.abs(t.v);
+   core=(mag===1?'':String(mag))+'('+formatNumber(solution)+')';
+  }else if(t.t==='group'){
+   core=(Math.abs(t.v)===1?'':Math.abs(t.v))+'('+
+    (t.u<0?'−':'')+(Math.abs(t.u)===1?'':Math.abs(t.u))+
+    '('+formatNumber(solution)+')'+(t.vInside<0?' − ':' + ')+Math.abs(t.vInside)+')';
+  }else core=String(Math.abs(t.v));
+  if(i===0)return t.v<0?'−'+core:core;
+  return t.v<0?' − '+core:' + '+core;
+ }).join('');
 }
-function evaluatedValues(arr,solution){return arr.filter(Boolean).map(t=>t.t==='x'?t.v*solution:t.v);}
+function evaluatedValues(arr,solution){
+ return arr.filter(Boolean).map(t=>t.t==='x'?t.v*solution:
+  t.t==='group'?t.v*(t.u*solution+t.vInside):t.v);
+}
+function verifiedTotal(arr,solution){
+ return evaluatedValues(arr,solution).reduce((a,b)=>a+b,0);
+}
 function makeVerificationRow(label,text,extra=''){
   const row=document.createElement('div');row.className='verification-row '+extra;
   row.innerHTML=`<div class="verification-label">${label}</div><div class="verification-math">${text}</div>`;
@@ -1227,15 +1236,16 @@ function runVerification(){
   nextBtn.disabled=true;
   const leftVals=evaluatedValues(original.left,currentSolution);
   const rightVals=evaluatedValues(original.right,currentSolution);
-  const leftTotal=leftVals.reduce((a,b)=>a+b,0);
-  const rightTotal=rightVals.reduce((a,b)=>a+b,0);
+  const leftTotal=verifiedTotal(original.left,currentSolution);
+  const rightTotal=verifiedTotal(original.right,currentSolution);
+  const isCorrect=leftTotal===rightTotal;
   const rows=[
     makeVerificationRow('Original',equationText(original)),
     makeVerificationRow('Substitute',`${substitutedSide(original.left,currentSolution)} = ${substitutedSide(original.right,currentSolution)}`,'substitute'),
     makeVerificationRow('Multiply',`${formatValueExpression(leftVals)} = ${formatValueExpression(rightVals)}`),
     makeVerificationRow('Simplify',`${formatNumber(leftTotal)} = ${formatNumber(rightTotal)}`,'final')
   ];
-  verificationPanel.innerHTML='<div class="verification-card"><button class="verification-close" type="button" aria-label="Close check my work" title="Close">×</button><div class="verification-title">Checking by substitution</div><div class="verification-steps"></div><div class="verification-result">✓ Both sides are equal.</div><div class="verification-controls"><button class="verification-continue" type="button">Continue →</button></div></div>';
+  verificationPanel.innerHTML='<div class="verification-card"><button class="verification-close" type="button" aria-label="Close check my work" title="Close">×</button><div class="verification-title">Checking by substitution</div><div class="verification-steps"></div><div class="verification-result">'+(isCorrect?'✓ Both sides are equal.':'✕ Both sides are not equal.')+'</div><div class="verification-controls"><button class="verification-continue" type="button">Continue →</button></div></div>';
   const steps=verificationPanel.querySelector('.verification-steps');
   // Reserve the full verified layout from the beginning. Every row occupies
   // its final space immediately, but only the current instructional line is
@@ -1274,7 +1284,7 @@ function runVerification(){
       if(visibleIndex===rows.length-1){
         setTimeout(()=>{
           if(run!==verificationRun)return;
-          rows[3].classList.add('equal');
+          if(isCorrect)rows[3].classList.add('equal');
           result.classList.add('show');
           continueBtn.classList.add('finished');
           continueBtn.disabled=true;
@@ -1282,7 +1292,7 @@ function runVerification(){
           checkWorkBtn.textContent='Check Again';
           checkWorkBtn.disabled=false;
           nextBtn.disabled=false;
-          setMessage('The solution makes the original equation true.','good');
+          setMessage(isCorrect?'The solution makes the original equation true.':'The solution does not satisfy the original equation.',isCorrect?'good':'bad');
         },430);
       }else{
         setTimeout(()=>{
