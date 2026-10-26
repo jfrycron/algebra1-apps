@@ -160,12 +160,16 @@ let groupDrag=null;
 async function autoCombineLikeTerms(){
  if(locked)return;
  for(const side of ['left','right']){
-  const arr=state[side],indices=arr.map((t,i)=>t&&t.t!=='group'?i:-1).filter(i=>i>=0);
-  let pair=null;
-  for(let i=0;i<indices.length&&!pair;i++)for(let j=i+1;j<indices.length;j++){
-   if(arr[indices[i]].t===arr[indices[j]].t){pair=[indices[i],indices[j]];break;}
-  }
-  if(!pair)continue;
+  const arr=state[side];
+  const indices=arr.map((t,i)=>t?i:-1).filter(i=>i>=0);
+  // Automatic combining is the last resort, not a shortcut:
+  // exactly two terms on this side, and both must be like terms.
+  // If a constant, group, or any third term remains, students choose
+  // when to combine by dragging the like terms together themselves.
+  if(indices.length!==2)continue;
+  const [firstIndex,secondIndex]=indices;
+  if(arr[firstIndex].t==='group'||arr[firstIndex].t!==arr[secondIndex].t)continue;
+  const pair=[firstIndex,secondIndex];
   locked=true;
   const [i,j]=pair,a=arr[i],b=arr[j],sum=a.v+b.v;
   const first=eqEl.querySelector('.term[data-side="'+side+'"][data-index="'+i+'"]');
