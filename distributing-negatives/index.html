@@ -6,7 +6,7 @@
 *{box-sizing:border-box}body{margin:0;background:#eaf0f4;color:#252b32;font-family:Geist,Arial,sans-serif;transition:background .4s}body.correct{background:#35c765}
 .shell{width:80%;margin:18px auto}header{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap}h1{font-size:clamp(26px,3vw,38px);margin:0}header p{color:#60748a;margin:5px 0 0}.top{display:flex;align-items:center;gap:12px}select,input{font:inherit;border:1px solid #cbd5df;border-radius:12px;padding:12px;background:#fff}.counter{border:1px solid #e5cdbf;border-radius:30px;background:white;padding:12px 18px;font-weight:700}
 .workspace{background:white;border:1px solid #d9e1e6;border-radius:16px;margin-top:18px;min-height:calc(100vh - 148px);padding:26px;display:flex;flex-direction:column;position:relative}
-#history{display:flex;flex-direction:column;align-items:center;gap:11px;margin:32px 0 12px}.eqrow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;width:100%;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(32px,4.7vw,62px);line-height:1.25;min-height:1.4em}.eqrow.old{color:#788391;font-size:clamp(25px,3vw,40px)}.eqside{display:flex;align-items:center;gap:.09em;min-height:1.4em}.eqside.left{justify-content:flex-end}.eqside.right{justify-content:flex-start}.equals{padding:0 .28em}.term{display:inline-flex;align-items:center;white-space:nowrap;border-radius:9px;padding:2px 4px;cursor:grab;touch-action:none;user-select:none;transition:background .2s}.term:hover{background:#edf2fa}.term.dragging{opacity:.35}.term.drop-target{background:#e5f4eb;outline:2px solid #68a988}.term.group{color:#252b32}.term .coef{color:#ae5625}.term .paren{color:inherit}.term .signed{white-space:pre}.eqrow.old .term{cursor:default;pointer-events:none}.eqrow.old .coef{color:inherit}
+#history{display:flex;justify-content:center;align-items:center;margin:85px 0 12px;min-height:160px}.eqrow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;width:100%;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(32px,4.7vw,62px);line-height:1.25;min-height:1.4em}.eqrow.old{color:#788391;font-size:clamp(25px,3vw,40px)}.eqside{display:flex;align-items:center;gap:.09em;min-height:1.4em}.eqside.left{justify-content:flex-end}.eqside.right{justify-content:flex-start}.equals{padding:0 .28em}.term{display:inline-flex;align-items:center;white-space:nowrap;border-radius:9px;padding:2px 4px;cursor:grab;touch-action:none;user-select:none;transition:background .2s}.term:hover{background:#edf2fa}.term.dragging{opacity:.35}.term.drop-target{background:#e5f4eb;outline:2px solid #68a988}.drop-space{height:1.18em;width:0;flex:0 0 0;opacity:0;border:2px dashed transparent;border-radius:9px;transition:width .3s ease,flex-basis .3s ease,opacity .3s ease;pointer-events:none}.drop-space.active{width:var(--slot-width);flex-basis:var(--slot-width);opacity:1;border-color:#93bba4;background:#eff8f2}.term.group{color:#252b32}.term .coef{color:#ae5625}.term .paren{color:inherit}.term .signed{white-space:pre}.eqrow.old .term{cursor:default;pointer-events:none}.eqrow.old .coef{color:inherit}
 #gate{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:22px auto}#gate input{width:125px;text-align:center}#status{min-height:24px;text-align:center;color:#a34226;font-weight:600;margin:10px 0}#instruction{text-align:center;color:#66778a;font-size:16px;max-width:780px;margin:12px auto}#actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:auto;padding-top:30px}button{font:inherit;border:0;border-radius:13px;padding:14px 22px;background:#237a4c;color:white;font-weight:750;cursor:pointer}button.alt{background:#f1e6dd;color:#422c22}button:disabled{opacity:.45;cursor:default}#divide{display:none;text-align:center;margin:16px auto;background:#eef3f7;border-radius:14px;padding:14px;max-width:480px}#divide input{width:90px;text-align:center;margin:0 10px}#divide button{padding:10px 15px}#ghost{position:fixed;z-index:1000;pointer-events:none;font-family:"Cambria Math",Cambria,Georgia,serif;font-size:clamp(32px,4.7vw,62px);color:#b75e23;opacity:.8;display:none;transform:translate(-50%,-50%);white-space:nowrap}#overlay{position:fixed;inset:0;pointer-events:none;z-index:1100;overflow:visible}#overlay path{fill:none;stroke:#b75e23;stroke-width:3;stroke-dasharray:7 6}#overlay text{font:700 30px "Cambria Math",Cambria,serif;fill:#b75e23}#overlay circle{fill:#efb446}#final{font-size:23px;font-weight:800;color:#206a42;text-align:center;margin:10px} [hidden]{display:none!important}
 @media(max-width:900px){.shell{width:95%}.workspace{padding:15px}.eqrow{font-size:clamp(24px,5.5vw,45px)}}
 </style></head><body><div class="shell"><header><div><h1>Solving Equations: Distributing Negatives</h1></div><div class="top"><select id="mode"><option value="mixed">Mixed Negatives</option><option value="coefficient">Negative Coefficients</option><option value="invisible">Invisible −1</option></select><div class="counter" id="count">Equations Solved: 0</div></div></header>
@@ -32,7 +32,7 @@ function copyState(){return {left:state.left.map(clone),right:state.right.map(cl
 function txt(t){if(t.kind==='num')return String(Math.abs(t.value));if(t.kind==='x')return vstr(t.value);let inside=(t.u<0?'−':'')+vstr(t.u)+(t.v<0?' − ':' + ')+Math.abs(t.v);return (Math.abs(t.value)===1?'':Math.abs(t.value))+'('+inside+')'}
 function full(t,first){return signed(t.value,first)+txt(t)}
 function showRow(s,old=false){
- const row=document.createElement('div');row.className='eqrow'+(old?' old':'');
+ const row=document.createElement('div');row.className='eqrow';
  for(const side of ['left','right']){
   const box=document.createElement('div');box.className='eqside '+side;box.dataset.side=side;
   if(!s[side].length)box.textContent='0';
@@ -42,15 +42,14 @@ function showRow(s,old=false){
     const inner=(t.u<0?'−':'')+vstr(t.u)+(t.v<0?' − ':' + ')+Math.abs(t.v);
     span.innerHTML='<span class="coef">'+sign+coefficient+'</span><span class="paren">('+inner+')</span>';
    }else span.textContent=full(t,i===0);
-   if(!old)span.addEventListener('pointerdown',startDrag);box.append(span)});
+   span.addEventListener('pointerdown',startDrag);box.append(span)});
   if(side==='right'){const eq=document.createElement('span');eq.className='equals';eq.textContent='=';row.append(eq)}
   row.append(box);
  }
  return row;
 }
 function render(note=''){
- const h=$('history');const old=h.querySelector('.eqrow:not(.old)');if(old){old.classList.add('old');old.querySelectorAll('.term').forEach(t=>t.replaceWith(t.cloneNode(true)))}
- h.append(showRow(state));$('status').textContent=note;
+ const h=$('history');h.replaceChildren(showRow(state));$('status').textContent=note;
  $('divide').style.display='none';checkDone();
 }
 function checkDone(){
@@ -88,34 +87,80 @@ function startDrag(e){
  node.classList.add('dragging');node.addEventListener('pointermove',onMove);node.addEventListener('pointerup',onUp,{once:true});node.addEventListener('pointercancel',cancelDrag,{once:true});
 }
 function moveGhost(e){$('ghost').style.left=e.clientX+'px';$('ghost').style.top=e.clientY+'px'}
-function onMove(e){if(!drag)return;drag.x=e.clientX;drag.y=e.clientY;if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>10)drag.moved=true;moveGhost(e);
- const left=document.querySelector('.eqrow:not(.old) .eqside.left').getBoundingClientRect();
- const right=document.querySelector('.eqrow:not(.old) .eqside.right').getBoundingClientRect();
- const crossed=drag.side==='left'?e.clientX>left.right:e.clientX<right.left;
+let slot=null;
+function clearSlot(){if(slot){slot.remove();slot=null}}
+function landingSide(x){
+ const eq=document.querySelector('.eqrow .equals').getBoundingClientRect();
+ return x<eq.left?'left':x>eq.right?'right':null;
+}
+function placeSlot(side,afterIndex){
+ if(!drag)return;
+ const box=document.querySelector('.eqrow .eqside.'+side);if(!box)return;
+ const terms=[...box.querySelectorAll('.term')];
+ const anchor=terms[afterIndex]||null;
+ if(slot&&slot.parentElement===box&&slot.dataset.after===String(afterIndex))return;
+ clearSlot();slot=document.createElement('span');slot.className='drop-space';slot.dataset.after=afterIndex;
+ slot.style.setProperty('--slot-width',Math.max(65,drag.node.getBoundingClientRect().width+16)+'px');
+ if(anchor)anchor.after(slot);else box.prepend(slot);
+ requestAnimationFrame(()=>slot&&slot.classList.add('active'));
+}
+function onMove(e){
+ if(!drag)return;
+ drag.x=e.clientX;drag.y=e.clientY;
+ if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>10)drag.moved=true;
+ moveGhost(e);
+ const side=landingSide(e.clientX);
+ const crossed=side&&side!==drag.side;
  $('ghost').textContent=crossed?full({...drag.t,value:-drag.t.value},false):full(drag.t,drag.index===0);
  $('ghost').style.color=crossed?'#a8481d':'#252b32';
  document.querySelectorAll('.drop-target').forEach(n=>n.classList.remove('drop-target'));
- const hit=document.elementFromPoint(e.clientX,e.clientY);if(hit){const term=hit.closest('.term');if(term&&term!==drag.node)term.classList.add('drop-target')}
-}
-function cancelDrag(){if(!drag)return;drag.node.classList.remove('dragging');drag.node.removeEventListener('pointermove',onMove);$('ghost').style.display='none';document.querySelectorAll('.drop-target').forEach(n=>n.classList.remove('drop-target'));drag=null}
-async function onUp(e){
- if(!drag)return;const d=drag;const hit=document.elementFromPoint(e.clientX,e.clientY),target=hit&&hit.closest('.term'),box=hit&&hit.closest('.eqside');cancelDrag();
- if(!d.moved){if(d.t.kind==='x')openDivide(d);return}
- const from=d.side,to=from==='left'?'right':'left',t=d.t;
- // A group dragged onto its own parentheses should distribute.
- // Dropping coefficient into its own parentheses distributes; hit-test by right half of group.
- if(t.kind==='group'&&target&&target.dataset.side===from&&+target.dataset.index===d.index){await distribute(d);return}
- // When dragging the same group, pointer hit-test can resolve its own element even after crossing; use bounding rect.
- if(t.kind==='group'&&d.node.getBoundingClientRect().contains(e.clientX,e.clientY)&&e.clientX>d.node.getBoundingClientRect().left+d.node.getBoundingClientRect().width*.42){await distribute(d);return}
- if((box&&box.dataset.side===to)||(from==='left'&&e.clientX>document.querySelector('.eqrow:not(.old) .equals').getBoundingClientRect().right)||(from==='right'&&e.clientX<document.querySelector('.eqrow:not(.old) .equals').getBoundingClientRect().left)){const next=copyState();next[from].splice(d.index,1);next[to].push({...clone(t),value:-t.value});state=next;render();return}
- if(target&&target.dataset.side===from&&+target.dataset.index!==d.index){
-  const j=+target.dataset.index,other=state[from][j];
-  if(t.kind===other.kind&&t.kind!=='group'){
-   const next=copyState();next[from][j].value+=t.value;next[from].splice(d.index,1);next[from]=next[from].filter(q=>q.value!==0);
-   state=next;render();return;
-  }
+ const hit=document.elementFromPoint(e.clientX,e.clientY),target=hit&&hit.closest('.term');
+ const groupSelf=drag.t.kind==='group'&&drag.node.getBoundingClientRect().contains(e.clientX,e.clientY)&&e.clientX>drag.node.getBoundingClientRect().left+drag.node.getBoundingClientRect().width*.42;
+ if(groupSelf){clearSlot();drag.node.classList.add('drop-target');return}
+ if(!side){clearSlot();return}
+ if(target&&target!==drag.node&&target.dataset.side===side&&target.dataset.index!==undefined){
+   const other=state[side][+target.dataset.index];
+   if(side===drag.side&&other.kind===drag.t.kind&&other.kind!=='group'){clearSlot();target.classList.add('drop-target');return}
  }
- $('status').textContent='That move does not simplify the equation. Try another.';
+ if(side!==drag.side){
+   const box=document.querySelector('.eqrow .eqside.'+side);
+   const terms=[...box.querySelectorAll('.term')];
+   const i=terms.findIndex(n=>e.clientX<n.getBoundingClientRect().left+n.getBoundingClientRect().width/2);
+   placeSlot(side,i===-1?terms.length-1:i-1);
+ }else clearSlot();
+}
+function cancelDrag(){
+ if(!drag)return;
+ drag.node.classList.remove('dragging');drag.node.removeEventListener('pointermove',onMove);
+ $('ghost').style.display='none';document.querySelectorAll('.drop-target').forEach(n=>n.classList.remove('drop-target'));
+ clearSlot();drag=null;
+}
+async function onUp(e){
+ if(!drag)return;
+ const d=drag,from=d.side,to=from==='left'?'right':'left',t=d.t;
+ const target=document.elementFromPoint(e.clientX,e.clientY)?.closest('.term');
+ const side=landingSide(e.clientX);
+ const dest=slot&&slot.parentElement?.dataset.side===to?Number(slot.dataset.after)+1:null;
+ const rect=d.node.getBoundingClientRect();
+ const selfDist=t.kind==='group'&&rect.contains(e.clientX,e.clientY)&&e.clientX>rect.left+rect.width*.42;
+ // Keep source available while the distribution animation runs.
+ if(selfDist){cancelDrag();await distribute(d);return}
+ cancelDrag();
+ if(!d.moved){if(t.kind==='x')openDivide(d);return}
+ if(side===to){
+   const next=copyState();next[from].splice(d.index,1);
+   const moved={...clone(t),value:-t.value};
+   const at=dest===null?next[to].length:Math.max(0,Math.min(dest,next[to].length));
+   next[to].splice(at,0,moved);
+   state=next;render();return;
+ }
+ if(target&&target!==d.node&&target.dataset.side===from){
+   const j=Number(target.dataset.index),other=state[from][j];
+   if(t.kind===other.kind&&t.kind!=='group'){
+     const next=copyState();next[from][j].value+=t.value;next[from].splice(d.index,1);
+     next[from]=next[from].filter(q=>q.value!==0);state=next;render();return;
+   }
+ }
 }
 function openDivide(d){
  const other=d.side==='left'?'right':'left';
