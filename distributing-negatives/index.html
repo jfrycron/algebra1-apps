@@ -607,6 +607,7 @@ function moveDrag(e){
     ghost.classList.toggle('crossed',nowCrossed);
     crossNote.classList.toggle('show',nowCrossed);
     clearInsertion(true);
+    clearGroupLanding();
   }
   document.querySelectorAll('.term.target,.zero-target.target').forEach(x=>x.classList.remove('target'));
   let target=null;
@@ -622,6 +623,7 @@ function moveDrag(e){
   }
   drag.target=target;
   if(target){
+    clearGroupLanding();
     target.classList.add('target');
     const moved={v:drag.crossed?-drag.originalV:drag.originalV,t:drag.type};
     showInsertion(target,moved);
@@ -629,8 +631,8 @@ function moveDrag(e){
     // Any term may cross the equals sign, even if the destination has
     // no like term. Open a landing slot rather than rejecting the move.
     const other=drag.side==='left'?'right':'left';
-    showGroupLanding(other,insertionIndexFor(other,e.clientX),{v:-drag.originalV,t:drag.type});
     clearInsertion(true);
+    showGroupLanding(other,insertionIndexFor(other,e.clientX),{v:-drag.originalV,t:drag.type});
   }else{clearInsertion(true);clearGroupLanding();}
 }
 function cleanup(preserveInsertion=false){
@@ -652,6 +654,7 @@ function endDrag(){
     cleanup();clearGroupLanding();transferAcross(d.side,d.index,at,{x,y});return;
   }
   if(!d.target){
+    clearGroupLanding();
     cleanup();
     setMessage(d.crossed?'Drop it into the space beside the like term on the other side.':'Drop it into the space beside a like term.','bad');
     return;
