@@ -196,11 +196,11 @@ async function autoCombineLikeTerms(){
   return autoCombineLikeTerms();
  }
 }
-function transferAcross(side,index,at,dropPoint=null,previewEqualsRect=null){
+function transferAcross(side,index,at,dropPoint=null,previewEqualsRect=null,previewTerms=null){
  const other=side==='left'?'right':'left',t=state[side][index];
  if(!t)return Promise.resolve();
- const before=new Map();
- eqEl.querySelectorAll('.term,.equals').forEach(el=>before.set(el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index,el.getBoundingClientRect()));
+ const before=previewTerms||new Map();
+ if(!previewTerms)eqEl.querySelectorAll('.term').forEach(el=>before.set(el.dataset.side+'-'+el.dataset.index,el.getBoundingClientRect()));
  // Preserve the equal sign's *preview* location, before removing the landing slot.
  previewEqualsRect=previewEqualsRect||document.getElementById('equals')?.getBoundingClientRect();
  const dest=state[other];
@@ -317,11 +317,13 @@ function endGroupDrag(e){
  const landing=document.getElementById('groupLanding');
  const landingAt=landing?Number(landing.dataset.at):null;
  const previewEqualsRect=document.getElementById('equals')?.getBoundingClientRect();
+ const previewTerms=new Map();
+ eqEl.querySelectorAll('.term').forEach(el=>previewTerms.set(el.dataset.side+'-'+el.dataset.index,el.getBoundingClientRect()));
  clearGroupLanding();
  if(!d.moved){distributeGroup(d.side,d.index);return;}
  if(!d.crossed)return;
  const other=d.side==='left'?'right':'left';
- transferAcross(d.side,d.index,landingAt===null?insertionIndexFor(other,e.clientX):landingAt,dropPoint,previewEqualsRect);
+ transferAcross(d.side,d.index,landingAt===null?insertionIndexFor(other,e.clientX):landingAt,dropPoint,previewEqualsRect,previewTerms);
 }
 let distributionReplay=null;
 function hideDistributionReplay(){document.getElementById("replayDistributionBtn").hidden=true;distributionReplay=null;}
@@ -664,9 +666,11 @@ function endDrag(){
     const x=Number(ghost.style.left.replace('px',''));
     const landing=document.getElementById('groupLanding');
     const previewEqualsRect=document.getElementById('equals')?.getBoundingClientRect();
+    const previewTerms=new Map();
+    eqEl.querySelectorAll('.term').forEach(el=>previewTerms.set(el.dataset.side+'-'+el.dataset.index,el.getBoundingClientRect()));
     const at=landing?Number(landing.dataset.at):insertionIndexFor(other,x);
     const y=Number(ghost.style.top.replace('px',''));
-    cleanup();clearGroupLanding();transferAcross(d.side,d.index,at,{x,y},previewEqualsRect);return;
+    cleanup();clearGroupLanding();transferAcross(d.side,d.index,at,{x,y},previewEqualsRect,previewTerms);return;
   }
   if(!d.target){
     clearGroupLanding();
