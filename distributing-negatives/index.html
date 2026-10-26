@@ -133,19 +133,22 @@ function generateEquation(){
 }
 
 function generateDistributionEquation(){
- // The teaching target is a negative multiplier following another term:
- // e.g. 5x − 2(x + 3) = 12, not an isolated −2(x + 3).
+ // Deliberately mix two distinct distribution misconceptions:
+ // a constant before the multiplier (6 − 2(x + 2)) tempts students
+ // to subtract 6 − 2 first; an x-term before it tests like terms.
+ // Favor the constant-leading type because it is the key teaching target.
+ const constantLeading=Math.random()<.6;
  for(let tries=0;tries<6000;tries++){
   const multiplier=-randomInt(2,5);
   const innerX=randomNonzero(-4,4),innerC=randomNonzero(-7,7);
-  const leadX=randomNonzero(-9,9);
+  const lead=randomNonzero(-9,9);
   const solution=randomNonzero(-9,9);
-  const totalX=leadX+multiplier*innerX;
-  if(totalX===0)continue;
-  const rightValue=totalX*solution+multiplier*innerC;
+  const rightValue=constantLeading
+   ?lead+multiplier*(innerX*solution+innerC)
+   :(lead+multiplier*innerX)*solution+multiplier*innerC;
   if(Math.abs(rightValue)>28||rightValue===0)continue;
   const groupedSide=[
-   {v:leadX,t:'x'},
+   {v:lead,t:constantLeading?'c':'x'},
    {v:multiplier,t:'group',u:innerX,vInside:innerC}
   ];
   const otherSide=[{v:rightValue,t:'c'}];
@@ -153,7 +156,7 @@ function generateDistributionEquation(){
    ?{left:groupedSide,right:otherSide}
    :{left:otherSide,right:groupedSide};
  }
- return {left:[{v:5,t:'x'},{v:-2,t:'group',u:1,vInside:3}],right:[{v:12,t:'c'}]};
+ return {left:[{v:4,t:'c'},{v:-2,t:'group',u:1,vInside:2}],right:[{v:6,t:'c'}]};
 }
 function groupCore(t){return (Math.abs(t.v)===1?'':Math.abs(t.v))+'('+(t.u<0?'−':'')+(Math.abs(t.u)===1?'':Math.abs(t.u))+'x'+(t.vInside<0?' − ':' + ')+Math.abs(t.vInside)+')';}
 let groupDrag=null;
