@@ -245,26 +245,15 @@ function reorderOnSide(side,from,at){
  at=Math.max(0,Math.min(at,arr.length));
  const adjusted=at>from?at-1:at;
  if(adjusted===from)return;
- const oldRects=new Map();
- eqEl.querySelectorAll('.term,.equals').forEach(el=>{
-  oldRects.set(el.classList.contains('equals')?'equals':el.dataset.side+'-'+el.dataset.index,el.getBoundingClientRect());
- });
+ // The landing rectangle already shows the intended destination.
+ // Commit the new order immediately: never animate a term from its old
+ // position to the new one after the mouse is released.
  const [moved]=arr.splice(from,1);
  arr.splice(adjusted,0,moved);
- const oldIndices=arr.map((_,i)=>i<adjusted?(i<from?i:i+1):i===adjusted?from:(i<=from?i-1:i));
  render();
- const anims=[];
- eqEl.querySelectorAll('.term,.equals').forEach(el=>{
-  if(el.classList.contains('equals'))return;
-  const idx=Number(el.dataset.index),original=el.dataset.side===side?oldIndices[idx]:idx;
-  const old=oldRects.get(el.dataset.side+'-'+original);
-  if(!old)return;
-  const now=el.getBoundingClientRect(),dx=old.left+old.width/2-now.left-now.width/2;
-  if(Math.abs(dx)>1)anims.push(el.animate([{transform:'translateX('+dx+'px)'},{transform:'translateX(0)'}],{duration:650,easing:'cubic-bezier(.22,.8,.25,1)'}).finished.catch(()=>{}));
- });
- locked=true;
- Promise.all(anims).then(()=>{locked=false;autoCombineLikeTerms();});
+ autoCombineLikeTerms();
 }
+
 function insertionIndexIgnoringSource(side,x,sourceIndex){
  const terms=[...eqEl.querySelectorAll('.term[data-side="'+side+'"]')].filter(el=>Number(el.dataset.index)!==sourceIndex);
  for(const el of terms){const r=el.getBoundingClientRect();if(x<r.left+r.width/2)return Number(el.dataset.index);}
