@@ -71,7 +71,7 @@ function formatEquation(value){
 $('eq').addEventListener('blur',()=>{$('eq').value=formatEquation($('eq').value)});
 $('eq').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submitEquation();$('eq').blur()}});
 // Select the entire current entry when a student clicks into an input.
-for(const id of ['eq','fig','tot']){
+for(const id of ['fig','tot']){
  const field=$(id);
  field.addEventListener('focus',()=>field.select());
  field.addEventListener('click',()=>field.select());
