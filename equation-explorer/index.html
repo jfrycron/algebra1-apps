@@ -39,7 +39,18 @@ function show(s){$('error').textContent=s}
 function submitEquation(){const next=parse($('eq').value);if(!next){show('Enter a valid linear equation using two variables.');return}$('eq').value=formatEquation($('eq').value);cancelAnimationFrame(animation);animation=null;formula=next;start=1;selected=null;show('');draw()}
 function figure(){if(!formula){show('Enter a valid linear equation using two variables.');return}if($('fig').value.trim()==='')return;let n=Number($('fig').value);animateTo(n)}
 function total(){if(!formula){show('Enter a valid linear equation using two variables.');return}if($('tot').value.trim()==='')return;let target=Number($('tot').value);if(!Number.isFinite(target)){show('Enter a valid total.');return}let {slope,intercept}=formula;if(Math.abs(slope)<1e-12){show('This equation has the same output for every input, so there is no unique location.');return}let input=(target-intercept)/slope,nearest=Math.round(input);if(!Number.isSafeInteger(nearest)||Math.abs(input-nearest)>1e-8*Math.max(1,Math.abs(input))){show('That output does not occur at a whole-number input.');return}animateTo(nearest)}
-$('eq').addEventListener('input',()=>{$('error').textContent=''});$('submitEq').onclick=submitEquation;$('clear').onclick=()=>{$('eq').value='';$('fig').value='';$('tot').value='';start=1;selected=null;formula=null;show('');draw();$('eq').focus()};$('gofig').onclick=figure;$('gotot').onclick=total;$('fig').addEventListener('keydown',e=>{if(e.key==='Enter')figure()});$('tot').addEventListener('keydown',e=>{if(e.key==='Enter')total()});
+// Format the equation immediately while preserving the insertion point.
+function formatLiveEquation(){
+ const field=$('eq'),raw=field.value;
+ const left=field.selectionStart,right=field.selectionEnd;
+ const formatted=formatEquation(raw);
+ if(formatted===raw)return;
+ const caretLeft=formatEquation(raw.slice(0,left)).length;
+ const caretRight=formatEquation(raw.slice(0,right)).length;
+ field.value=formatted;
+ field.setSelectionRange(caretLeft,caretRight);
+}
+$('eq').addEventListener('input',()=>{$('error').textContent='';formatLiveEquation()});$('submitEq').onclick=submitEquation;$('clear').onclick=()=>{$('eq').value='';$('fig').value='';$('tot').value='';start=1;selected=null;formula=null;show('');draw();$('eq').focus()};$('gofig').onclick=figure;$('gotot').onclick=total;$('fig').addEventListener('keydown',e=>{if(e.key==='Enter')figure()});$('tot').addEventListener('keydown',e=>{if(e.key==='Enter')total()});
 rows.addEventListener('wheel',e=>{e.preventDefault();move(e.deltaY>0?1:-1)},{passive:false});rows.addEventListener('keydown',e=>{if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();move(e.key==='ArrowDown'?1:-1)}});let touchY=null;rows.addEventListener('touchstart',e=>{touchY=e.touches[0].clientY},{passive:true});rows.addEventListener('touchend',e=>{if(touchY!==null){let dy=touchY-e.changedTouches[0].clientY;move(Math.round(dy/35));touchY=null}},{passive:true});
 for(const [id,d] of [['up',-1],['down',1]]){const el=$(id);let delay=null,repeat=null;function stop(){clearTimeout(delay);clearInterval(repeat);delay=null;repeat=null}el.addEventListener('pointerdown',e=>{if(e.button!==0&&e.pointerType==='mouse')return;e.preventDefault();stop();el.setPointerCapture(e.pointerId);move(d);delay=setTimeout(()=>{repeat=setInterval(()=>move(d),125)},420)});for(const ev of ['pointerup','pointercancel','lostpointercapture'])el.addEventListener(ev,stop);el.addEventListener('click',e=>e.preventDefault())}
 // Keep mathematical notation legible without moving the cursor during typing.
