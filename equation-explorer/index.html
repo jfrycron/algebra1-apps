@@ -44,6 +44,6 @@ for(const id of ['eq','fig','tot']){
 const tableArea=document.querySelector('.tablearea');
 function syncPanelHeight(){document.querySelector('.content').style.setProperty('--table-stack-height',Math.ceil(tableArea.getBoundingClientRect().height)+'px')}
 window.addEventListener('resize',syncPanelHeight);
-syncPanelHeight();
 draw();
+syncPanelHeight();
 </script></body></html>
