@@ -34,5 +34,11 @@ function total(){if(!formula){show('Enter a valid equation first.');return}if($(
 $('eq').addEventListener('input',()=>{cancelAnimationFrame(animation);animation=null;start=1;selected=null;draw()});$('clear').onclick=()=>{$('eq').value='';$('fig').value='';$('tot').value='';start=1;selected=null;draw();$('eq').focus()};$('gofig').onclick=figure;$('gotot').onclick=total;$('fig').addEventListener('keydown',e=>{if(e.key==='Enter')figure()});$('tot').addEventListener('keydown',e=>{if(e.key==='Enter')total()});
 rows.addEventListener('wheel',e=>{e.preventDefault();move(e.deltaY>0?1:-1)},{passive:false});rows.addEventListener('keydown',e=>{if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();move(e.key==='ArrowDown'?1:-1)}});let touchY=null;rows.addEventListener('touchstart',e=>{touchY=e.touches[0].clientY},{passive:true});rows.addEventListener('touchend',e=>{if(touchY!==null){let dy=touchY-e.changedTouches[0].clientY;move(Math.round(dy/35));touchY=null}},{passive:true});
 for(let [id,d] of [['up',-1],['down',1]]){let el=$(id),timer=null;el.addEventListener('pointerdown',e=>{e.preventDefault();el.setPointerCapture(e.pointerId);move(d);timer=setInterval(()=>move(d),110)});for(let ev of ['pointerup','pointercancel','lostpointercapture'])el.addEventListener(ev,()=>{clearInterval(timer);timer=null})}
+// Select the entire current entry when a student clicks into an input.
+for(const id of ['eq','fig','tot']){
+ const field=$(id);
+ field.addEventListener('focus',()=>field.select());
+ field.addEventListener('click',()=>field.select());
+}
 draw();
 </script></body></html>
