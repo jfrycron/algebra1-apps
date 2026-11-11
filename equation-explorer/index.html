@@ -36,13 +36,13 @@ rows.addEventListener('wheel',e=>{e.preventDefault();move(e.deltaY>0?1:-1)},{pas
 for(let [id,d] of [['up',-1],['down',1]]){let el=$(id),timer=null;el.addEventListener('pointerdown',e=>{e.preventDefault();el.setPointerCapture(e.pointerId);move(d);timer=setInterval(()=>move(d),110)});for(let ev of ['pointerup','pointercancel','lostpointercapture'])el.addEventListener(ev,()=>{clearInterval(timer);timer=null})}
 // Keep mathematical notation legible without moving the cursor during typing.
 function formatEquation(value){
- const compact=value.replace(/\\s+/g,'').replace(/[−–]/g,'-');
+ const compact=value.replace(/\s+/g,'').replace(/[−–]/g,'-');
  let out='';
  for(let i=0;i<compact.length;i++){
   const c=compact[i];
   if(c==='='||c==='+'||c==='-'){
    const prev=compact[i-1]||'';
-   const unary=(c==='+'||c==='-')&&(i===0||/[=+\\-*/^(]/.test(prev));
+   const unary=(c==='+'||c==='-')&&(i===0||' =+-*/^('.includes(prev));
    if(unary){out+=c;continue}
    out+=' '+(c==='-'?'−':c)+' ';
   }else{out+=c}
