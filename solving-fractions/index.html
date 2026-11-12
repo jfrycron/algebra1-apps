@@ -24,22 +24,22 @@ const T=(id,value,x,y,accent=false)=>({id,type:'text',value:String(value),x,y,ac
 const L=(id,x1,y1,x2,y2,accent=false,slash=false)=>({id,type:'line',x1,y1,x2,y2,accent,slash});
 function F(id,n,d,x,accent=false){return [T(id+'n',n,x,111,accent),L(id+'bar',x-29,154,x+29,154,accent),T(id+'d',d,x,197,accent)]}
 function scene(s,{a,b,c}){
- let r=[],add=(...v)=>r.push(...v.flat()),left=365,eq=505,right=650;
- const original=()=>add(...F('coef',a,b,left),T('x','x',left+54,154),T('eq','=',eq,154));
+ let r=[],add=(...v)=>r.push(...v.flat()),left=390,eq=505,right=615;
+ const original=()=>add(...F('coef',a,b,left),T('x','x',left+43,154),T('eq','=',eq,154));
  if(s===0){original();add(T('constant',c,right,154))}
  if(s>=1&&s<=5){
    original();
-   add(...F('recL',b,a,264,true),T('dotL','·',311,154,true),T('dotR','·',right+62,154,true),...F('recR',b,a,right+115,true));
+   add(...F('recL',b,a,286,true),T('dotL','·',334,154,true),T('dotR','·',right+53,154,true),...F('recR',b,a,right+105,true));
    add(T('constant',c,right,s===1?154:111));
    if(s>=2)add(L('cbar',right-29,154,right+29,154),T('one','1',right,197));
-   if(s>=3)add(L('slashB1',left-13,212,left+13,181,true,true),L('slashB2',264-13,127,264+13,96,true,true));
+   if(s>=3)add(L('slashB1',left-13,212,left+13,181,true,true),L('slashB2',286-13,127,286+13,96,true,true));
    if(s>=4)add(L('slashA1',left-13,127,left+13,96,true,true),L('slashA2',264-13,212,264+13,181,true,true));
  }
  if(s===5){r=r.filter(i=>!['recLn','recLd','recLbar','coefn','coefd','coefbar','dotL','slashB1','slashB2','slashA1','slashA2'].includes(i.id));}
  if(s>=6){
    add(T('x','x',left+54,154),T('eq','=',eq,154));
    if(s===6){add(T('constant',c,right,111),L('cbar',right-29,154,right+29,154),T('one','1',right,197),T('dotR','·',right+62,154,true),...F('recR',b,a,right+115,true))}
-   if(s===7)add(...F('product',c*b,a,right+52));
+   if(s===7)add(...F('product',c*b,a,right+45));
    if(s===8)add(T('answer',c*b/a,right+52,154));
  }
  return r;
