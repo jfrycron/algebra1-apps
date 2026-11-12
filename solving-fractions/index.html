@@ -68,8 +68,21 @@ function draw(target,animate=true){
       if(animate){el.animate([{opacity:1},{opacity:0}],{duration:duration*.5,fill:'forwards'});replacement.animate([{opacity:0},{opacity:1}],{delay:duration*.5,duration:duration*.5,fill:'both'})}
       el.dataset.id='retiring-'+item.id; 
     }else{
-      if(animate)el.animate([from,to],{duration,fill:'both',easing:'ease-in-out'});
       for(const [k,v] of Object.entries(to))el.setAttribute(k,v);
+      if(animate){
+        if(item.type==='text' && (from.x!==to.x || from.y!==to.y)){
+          // SVG geometry attributes do not interpolate reliably with WAAPI.
+          // Translate the SAME text element from its former visual position.
+          const dx=from.x-to.x,dy=from.y-to.y;
+          el.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0px,0px)'}],{duration,fill:'both',easing:'ease-in-out'});
+        }else if(item.type==='line'){
+          // Keep stationary fraction bars stable; newly appearing bars fade in.
+          if(from.x1!==to.x1||from.x2!==to.x2||from.y1!==to.y1||from.y2!==to.y2){
+            const dx=from.x1-to.x1,dy=from.y1-to.y1;
+            el.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'translate(0px,0px)'}],{duration,fill:'both',easing:'ease-in-out'});
+          }
+        }
+      }
     }
   }
  }
