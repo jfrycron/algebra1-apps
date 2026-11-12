@@ -24,6 +24,7 @@ const T=(id,value,x,y,accent=false)=>({id,type:'text',value:String(value),x,y,ac
 const L=(id,x1,y1,x2,y2,accent=false,slash=false)=>({id,type:'line',x1,y1,x2,y2,accent,slash});
 function F(id,n,d,x,accent=false){return [T(id+'n',n,x,111,accent),L(id+'bar',x-23,154,x+23,154,accent),T(id+'d',d,x,197,accent)]}
 function scene(s,{a,b,c}){
+ if(s>=6)s+=1; // Skip redundant realignment scene.
  let r=[],add=(...v)=>r.push(...v.flat()),left=388,eq=513,right=615;
  const original=()=>add(...F('coef',a,b,left),T('x','x',left+48,154),T('eq','=',eq,154));
  if(s===0){original();add(T('constant',c,right,154))}
@@ -92,8 +93,8 @@ function draw(target,animate=true){
  }
  step=target;
  document.getElementById('back').disabled=step===0;
- document.getElementById('next').textContent=step===8?(example===2?'Start over ↺':'Next example →'):'Continue →';
- document.getElementById('dots').innerHTML=Array.from({length:9},(_,i)=>'<span class="dot '+(i===step?'active':'')+'"></span>').join('');
+ document.getElementById('next').textContent=step===7?(example===2?'Start over ↺':'Next example →'):'Continue →';
+ document.getElementById('dots').innerHTML=Array.from({length:8},(_,i)=>'<span class="dot '+(i===step?'active':'')+'"></span>').join('');
  setTimeout(()=>{if(token!==serial)return;board.replaceChildren(...next.map(element));busy=false},animate?duration+50:0);
 }
 function selectExample(n){if(busy)return;example=n;step=0;serial++;board.replaceChildren();document.querySelectorAll('[data-example]').forEach(b=>b.classList.toggle('active',Number(b.dataset.example)===n));draw(0,false)}
@@ -105,9 +106,9 @@ document.getElementById('next').onclick=()=>{
    for(const el of [...board.children])el.getAnimations().forEach(a=>a.cancel());
    board.replaceChildren(...scene(step,examples[example]).map(element));
    busy=false;
-   if(step===8)selectExample((example+1)%examples.length);
+   if(step===7)selectExample((example+1)%examples.length);
    else draw(step+1,false);
- }else if(step===8)selectExample((example+1)%examples.length);
+ }else if(step===7)selectExample((example+1)%examples.length);
  else draw(step+1);
 };
 document.getElementById('back').onclick=()=>{
