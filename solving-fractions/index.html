@@ -92,7 +92,7 @@ function draw(target,animate=true){
    else el.remove();
  }
  step=target;
- document.getElementById('back').disabled=step===0;
+ document.getElementById('back').disabled=step===0&&example===0;
  document.getElementById('next').textContent=step===7?(example===2?'Start over ↺':'Next example →'):'Continue →';
  document.getElementById('dots').innerHTML=Array.from({length:8},(_,i)=>'<span class="dot '+(i===step?'active':'')+'"></span>').join('');
  setTimeout(()=>{if(token!==serial)return;board.replaceChildren(...next.map(element));busy=false},animate?duration+50:0);
@@ -112,15 +112,21 @@ document.getElementById('next').onclick=()=>{
  else draw(step+1);
 };
 document.getElementById('back').onclick=()=>{
- if(step===0)return;
+ if(step===0&&example===0)return;
  if(busy){
-   // A second Back press interrupts the current transition immediately.
    serial++;
    for(const el of [...board.children])el.getAnimations().forEach(a=>a.cancel());
    board.replaceChildren(...scene(step,examples[example]).map(element));
    busy=false;
-   draw(step-1,false);
- }else draw(step-1);
+ }
+ if(step===0){
+   example--;
+   step=7;
+   serial++;
+   board.replaceChildren();
+   document.querySelectorAll('[data-example]').forEach(b=>b.classList.toggle('active',Number(b.dataset.example)===example));
+   draw(7,false);
+ }else draw(step-1,!busy);
 };
 document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='Enter'){if(e.target.tagName!=='BUTTON')document.getElementById('next').click()}if(e.key==='ArrowLeft')document.getElementById('back').click()});
 draw(0,false);
