@@ -24,8 +24,8 @@ const T=(id,value,x,y,accent=false)=>({id,type:'text',value:String(value),x,y,ac
 const L=(id,x1,y1,x2,y2,accent=false,slash=false)=>({id,type:'line',x1,y1,x2,y2,accent,slash});
 function F(id,n,d,x,accent=false){return [T(id+'n',n,x,111,accent),L(id+'bar',x-23,154,x+23,154,accent),T(id+'d',d,x,197,accent)]}
 function scene(s,{a,b,c}){
- let r=[],add=(...v)=>r.push(...v.flat()),left=405,eq=502,right=591;
- const original=()=>add(...F('coef',a,b,left),T('x','x',left+30,154),T('eq','=',eq,154));
+ let r=[],add=(...v)=>r.push(...v.flat()),left=388,eq=513,right=615;
+ const original=()=>add(...F('coef',a,b,left),T('x','x',left+48,154),T('eq','=',eq,154));
  if(s===0){original();add(T('constant',c,right,154))}
  if(s>=1&&s<=5){
    original();
