@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Solving Equations with Fractions</title>
+<style>
+:root{font-family:Inter,Geist,Arial,sans-serif;color:#20272e;background:#f7f9fa}*{box-sizing:border-box}body{margin:0}
+main{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:22px}
+header{width:min(1100px,100%);display:flex;align-items:center;justify-content:space-between;gap:15px}
+h1{font-size:clamp(19px,2.4vw,28px);margin:8px 0;font-weight:750}
+.pill{border:1px solid #d6dfe3;border-radius:40px;background:white;padding:10px 17px;font-weight:700;color:#33434d;cursor:pointer}
+.stage{width:min(1100px,100%);background:white;border:1px solid #e3e9eb;border-radius:24px;min-height:520px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-top:22px;box-shadow:0 10px 30px #19334009;overflow:hidden}
+svg{width:min(100%,1000px);height:auto;overflow:visible}svg text{font-family:Georgia,'Times New Roman',serif;fill:#192b35;font-size:53px;text-anchor:middle;dominant-baseline:middle}svg line{stroke:#192b35;stroke-width:3.3;stroke-linecap:round}.accent text{fill:#ba5c26}.accent line{stroke:#ba5c26}
+.controls{display:flex;gap:18px;margin:8px 0 26px}button.nav{font-size:17px;font-weight:750;padding:14px 32px;border-radius:14px;border:1px solid #ccd7dc;background:white;color:#2a3c43;cursor:pointer}button.next{background:#168b52;color:white;border-color:#168b52}button:disabled{opacity:.28;cursor:default}
+.progress{font-size:13px;color:#8b9aa2;margin-top:12px}.dots{display:flex;gap:7px;margin-bottom:22px}.dot{width:7px;height:7px;background:#d9e1e5;border-radius:100%}.dot.active{background:#168b52}
+@media(max-width:600px){main{padding:12px}.stage{min-height:380px;border-radius:16px}button.nav{padding:12px 24px}}
+</style></head><body><main><header><h1>Solving Equations with Fractions</h1><button class="pill" id="problem">Example 1 of 3 ▾</button></header>
+<section class="stage"><svg id="board" viewBox="0 0 1000 310" aria-label="Animated equation"></svg><div class="progress" id="progress"></div><div class="dots" id="dots"></div><div class="controls"><button class="nav" id="back">← Back</button><button class="nav next" id="next">Continue →</button></div></section></main>
+<script>
+const examples=[{a:3,b:4,c:12},{a:2,b:5,c:15},{a:5,b:6,c:18}];
+let example=0,step=0,busy=false;const board=document.getElementById('board'),NS='http://www.w3.org/2000/svg';
+const node=(tag,attrs={})=>{let e=document.createElementNS(NS,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));return e};
+function text(id,value,x,y,accent=false){return {id,type:'text',value:String(value),x,y,accent}}
+function line(id,x1,y1,x2,y2,accent=false){return {id,type:'line',x1,y1,x2,y2,accent}}
+function fraction(prefix,n,d,x,accent=false){return [text(prefix+'n',n,x,110,accent),line(prefix+'bar',x-36,153,x+36,153,accent),text(prefix+'d',d,x,195,accent)]}
+function scene(s,e){let {a,b,c}=e,r=[],right=690;let put=(...items)=>r.push(...items.flat());
+const base=()=>{put(...fraction('coef',a,b,320),text('x','x',392,153),text('eq','=',500,153))};
+if(s===0){base();put(text('constant',c,right,153));}
+if(s===1){base();put(...fraction('ln',b,a,190,true),text('ldot','·',251,153,true),text('constant',c,right,153),text('rdot','·',747,153,true),...fraction('rn',b,a,825,true));}
+if(s===2||s===3){base();put(...fraction('ln',b,a,190,true),text('ldot','·',251,153,true),text('constant',c,right,110),line('cbar',right-40,153,right+40,153),text('one','1',right,195),text('rdot','·',747,153,true),...fraction('rn',b,a,825,true));
+if(s===3){put(line('cancel1',163,207,217,99,true),line('cancel2',291,207,346,99,true),line('cancel3',164,99,215,207,true),line('cancel4',292,99,346,207,true));}}
+if(s===4){put(text('x','x',392,153),text('eq','=',500,153),text('constant',c,right,110),line('cbar',right-40,153,right+40,153),text('one','1',right,195),text('rdot','·',747,153,true),...fraction('rn',b,a,825,true));}
+if(s===5){put(text('x','x',392,153),text('eq','=',500,153),...fraction('product',c*b,a,730));}
+if(s===6){put(text('x','x',392,153),text('eq','=',500,153),text('answer',c*b/a,730,153));}
+return r}
+function element(item){let e=item.type==='text'?node('text',{x:item.x,y:item.y}):node('line',{x1:item.x1,y1:item.y1,x2:item.x2,y2:item.y2});e.dataset.id=item.id;if(item.accent)e.classList.add('accent');if(item.type==='text')e.textContent=item.value;return e}
+function attr(item){return item.type==='text'?{x:item.x,y:item.y}:{x1:item.x1,y1:item.y1,x2:item.x2,y2:item.y2}}
+function draw(next,animate=true){const old=scene(step,examples[example]),newItems=scene(next,examples[example]);let prev=new Map(old.map(i=>[i.id,i]));let nextMap=new Map(newItems.map(i=>[i.id,i]));let oldEls=new Map([...board.children].map(el=>[el.dataset.id,el]));const duration=950;busy=true;
+for(let item of newItems){let el=oldEls.get(item.id);if(!el){el=element(item);board.append(el);if(animate)el.animate([{opacity:0},{opacity:1}],{duration,fill:'both',easing:'ease-in-out'});}
+else{let was=prev.get(item.id);if(animate&&was){let from=attr(was),to=attr(item);if(was.value!==item.value){el.animate([{opacity:1},{opacity:0}],{duration:duration*.45,fill:'forwards'});let replacement=element(item);replacement.style.opacity='0';board.append(replacement);replacement.animate([{opacity:0},{opacity:1}],{delay:duration*.45,duration:duration*.55,fill:'forwards'});el.remove();el=replacement;}else{el.animate([from,to],{duration,fill:'both',easing:'ease-in-out'});Object.entries(to).forEach(([k,v])=>el.setAttribute(k,v));}}}
+}
+for(let [id,el] of oldEls)if(!nextMap.has(id)){if(animate){let anim=el.animate([{opacity:1},{opacity:0}],{duration:duration*.8,fill:'forwards',easing:'ease-in'});anim.onfinish=()=>el.remove()}else el.remove()}
+step=next;document.getElementById('back').disabled=step===0;document.getElementById('next').textContent=step===6?(example===2?'Start over ↺':'Next example →'):'Continue →';document.getElementById('progress').textContent='';document.getElementById('dots').innerHTML=Array.from({length:7},(_,i)=>'<span class="dot '+(i===step?'active':'')+'"></span>').join('');
+setTimeout(()=>{busy=false;for(let el of board.children){el.getAnimations().forEach(a=>a.cancel());el.style.opacity='';}let ids=new Set(newItems.map(x=>x.id));for(let el of [...board.children])if(!ids.has(el.dataset.id))el.remove()},animate?duration+80:0)}
+document.getElementById('next').onclick=()=>{if(busy)return;if(step===6){example=(example+1)%examples.length;step=0;board.replaceChildren();document.getElementById('problem').textContent='Example '+(example+1)+' of 3 ▾';draw(0,false)}else draw(step+1)};
+document.getElementById('back').onclick=()=>{if(!busy&&step>0)draw(step-1)};
+document.getElementById('problem').onclick=()=>{if(busy)return;example=(example+1)%examples.length;step=0;board.replaceChildren();document.getElementById('problem').textContent='Example '+(example+1)+' of 3 ▾';draw(0,false)};
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='Enter')document.getElementById('next').click();if(e.key==='ArrowLeft')document.getElementById('back').click()});
+draw(0,false);
+</script></body></html>
