@@ -8,7 +8,7 @@ header{width:min(1100px,100%);display:flex;align-items:center;justify-content:sp
 h1{font-size:clamp(19px,2.4vw,28px);margin:8px 0;font-weight:750}
 .pill{border:1px solid #d6dfe3;border-radius:40px;background:white;padding:10px 17px;font-weight:700;color:#33434d;cursor:pointer}
 .stage{width:min(1100px,100%);background:white;border:1px solid #e3e9eb;border-radius:24px;min-height:520px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-top:22px;box-shadow:0 10px 30px #19334009;overflow:hidden}
-svg{width:min(100%,1000px);height:auto;overflow:visible}svg text{font-family:Georgia,'Times New Roman',serif;fill:#192b35;font-size:53px;text-anchor:middle;dominant-baseline:middle}svg line{stroke:#192b35;stroke-width:3.3;stroke-linecap:round}.accent text{fill:#ba5c26}.accent line{stroke:#ba5c26}
+svg{width:min(100%,1000px);height:auto;overflow:visible}svg text{font-family:Georgia,'Times New Roman',serif;fill:#192b35;font-size:59px;font-weight:700;text-anchor:middle;dominant-baseline:middle}svg line{stroke:#192b35;stroke-width:3.8;stroke-linecap:round}.accent text{fill:#ba5c26}.accent line{stroke:#ba5c26}
 .controls{display:flex;gap:18px;margin:8px 0 26px}button.nav{font-size:17px;font-weight:750;padding:14px 32px;border-radius:14px;border:1px solid #ccd7dc;background:white;color:#2a3c43;cursor:pointer}button.next{background:#168b52;color:white;border-color:#168b52}button:disabled{opacity:.28;cursor:default}
 .progress{font-size:13px;color:#8b9aa2;margin-top:12px}.dots{display:flex;gap:7px;margin-bottom:22px}.dot{width:7px;height:7px;background:#d9e1e5;border-radius:100%}.dot.active{background:#168b52}
 @media(max-width:600px){main{padding:12px}.stage{min-height:380px;border-radius:16px}button.nav{padding:12px 24px}}
@@ -30,7 +30,7 @@ if(s===3){put(line('cancel1',163,207,217,99,true),line('cancel2',291,207,346,99,
 if(s===4){put(text('x','x',392,153),text('eq','=',500,153),text('constant',c,right,110),line('cbar',right-40,153,right+40,153),text('one','1',right,195),text('rdot','·',747,153,true),...fraction('rn',b,a,825,true));}
 if(s===5){put(text('x','x',392,153),text('eq','=',500,153),...fraction('product',c*b,a,730));}
 if(s===6){put(text('x','x',392,153),text('eq','=',500,153),text('answer',c*b/a,730,153));}
-return r}
+return r.map(i=>{let out={...i};for(let key of ['x','x1','x2'])if(out[key]!==undefined)out[key]=500+(out[key]-500)*.88;return out})}
 function element(item){let e=item.type==='text'?node('text',{x:item.x,y:item.y}):node('line',{x1:item.x1,y1:item.y1,x2:item.x2,y2:item.y2});e.dataset.id=item.id;if(item.accent)e.classList.add('accent');if(item.type==='text')e.textContent=item.value;return e}
 function attr(item){return item.type==='text'?{x:item.x,y:item.y}:{x1:item.x1,y1:item.y1,x2:item.x2,y2:item.y2}}
 function draw(next,animate=true){const old=scene(step,examples[example]),newItems=scene(next,examples[example]);let prev=new Map(old.map(i=>[i.id,i]));let nextMap=new Map(newItems.map(i=>[i.id,i]));let oldEls=new Map([...board.children].map(el=>[el.dataset.id,el]));const duration=950;busy=true;
