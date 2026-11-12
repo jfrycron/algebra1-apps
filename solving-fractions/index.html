@@ -32,8 +32,8 @@ function scene(s,{a,b,c}){
    add(...F('recL',b,a,286,true),T('dotL','·',334,154,true),T('dotR','·',right+53,154,true),...F('recR',b,a,right+105,true));
    add(T('constant',c,right,s===1?154:111));
    if(s>=2)add(L('cbar',right-23,154,right+23,154),T('one','1',right,197));
-   if(s>=3)add(L('slashB1',left-12,212,left+12,181,true,true),L('slashB2',286-13,127,286+13,96,true,true));
-   if(s>=4)add(L('slashA1',left-12,127,left+12,96,true,true),L('slashA2',264-13,212,264+13,181,true,true));
+   if(s>=3)add(L('slashB1',left-13,211,left+13,183,true,true),L('slashB2',286-13,125,286+13,97,true,true));
+   if(s>=4)add(L('slashA1',left-13,125,left+13,97,true,true),L('slashA2',286-13,211,286+13,183,true,true));
  }
  if(s===5){r=r.filter(i=>!['recLn','recLd','recLbar','coefn','coefd','coefbar','dotL','slashB1','slashB2','slashA1','slashA2'].includes(i.id));}
  if(s>=6){
