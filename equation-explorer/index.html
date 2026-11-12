@@ -11,7 +11,11 @@ function parse(s){
  s=s.replace(/\s+/g,'').replace(/[−–]/g,'-').replace(/×/g,'*');
  const parts=s.split('=');if(parts.length!==2||!parts[0]||!parts[1])return null;
  const vars=[...new Set((s.match(/[a-zA-Z]/g)||[]))];if(vars.length!==2)return null;
- let dep=vars.find(v=>v.toLowerCase()==='y')||vars.find(v=>v.toLowerCase()==='t')||vars.find(v=>v.toLowerCase()!=='f')||vars[1],ind=vars.find(v=>v!==dep);
+ const isolated=parts.map(p=>/^[a-zA-Z]$/.test(p)?p:null).filter(Boolean);
+ let dep;
+ if(isolated.length===1)dep=isolated[0];
+ else dep=vars.find(v=>v.toLowerCase()==='y')||vars.find(v=>v.toLowerCase()==='t')||vars.find(v=>v.toLowerCase()!=='x'&&v.toLowerCase()!=='f')||vars[1];
+ let ind=vars.find(v=>v!==dep);
  function side(expr){
   if(!/^[0-9a-zA-Z+\-*/().^]+$/.test(expr))throw Error('Invalid characters');
   let e=expr.replace(/\^/g,'**').replace(/(\d)([a-zA-Z(])/g,'$1*$2').replace(/([a-zA-Z])(\()/g,'$1*$2').replace(/\)([a-zA-Z0-9(])/g,')*$1');
