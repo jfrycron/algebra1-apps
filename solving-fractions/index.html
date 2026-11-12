@@ -8,7 +8,7 @@ header{width:min(1100px,100%);display:flex;align-items:center;justify-content:sp
 h1{font-size:clamp(19px,2.4vw,28px);margin:8px 0;font-weight:750}
 .pills{display:flex;gap:8px}.pill.active{background:#263e4a;color:white;border-color:#263e4a}.pill{border:1px solid #d6dfe3;border-radius:40px;background:white;padding:10px 17px;font-weight:700;color:#33434d;cursor:pointer}
 .stage{width:min(1100px,100%);background:white;border:1px solid #e3e9eb;border-radius:24px;min-height:520px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-top:22px;box-shadow:0 10px 30px #19334009;overflow:hidden}
-svg{width:min(100%,1000px);height:auto;overflow:visible}svg text{font-family:'Times New Roman',Times,serif;fill:#192b35;font-size:59px;font-weight:700;text-anchor:middle;dominant-baseline:middle}svg line{stroke:#192b35;stroke-width:3.8;stroke-linecap:round}.accent text{fill:#ba5c26}.accent line{stroke:#ba5c26}
+svg{width:min(100%,1000px);height:auto;overflow:visible}svg text{font-family:'Times New Roman',Times,serif;fill:#192b35;font-size:55px;font-weight:400;text-anchor:middle;dominant-baseline:middle}svg line{stroke:#192b35;stroke-width:2.5;stroke-linecap:round}.accent text{fill:#ba5c26}.accent line{stroke:#ba5c26}
 .controls{display:flex;gap:18px;margin:8px 0 26px}button.nav{font-size:17px;font-weight:750;padding:14px 32px;border-radius:14px;border:1px solid #ccd7dc;background:white;color:#2a3c43;cursor:pointer}button.next{background:#168b52;color:white;border-color:#168b52}button:disabled{opacity:.28;cursor:default}
 .progress{font-size:13px;color:#8b9aa2;margin-top:12px}.dots{display:flex;gap:7px;margin-bottom:22px}.dot{width:7px;height:7px;background:#d9e1e5;border-radius:100%}.dot.active{background:#168b52}
 @media(max-width:600px){main{padding:12px}.stage{min-height:380px;border-radius:16px}button.nav{padding:12px 24px}}
@@ -22,18 +22,18 @@ let example=0,step=0,busy=false,serial=0;
 const node=(tag,attrs={})=>{let e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);return e};
 const T=(id,value,x,y,accent=false)=>({id,type:'text',value:String(value),x,y,accent});
 const L=(id,x1,y1,x2,y2,accent=false,slash=false)=>({id,type:'line',x1,y1,x2,y2,accent,slash});
-function F(id,n,d,x,accent=false){return [T(id+'n',n,x,111,accent),L(id+'bar',x-29,154,x+29,154,accent),T(id+'d',d,x,197,accent)]}
+function F(id,n,d,x,accent=false){return [T(id+'n',n,x,111,accent),L(id+'bar',x-23,154,x+23,154,accent),T(id+'d',d,x,197,accent)]}
 function scene(s,{a,b,c}){
- let r=[],add=(...v)=>r.push(...v.flat()),left=390,eq=505,right=615;
- const original=()=>add(...F('coef',a,b,left),T('x','x',left+43,154),T('eq','=',eq,154));
+ let r=[],add=(...v)=>r.push(...v.flat()),left=405,eq=502,right=591;
+ const original=()=>add(...F('coef',a,b,left),T('x','x',left+30,154),T('eq','=',eq,154));
  if(s===0){original();add(T('constant',c,right,154))}
  if(s>=1&&s<=5){
    original();
    add(...F('recL',b,a,286,true),T('dotL','·',334,154,true),T('dotR','·',right+53,154,true),...F('recR',b,a,right+105,true));
    add(T('constant',c,right,s===1?154:111));
-   if(s>=2)add(L('cbar',right-29,154,right+29,154),T('one','1',right,197));
-   if(s>=3)add(L('slashB1',left-13,212,left+13,181,true,true),L('slashB2',286-13,127,286+13,96,true,true));
-   if(s>=4)add(L('slashA1',left-13,127,left+13,96,true,true),L('slashA2',264-13,212,264+13,181,true,true));
+   if(s>=2)add(L('cbar',right-23,154,right+23,154),T('one','1',right,197));
+   if(s>=3)add(L('slashB1',left-12,212,left+12,181,true,true),L('slashB2',286-13,127,286+13,96,true,true));
+   if(s>=4)add(L('slashA1',left-12,127,left+12,96,true,true),L('slashA2',264-13,212,264+13,181,true,true));
  }
  if(s===5){r=r.filter(i=>!['recLn','recLd','recLbar','coefn','coefd','coefbar','dotL','slashB1','slashB2','slashA1','slashA2'].includes(i.id));}
  if(s>=6){
