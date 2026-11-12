@@ -98,7 +98,18 @@ function draw(target,animate=true){
 }
 function selectExample(n){if(busy)return;example=n;step=0;serial++;board.replaceChildren();document.querySelectorAll('[data-example]').forEach(b=>b.classList.toggle('active',Number(b.dataset.example)===n));draw(0,false)}
 document.querySelectorAll('[data-example]').forEach(b=>b.addEventListener('click',()=>selectExample(Number(b.dataset.example))));
-document.getElementById('next').onclick=()=>{if(busy)return;if(step===8)selectExample((example+1)%examples.length);else draw(step+1)};
+document.getElementById('next').onclick=()=>{
+ if(busy){
+   // Repeated Continue immediately skips the current animation and advances.
+   serial++;
+   for(const el of [...board.children])el.getAnimations().forEach(a=>a.cancel());
+   board.replaceChildren(...scene(step,examples[example]).map(element));
+   busy=false;
+   if(step===8)selectExample((example+1)%examples.length);
+   else draw(step+1,false);
+ }else if(step===8)selectExample((example+1)%examples.length);
+ else draw(step+1);
+};
 document.getElementById('back').onclick=()=>{
  if(step===0)return;
  if(busy){
