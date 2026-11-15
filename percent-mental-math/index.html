@@ -58,8 +58,9 @@ function check(){
   next();return;
  }
  const raw=$('answer').value.trim().replace(/[$,\s]/g,'');
- if(!/^\d+(\.\d{0,2})?$/.test(raw)){$('message').textContent='Enter a dollar amount.';return}
+ if(!/^(?:\d+(?:\.\d{0,2})?|\.\d{1,2})$/.test(raw)){$('message').textContent='Enter a dollar amount.';return}
  const given=Math.round(Number(raw)*100),expected=cents*percent/100;
+ $('answer').value=money(given);
  if(given===expected){
   correct++;
   if(stage===6)finalCount++;else streak++;
