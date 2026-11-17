@@ -3,11 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Finding the Slope of a Line on a Graph</title>
+    <title>Identifying the Slope from a Graph</title>
     <script type="module" crossorigin src="/algebra1-apps/find-slope-on-a-graph/assets/github-pages-index-DOxvmQYm.js"></script>
     <link rel="stylesheet" crossorigin href="/algebra1-apps/find-slope-on-a-graph/assets/github-pages-index-BxxUzBTk.css">
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      (() => {
+        const oldTitle = "Finding the Slope of a Line on a Graph";
+        const newTitle = "Identifying the Slope from a Graph";
+        const root = document.getElementById("root");
+        const rename = () => {
+          const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+          let node;
+          while ((node = walker.nextNode())) {
+            if (node.nodeValue.includes(oldTitle)) node.nodeValue = node.nodeValue.replaceAll(oldTitle, newTitle);
+          }
+        };
+        new MutationObserver(rename).observe(root, { childList: true, subtree: true, characterData: true });
+        rename();
+      })();
+    </script>
   </body>
 </html>
