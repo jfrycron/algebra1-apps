@@ -978,6 +978,9 @@ body:has(.success-page) {
 }
 
 /* Simplified two-panel graph-first version */
+/* Remove the extra rounded frame around graph controls; retain outer workspace and graph grid. */
+.panel.graph-panel { border: none; border-radius: 0; }
+
 .layout { grid-template-columns: minmax(480px, 1.65fr) minmax(330px, 1fr); }
 .graph-panel > .new-round-button { position:absolute; top:18px; left:18px; z-index:12; min-height:34px; border:1px solid #b8c7da; border-radius:999px; background:#f7faff; color:#2f5687; padding:6px 12px; font-size:.76rem; font-weight:850; cursor:pointer; }
 .graph .dot { cursor:pointer; pointer-events:all; fill:transparent; stroke:none; }
