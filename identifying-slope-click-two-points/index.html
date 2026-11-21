@@ -986,6 +986,7 @@ body:has(.success-page) {
 .graph-panel > .new-round-button { position:absolute; top:18px; left:18px; z-index:12; min-height:34px; border:1px solid #b8c7da; border-radius:999px; background:#f7faff; color:#2f5687; padding:6px 12px; font-size:.76rem; font-weight:850; cursor:pointer; }
 .graph .dot { cursor:pointer; pointer-events:all; fill:transparent; stroke:none; }
 .graph .dot:hover { fill:transparent; stroke:none; }
+.graph .dot:focus, .graph .dot:focus-visible { outline:none; }
 .graph .dot.selected, .graph .dot.selected:hover { fill:#173a70; stroke:white; stroke-width:2px; }
 @media (max-width: 1100px) { .layout { grid-template-columns: minmax(0,1fr); } .calc-panel { grid-column:auto; } .graph { min-height:500px; } }
 </style></head><body><div id="root"></div><script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script><script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script><script>const { useEffect, useRef, useState } = React;
