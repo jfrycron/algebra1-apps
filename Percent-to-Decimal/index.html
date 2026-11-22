@@ -3,8 +3,28 @@
 </style></head><body><main class="workspace"><header><div><h1>Percent to Decimal</h1></div><span class="pill" id="round">Table 1</span></header><table><thead><tr><th>Decimal</th><th>Percent</th></tr></thead><tbody id="rows"></tbody></table><div class="footer"><button id="action" disabled>Check Answers</button><button id="newTable" type="button">New Table</button></div></main><script>
 const rows=document.getElementById('rows'),action=document.getElementById('action'),roundEl=document.getElementById('round'),newTable=document.getElementById('newTable');
 let round=0,questions=[],seen=new Set(),results=Array(8).fill(false),hasChecked=false;
-const initial=[['.6',60],['.125',12.5],['.29',29],['.009',.9],['.051',5.1],['.899',89.9],['.2375',23.75],['.8',80]];
-function makeQuestions(){if(round===0){initial.forEach(x=>seen.add(x[0]));return initial.map(([d,p])=>({d,p}));}if(seen.size>9800)seen.clear();const next=[];while(next.length<8){const n=1+Math.floor(Math.random()*9999);const d=(n/10000).toString().replace(/^0(?=\.)/,'');if(seen.has(d))continue;seen.add(d);next.push({d,p:n/100});}return next}
+const initial=[['.6',60],['.07',7],['.29',29],['.09',9],['.51',51],['.899',89.9],['.2375',23.75],['.8',80]];
+function makeQuestions(){
+ if(round===0){initial.forEach(x=>seen.add(x[0]));return initial.map(([d,p])=>({d,p}));}
+ const next=[];
+ // Six whole-number percents, one one-decimal percent, and one two-decimal percent.
+ const kinds=['whole','whole','whole','whole','whole','whole','tenths','hundredths'];
+ for(let i=kinds.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[kinds[i],kinds[j]]=[kinds[j],kinds[i]]}
+ for(const kind of kinds){
+  let p,d,key,attempt=0;
+  do{
+   if(kind==='whole')p=Math.floor(Math.random()*100)+1;
+   else if(kind==='tenths')p=(Math.floor(Math.random()*999)+1)/10;
+   else p=(Math.floor(Math.random()*9999)+1)/100;
+   if(kind==='tenths'&&Number.isInteger(p))continue;
+   if(kind==='hundredths'&&Number.isInteger(p*10))continue;
+   d=(p/100).toString().replace(/^0(?=\\.)/,'');
+   key=String(p);attempt++;
+  }while((seen.has(key)||next.some(q=>q.p===p))&&attempt<1000);
+  seen.add(key);next.push({d,p});
+ }
+ return next;
+}
 function inputs(){return [...rows.querySelectorAll('input')]}
 function refresh(){const all=inputs();if(results.every(Boolean)){action.disabled=true;action.textContent='Check Answers';document.body.classList.add('complete');return}action.textContent='Check Answers';action.disabled=all.some(i=>!i.value.trim());}
 function draw(){document.body.classList.remove('complete');questions=makeQuestions();results=Array(8).fill(false);hasChecked=false;roundEl.textContent='Table '+(round+1);rows.innerHTML='';questions.forEach((q,index)=>{const tr=document.createElement('tr');const left=document.createElement('td');const right=document.createElement('td');right.textContent=q.p+'%';const wrap=document.createElement('div');wrap.className='entry';const input=document.createElement('input');input.inputMode='decimal';input.autocomplete='off';input.setAttribute('aria-label','Decimal for '+q.p+' percent');const mark=document.createElement('span');mark.className='mark';mark.setAttribute('aria-live','polite');wrap.append(input,mark);left.append(wrap);tr.append(left,right);rows.append(tr);input.addEventListener('input',()=>{if(!results[index]){input.classList.remove('bad');mark.textContent=''}refresh()});input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const editable=inputs().filter(x=>!x.disabled);const next=editable.find(x=>inputs().indexOf(x)>index)||editable[0];if(next&&next!==input)next.focus();else if(!action.disabled)action.focus()}})});refresh()}
