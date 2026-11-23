@@ -72,7 +72,7 @@ let groupData={},saved={};try{groupData=JSON.parse(localStorage.getItem(KEY))||{
 if(!groupData.rosters||typeof groupData.rosters!=='object')groupData.rosters={'1st Hour':[],'2nd Hour':[],'3rd Hour':[],'4th Hour':[],'5th Hour':[],'6th Hour':[]};
 const today=()=>new Date().toLocaleDateString('en-CA');if(groupData.attendanceDay!==today()){groupData.absent={};groupData.attendanceDay=today();groupData.groups=[];try{localStorage.setItem(KEY,JSON.stringify(groupData))}catch{}}
 const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let selected=Object.keys(groupData.rosters).includes(saved.selected)?saved.selected:(groupData.selected||Object.keys(groupData.rosters)[0]),teacher=false,dragSource=null,suppressClickUntil=0;
+let selected=Object.keys(groupData.rosters).includes(saved.selected)?saved.selected:(groupData.selected||Object.keys(groupData.rosters)[0]),teacher=true,dragSource=null,suppressClickUntil=0;
 const roster=()=>groupData.rosters[selected]||[], absent=()=>new Set((groupData.absent||{})[selected]||[]),present=()=>roster().filter(n=>!absent().has(n));
 function chart(){if(!saved.charts)saved.charts={};if(!saved.charts[selected])saved.charts[selected]={seats:Array(32).fill(null),locks:Array(32).fill(false),blocked:Array(32).fill(false),extra:false};const c=saved.charts[selected];c.seats=Array.from({length:32},(_,i)=>c.seats?.[i]||null);c.locks=Array.from({length:32},(_,i)=>!!c.locks?.[i]);c.blocked=Array.from({length:32},(_,i)=>!!c.blocked?.[i]);return c}
 function save(){saved.selected=selected;try{localStorage.setItem(SEAT_KEY,JSON.stringify(saved))}catch{alert('Browser storage unavailable.')}}function saveAttendance(){try{localStorage.setItem(KEY,JSON.stringify(groupData))}catch{}}
@@ -171,6 +171,6 @@ $('extraToggle').onchange=e=>{const c=chart();if(!e.target.checked&&(c.seats[30]
 $('unlockBtn').onclick=()=>{chart().locks.fill(false);save();render()};$('clearBtn').onclick=()=>{if(confirm('Clear all students from the desks for this class? Blocked desks will stay blocked.')){chart().seats.fill(null);chart().locks.fill(false);save();render()}};$('printBtn').onclick=()=>window.print();$('resetBtn').onclick=()=>{if(confirm('Clear all seat assignments for this class? Blocked desks will stay blocked.')){chart().seats.fill(null);chart().locks.fill(false);save();render()}};
 function fullscreen(on){$('app').classList.toggle('full',on);if(on)document.documentElement.requestFullscreen?.().catch(()=>{});else if(document.fullscreenElement)document.exitFullscreen?.().catch(()=>{})}$('fullBtn').onclick=()=>fullscreen(true);$('fsExit').onclick=()=>fullscreen(false);document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement)$('app').classList.remove('full')});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){dragSource=null;$('modalBackdrop').classList.add('hidden');$('rosterBackdrop').classList.add('hidden');render()}});window.addEventListener('storage',e=>{if(e.key===KEY){renderSelect();render()}});
-renderSelect();render();
+renderSelect();$('chart').classList.add('teacher');$('viewBtn').textContent='Student View';render();
 })();
 </script></body></html>
