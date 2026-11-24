@@ -256,7 +256,7 @@ header p {
 }
 .linear-guide {
   stroke: #172033;
-  stroke-width: 1.75;
+  stroke-width: 2.25;
   stroke-linecap: round;
   opacity: 1;
 }
@@ -1318,7 +1318,7 @@ function Home() {
                                     React.createElement("rect", { x: PAD, y: PAD, width: Q, height: Q })),
                                 React.createElement("mask", { id: "line-break-mask", maskUnits: "userSpaceOnUse", x: "0", y: "0", width: S, height: S },
                                     React.createElement("rect", { x: PAD, y: PAD, width: Q, height: Q, fill: "white" }),
-                                    d.pts.map((point, index) => w.sel.includes(index) ? (React.createElement("circle", { key: index, cx: gx(point.x), cy: gy(point.y), r: "8.5", fill: "black" })) : null)),
+                                    d.pts.map((point, index) => w.sel.includes(index) ? (React.createElement("circle", { key: index, cx: gx(point.x), cy: gy(point.y), r: "7", fill: "black" })) : null)),
                                 React.createElement("marker", { id: "line-arrow", viewBox: "0 0 10 10", refX: "5", refY: "5", markerWidth: "4.2", markerHeight: "4.2", orient: "auto-start-reverse" },
                                     React.createElement("path", { d: "M0 0 10 5 0 10z", fill: "#172033" })),
                                 React.createElement("marker", { id: "amber-arrow", viewBox: "0 0 10 10", refX: "8", refY: "5", markerWidth: "4.3", markerHeight: "4.3", orient: "auto-start-reverse" },
@@ -1336,7 +1336,7 @@ function Home() {
                                 dy !== 0 && React.createElement("line", { x1: gx(a.x), y1: gy(a.y), x2: gx(a.x), y2: gy(b.y), className: "rise animated-rise", pathLength: "1", markerEnd: "url(#amber-arrow)" }),
                                 React.createElement("line", { x1: gx(a.x), y1: gy(b.y), x2: gx(b.x), y2: gy(b.y), className: "run animated-run", pathLength: "1", style: { animationName: "drawSegment, revealRunArrow", animationDuration: "0.55s, 0s", animationTimingFunction: "ease-out, step-end", animationDelay: "0.5s, 1.05s", animationFillMode: "forwards, forwards" } }))),
                             d.pts.map((p, k) => (React.createElement("g", { key: k },
-                                React.createElement("circle", { cx: gx(p.x), cy: gy(p.y), r: "8", role: "button", tabIndex: locked ? -1 : 0, "aria-label": `Select point (${f(p.x)}, ${f(p.y)})`, onClick: () => choose(k), onKeyDown: (event) => { if (event.key === "Enter" || event.key === " ") {
+                                React.createElement("circle", { cx: gx(p.x), cy: gy(p.y), r: w.sel.includes(k) ? "6.5" : "8", role: "button", tabIndex: locked ? -1 : 0, "aria-label": `Select point (${f(p.x)}, ${f(p.y)})`, onClick: () => choose(k), onKeyDown: (event) => { if (event.key === "Enter" || event.key === " ") {
                                         event.preventDefault();
                                         choose(k);
                                     } }, style: { cursor: locked ? "default" : "pointer" }, className: w.sel.includes(k) ? "dot selected" : "dot" }),
