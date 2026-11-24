@@ -67,6 +67,17 @@
 
 /* Larger projected names, with room to wrap longer names. */
 @media screen{.chart .seats .seat.occupied .student-name{font-size:clamp(13px,1.85vw,24px);line-height:1.05;padding:0 2px}.chart .extra .seat.occupied .student-name{font-size:clamp(12px,1.65vw,22px);line-height:1.05;padding:0 2px}}
+
+/* Give the optional back row the same dimensions as the six main rows. */
+@media screen{
+.chart:has(.extra:not(.hidden)) .seats{flex:6 1 0}
+.chart .extra:not(.hidden){flex:1 1 0;height:auto;min-height:0;gap:clamp(4px,1.5vw,22px)}
+.chart .extra .seat{width:calc((100% - 4 * clamp(4px,1.5vw,22px))/5);height:100%;padding-top:clamp(8px,1.4vh,13px)}
+.chart .extra .seat .desktop{height:87%;padding:3px 6px;min-height:0}
+.chart.teacher .extra .seat{padding-top:0;padding-bottom:clamp(8px,1.4vh,13px)}
+.chart .extra .seat.occupied .student-name{font-size:clamp(13px,1.85vw,24px);line-height:1.05;padding:0 2px}
+.chart:has(.extra:not(.hidden)) .seats{flex-basis:calc(5 * clamp(2px,.55vh,7px))}
+}
 </style></head><body><div class="app" id="app"><header class="toolbar"><div class="brand">Seating Chart Generator</div><label>Class <select id="classSelect"></select></label><button class="btn primary" id="shuffleBtn">↻ Shuffle Seats</button><button class="btn" id="clearBtn">Clear</button><button class="btn" id="viewBtn">Teacher View</button><button class="btn" id="fullBtn">⛶ Full Screen</button><div class="settings"><button class="btn" id="settingsBtn" aria-expanded="false">⚙ Settings</button><div class="settings-menu hidden" id="settingsMenu"><button class="btn" id="rosterBtn">Edit Class Roster</button><label><input type="checkbox" id="extraToggle"> Show extra desks (31st and 32nd)</label><button class="btn" id="unlockBtn">Unlock All Seats</button><button class="btn" id="printBtn">Print Seating Chart</button><button class="btn" id="resetBtn">Clear Seating Chart</button><div class="status">Rosters are shared with Random Group Generator in this browser. Changes here also update Random Group Generator.</div></div></div></header><main class="chart" id="chart"><div class="front">FRONT</div><div class="front-fixtures"><div class="smartboard" role="img" aria-label="Overhead view of classroom Smartboard"></div><div class="teaching-cart-marker" aria-label="You are here: teaching cart"><span>TEACHING CART</span></div></div><div class="seats" id="seats"></div><div class="extra" id="extra"></div><div class="back">BACK</div></main><div class="floating"><button class="btn primary" id="fsShuffle">↻ Shuffle</button><button class="btn" id="fsExit">Exit Full Screen</button></div></div>
 <div class="modal-backdrop hidden" id="rosterBackdrop"><div class="modal roster-modal"><h2>Edit Class Roster</h2><p id="rosterHeading"></p><form id="addStudentForm" class="roster-add"><input id="newStudentName" type="text" autocomplete="off" placeholder="Last, First" aria-label="Student name" required><button class="btn primary" type="submit">Add Student</button></form><div id="rosterEditList" class="roster-edit-list"></div><div class="modal-actions"><button class="btn primary" id="rosterDone">Done</button></div></div></div><script>
 (()=>{'use strict';
