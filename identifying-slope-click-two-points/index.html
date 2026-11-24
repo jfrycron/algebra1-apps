@@ -299,6 +299,7 @@ header p {
   animation: drawSegment 0.55s ease-out forwards;
 }
 .animated-run {
+  marker-end: none;
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
   animation: drawSegment 0.55s ease-out 0.5s forwards;
@@ -307,6 +308,9 @@ header p {
   opacity: 0;
   animation: labelIn 0.22s ease-out 1.03s forwards;
   overflow: visible;
+}
+@keyframes revealRunArrow {
+  to { marker-end: url(#blue-arrow); }
 }
 @keyframes drawSegment {
   to {
@@ -1330,7 +1334,7 @@ function Home() {
                             React.createElement("line", { x1: gx(guideEnds[0].x), y1: gy(guideEnds[0].y), x2: gx(guideEnds[1].x), y2: gy(guideEnds[1].y), className: "linear-guide", mask: "url(#line-break-mask)" }),
                             showRays && (React.createElement(React.Fragment, null,
                                 dy !== 0 && React.createElement("line", { x1: gx(a.x), y1: gy(a.y), x2: gx(a.x), y2: gy(b.y), className: "rise animated-rise", pathLength: "1", markerEnd: "url(#amber-arrow)" }),
-                                React.createElement("line", { x1: gx(a.x), y1: gy(b.y), x2: gx(b.x), y2: gy(b.y), className: "run animated-run", pathLength: "1", markerEnd: "url(#blue-arrow)" }))),
+                                React.createElement("line", { x1: gx(a.x), y1: gy(b.y), x2: gx(b.x), y2: gy(b.y), className: "run animated-run", pathLength: "1", style: { animationName: "drawSegment, revealRunArrow", animationDuration: "0.55s, 0s", animationTimingFunction: "ease-out, step-end", animationDelay: "0.5s, 1.05s", animationFillMode: "forwards, forwards" } }))),
                             d.pts.map((p, k) => (React.createElement("g", { key: k },
                                 React.createElement("circle", { cx: gx(p.x), cy: gy(p.y), r: "8", role: "button", tabIndex: locked ? -1 : 0, "aria-label": `Select point (${f(p.x)}, ${f(p.y)})`, onClick: () => choose(k), onKeyDown: (event) => { if (event.key === "Enter" || event.key === " ") {
                                         event.preventDefault();
