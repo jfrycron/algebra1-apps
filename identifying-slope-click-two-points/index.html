@@ -1306,7 +1306,7 @@ function Home() {
                     w.status !== "right" && React.createElement("button", { className: "new-round-button", onClick: newRound }, "New Round"),
                     pair && (React.createElement("div", { className: "graph-view-toggle", role: "group", "aria-label": "Graph view" },
                         React.createElement("button", { className: !focus ? "active" : "", onClick: () => setFocus(false) }, "Full Line"),
-                        React.createElement("button", { className: focus ? "active" : "", onClick: () => setFocus(true) }, "Focus on Points"))),
+                        React.createElement("button", { className: focus ? "active" : "", onClick: () => setFocus(true) }, "Zoom"))),
                     React.createElement("div", { className: "graph" },
                         React.createElement("svg", { viewBox: "0 0 600 600", "aria-label": "Click two lattice points on the line" },
                             React.createElement("defs", null,
